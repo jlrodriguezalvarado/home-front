@@ -1,0 +1,1066 @@
+
+> home-manager@0.0.0 start
+> ng serve
+
+Component HMR has been enabled, see https://angular.dev/hmr for more info.
+❯ Building...
+✔ Building...
+Initial chunk files | Names                        |  Raw size
+polyfills.js        | polyfills                    |  89.77 kB |
+main.js             | main                         |  50.85 kB |
+styles.css          | styles                       |  19.75 kB |
+chunk-YWFJDGHP.js   | -                            |   2.48 kB |
+chunk-Y5RQAIA6.js   | -                            |   1.50 kB |
+chunk-AOHBAA7V.js   | -                            | 193 bytes |
+
+                    | Initial total                | 164.55 kB
+
+Lazy chunk files    | Names                        |  Raw size
+chunk-XWKWNQ5C.js   | product-list-component       |  20.62 kB |
+chunk-I3PSU6BV.js   | mosaic-component             |  14.23 kB |
+chunk-BX7XJEVL.js   | cart-component               |  13.99 kB |
+chunk-6IRHR54C.js   | app-shell-component          |  13.11 kB |
+chunk-DDSNKCG6.js   | finance-dashboard-component  |  12.06 kB |
+chunk-SOAPMAME.js   | exchange-dashboard-component |  11.42 kB |
+chunk-WVCENY4I.js   | login-component              |   8.69 kB |
+chunk-Y7I4HLSG.js   | purchase-history-component   |   8.14 kB |
+chunk-7DLVYU57.js   | currency-list-component      |   6.28 kB |
+chunk-2M3JGMIK.js   | dashboard-component          |   5.13 kB |
+chunk-KRNKSWRU.js   | commerce-list-component      |   2.93 kB |
+chunk-LBVUURGE.js   | splash-component             |   2.79 kB |
+chunk-G37VJRVR.js   | -                            |   2.72 kB |
+chunk-4IFWY7IC.js   | -                            |   2.34 kB |
+chunk-D7HVCHJJ.js   | -                            |   1.62 kB |
+...and 1 more lazy chunks files. Use "--verbose" to show all the files.
+
+Application bundle generation complete. [3.780 seconds]
+
+Watch mode enabled. Watching for file changes...
+NOTE: Raw file sizes do not reflect development server per-request transformations.
+  ➜  Local:   http://localhost:4200/
+❯ Changes detected. Rebuilding...
+✔ Changes detected. Rebuilding...
+Initial chunk files | Names | Raw size
+main.js             | main  |  5.98 kB |
+
+Application bundle generation complete. [0.967 seconds]
+
+Component update sent to client(s).
+❯ Changes detected. Rebuilding...
+✔ Changes detected. Rebuilding...
+Initial chunk files | Names                  | Raw size
+main.js             | main                   |  5.98 kB |
+
+Lazy chunk files    | Names                  | Raw size
+chunk-T5RH55GA.js   | product-list-component | 20.62 kB |
+chunk-QOI4IRNV.js   | cart-component         | 13.99 kB |
+chunk-QXAYQOGD.js   | -                      |  3.62 kB |
+
+Application bundle generation complete. [0.912 seconds]
+
+Page reload sent to client(s).
+❯ Changes detected. Rebuilding...
+✔ Changes detected. Rebuilding...
+Initial chunk files | Names                      | Raw size
+styles.css          | styles                     | 19.87 kB |
+main.js             | main                       |  5.98 kB |
+
+Lazy chunk files    | Names                      | Raw size
+chunk-DFWERSP2.js   | purchase-history-component | 10.04 kB |
+
+Application bundle generation complete. [0.506 seconds]
+
+Page reload sent to client(s).
+❯ Changes detected. Rebuilding...
+✔ Changes detected. Rebuilding...
+Initial chunk files | Names                     | Raw size
+styles.css          | styles                    | 19.91 kB |
+main.js             | main                      |  6.13 kB |
+
+Lazy chunk files    | Names                     | Raw size
+chunk-H2KTWQGJ.js   | purchase-detail-component |  7.93 kB |
+
+Application bundle generation complete. [0.998 seconds]
+
+Page reload sent to client(s).
+❯ Changes detected. Rebuilding...
+✔ Changes detected. Rebuilding...
+Initial chunk files | Names          | Raw size
+styles.css          | styles         | 20.13 kB |
+main.js             | main           |  6.13 kB |
+
+Lazy chunk files    | Names          | Raw size
+chunk-GBTTCRU5.js   | cart-component | 18.71 kB |
+
+Application bundle generation complete. [0.677 seconds]
+
+Page reload sent to client(s).
+❯ Changes detected. Rebuilding...
+✔ Changes detected. Rebuilding...
+Initial chunk files | Names                  | Raw size
+main.js             | main                   |  6.13 kB |
+
+Lazy chunk files    | Names                  | Raw size
+chunk-5ZWQGYPR.js   | product-list-component | 20.80 kB |
+
+Application bundle generation complete. [0.392 seconds]
+
+Page reload sent to client(s).
+❯ Changes detected. Rebuilding...
+✔ Changes detected. Rebuilding...
+Initial chunk files | Names                      | Raw size
+main.js             | main                       |  6.13 kB |
+
+Lazy chunk files    | Names                      | Raw size
+chunk-SCUXXBNH.js   | cart-component             | 18.71 kB |
+chunk-PEBWLMUH.js   | product-list-component     | 18.35 kB |
+chunk-ZUUNEZHX.js   | purchase-history-component | 10.04 kB |
+chunk-G65YXEYE.js   | -                          |  6.62 kB |
+
+Application bundle generation complete. [0.316 seconds]
+
+Page reload sent to client(s).
+❯ Changes detected. Rebuilding...
+✔ Changes detected. Rebuilding...
+Initial chunk files | Names          | Raw size
+styles.css          | styles         | 20.36 kB |
+main.js             | main           |  6.13 kB |
+
+Lazy chunk files    | Names          | Raw size
+chunk-KQCURJAX.js   | cart-component | 19.86 kB |
+
+Application bundle generation complete. [0.375 seconds]
+
+Page reload sent to client(s).
+❯ Changes detected. Rebuilding...
+✔ Changes detected. Rebuilding...
+Initial chunk files | Names                       |  Raw size
+main.js             | main                        |   6.13 kB |
+
+Lazy chunk files    | Names                       |  Raw size
+chunk-IKMQJ5N6.js   | finance-dashboard-component |  12.54 kB |
+chunk-ZGGMCWV5.js   | finance-routes              | 480 bytes |
+
+Application bundle generation complete. [0.330 seconds]
+
+Page reload sent to client(s).
+❯ Changes detected. Rebuilding...
+✔ Changes detected. Rebuilding...
+Initial chunk files | Names                       |  Raw size
+main.js             | main                        |   6.13 kB |
+
+Lazy chunk files    | Names                       |  Raw size
+chunk-RIUF4JYZ.js   | finance-dashboard-component |  11.01 kB |
+chunk-QLBZMH74.js   | initial-expenses-component  |   6.83 kB |
+chunk-2A7GMI7L.js   | -                           |   1.55 kB |
+chunk-ZQRJLDVV.js   | finance-routes              | 652 bytes |
+
+Application bundle generation complete. [0.370 seconds]
+
+Page reload sent to client(s).
+❯ Changes detected. Rebuilding...
+✔ Changes detected. Rebuilding...
+Initial chunk files | Names                       |  Raw size
+styles.css          | styles                      |  20.45 kB |
+main.js             | main                        |   6.13 kB |
+
+Lazy chunk files    | Names                       |  Raw size
+chunk-MZBAGJ65.js   | finance-dashboard-component |  13.60 kB |
+chunk-WQEB7BSU.js   | finance-routes              | 652 bytes |
+
+Application bundle generation complete. [0.434 seconds]
+
+Page reload sent to client(s).
+❯ Changes detected. Rebuilding...
+✔ Changes detected. Rebuilding...
+Initial chunk files | Names                   |  Raw size
+main.js             | main                    |   6.13 kB |
+
+Lazy chunk files    | Names                   |  Raw size
+chunk-4YOUPW7X.js   | math-expenses-component |   6.66 kB |
+chunk-OLW3KOB6.js   | finance-routes          | 787 bytes |
+
+Application bundle generation complete. [1.019 seconds]
+
+Page reload sent to client(s).
+❯ Changes detected. Rebuilding...
+✔ Changes detected. Rebuilding...
+Initial chunk files | Names                   |  Raw size
+main.js             | main                    |   6.13 kB |
+
+Lazy chunk files    | Names                   |  Raw size
+chunk-IISEDB7N.js   | home-expenses-component |   6.66 kB |
+chunk-NPN7UZ5O.js   | finance-routes          | 922 bytes |
+
+Application bundle generation complete. [0.465 seconds]
+
+Page reload sent to client(s).
+❯ Changes detected. Rebuilding...
+✔ Changes detected. Rebuilding...
+Initial chunk files | Names             | Raw size
+styles.css          | styles            | 20.55 kB |
+main.js             | main              |  6.13 kB |
+
+Lazy chunk files    | Names             | Raw size
+chunk-EHW6ALDD.js   | savings-component |  6.53 kB |
+chunk-PLNG4AG7.js   | finance-routes    |  1.05 kB |
+
+Application bundle generation complete. [0.581 seconds]
+
+Page reload sent to client(s).
+❯ Changes detected. Rebuilding...
+✔ Changes detected. Rebuilding...
+Initial chunk files | Names            | Raw size
+styles.css          | styles           | 20.65 kB |
+main.js             | main             |  6.13 kB |
+
+Lazy chunk files    | Names            | Raw size
+chunk-OVBSG66Z.js   | income-component |  6.50 kB |
+chunk-FGOXACIY.js   | finance-routes   |  1.19 kB |
+
+Application bundle generation complete. [0.432 seconds]
+
+Page reload sent to client(s).
+❯ Changes detected. Rebuilding...
+✔ Changes detected. Rebuilding...
+Initial chunk files | Names                 | Raw size
+main.js             | main                  |  6.13 kB |
+
+Lazy chunk files    | Names                 | Raw size
+chunk-VCFKS5GQ.js   | declaration-component |  6.64 kB |
+chunk-GUDT26DQ.js   | finance-routes        |  1.33 kB |
+
+Application bundle generation complete. [0.454 seconds]
+
+Page reload sent to client(s).
+❯ Changes detected. Rebuilding...
+✔ Changes detected. Rebuilding...
+Initial chunk files | Names                        | Raw size
+main.js             | main                         |  6.13 kB |
+
+Lazy chunk files    | Names                        | Raw size
+chunk-NGZAJQHA.js   | exchange-dashboard-component | 10.24 kB |
+chunk-2WWKSN4S.js   | exchange-history-component   |  6.13 kB |
+chunk-KNJE47LK.js   | finance-routes               |  1.48 kB |
+chunk-UHI7JZEF.js   | -                            |  1.21 kB |
+
+Application bundle generation complete. [0.445 seconds]
+
+Page reload sent to client(s).
+❯ Changes detected. Rebuilding...
+✔ Changes detected. Rebuilding...
+Initial chunk files | Names             | Raw size
+styles.css          | styles            | 20.76 kB |
+main.js             | main              |  6.13 kB |
+
+Lazy chunk files    | Names             | Raw size
+chunk-2BDP2IVP.js   | reports-component |  8.35 kB |
+chunk-FXDUMFW4.js   | finance-routes    |  1.62 kB |
+
+Application bundle generation complete. [0.446 seconds]
+
+Page reload sent to client(s).
+❯ Changes detected. Rebuilding...
+✔ Changes detected. Rebuilding...
+Initial chunk files | Names                        | Raw size
+styles.css          | styles                       | 21.01 kB |
+main.js             | main                         |  6.13 kB |
+
+Lazy chunk files    | Names                        | Raw size
+chunk-TGCHJH5O.js   | exchange-dashboard-component | 15.85 kB |
+
+Application bundle generation complete. [0.402 seconds]
+
+Page reload sent to client(s).
+❯ Changes detected. Rebuilding...
+✔ Changes detected. Rebuilding...
+Application bundle generation failed. [0.514 seconds]
+
+[31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mTS2769: No overload matches this call.
+  Overload 1 of 7, '(token: ProviderToken<unknown>): unknown', gave the following error.
+    Argument of type 'Promise<typeof HttpClient>' is not assignable to parameter of type 'ProviderToken<unknown>'.
+  Overload 2 of 7, '(token: ProviderToken<unknown>, flags?: InjectFlags | undefined): unknown', gave the following error.
+    Argument of type 'Promise<typeof HttpClient>' is not assignable to parameter of type 'ProviderToken<unknown>'.
+  Overload 3 of 7, '(token: HostAttributeToken): string', gave the following error.
+    Argument of type 'Promise<typeof HttpClient>' is not assignable to parameter of type 'HostAttributeToken'.
+      Property 'attributeName' is missing in type 'Promise<typeof HttpClient>' but required in type 'HostAttributeToken'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/features/currency/currency-list.component.ts:114:24:
+[37m      114 │ ... = inject([32mimport('@angular/common/http').then(m => m.HttpClien[37m...
+          ╵              [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+  Did you forget to use 'await'?
+
+    src/app/features/currency/currency-list.component.ts:114:24:
+[37m      114 │ ... = inject([32mimport('@angular/common/http').then(m => m.HttpClien[37m...
+          ╵              [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+  Did you forget to use 'await'?
+
+    src/app/features/currency/currency-list.component.ts:114:24:
+[37m      114 │ ... = inject([32mimport('@angular/common/http').then(m => m.HttpClien[37m...
+          ╵              [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+  'attributeName' is declared here.
+
+    node_modules/@angular/core/index.d.ts:8314:12:
+[37m      8314 │     private [32mattributeName[37m;
+           ╵             [32m~~~~~~~~~~~~~[0m
+
+
+❯ Changes detected. Rebuilding...
+✔ Changes detected. Rebuilding...
+Application bundle generation failed. [0.292 seconds]
+
+[31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mTS2769: No overload matches this call.
+  Overload 1 of 7, '(token: ProviderToken<unknown>): unknown', gave the following error.
+    Argument of type 'Promise<typeof HttpClient>' is not assignable to parameter of type 'ProviderToken<unknown>'.
+  Overload 2 of 7, '(token: ProviderToken<unknown>, flags?: InjectFlags | undefined): unknown', gave the following error.
+    Argument of type 'Promise<typeof HttpClient>' is not assignable to parameter of type 'ProviderToken<unknown>'.
+  Overload 3 of 7, '(token: HostAttributeToken): string', gave the following error.
+    Argument of type 'Promise<typeof HttpClient>' is not assignable to parameter of type 'HostAttributeToken'.
+      Property 'attributeName' is missing in type 'Promise<typeof HttpClient>' but required in type 'HostAttributeToken'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/features/currency/currency-list.component.ts:114:24:
+[37m      114 │ ... = inject([32mimport('@angular/common/http').then(m => m.HttpClien[37m...
+          ╵              [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+  Did you forget to use 'await'?
+
+    src/app/features/currency/currency-list.component.ts:114:24:
+[37m      114 │ ... = inject([32mimport('@angular/common/http').then(m => m.HttpClien[37m...
+          ╵              [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+  Did you forget to use 'await'?
+
+    src/app/features/currency/currency-list.component.ts:114:24:
+[37m      114 │ ... = inject([32mimport('@angular/common/http').then(m => m.HttpClien[37m...
+          ╵              [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+  'attributeName' is declared here.
+
+    node_modules/@angular/core/index.d.ts:8314:12:
+[37m      8314 │     private [32mattributeName[37m;
+           ╵             [32m~~~~~~~~~~~~~[0m
+
+
+❯ Changes detected. Rebuilding...
+✔ Changes detected. Rebuilding...
+Initial chunk files | Names                        |  Raw size
+polyfills.js        | polyfills                    |  89.77 kB |
+styles.css          | styles                       |  21.16 kB |
+main.js             | main                         |   6.13 kB |
+chunk-YWFJDGHP.js   | -                            |   2.48 kB |
+chunk-Y5RQAIA6.js   | -                            |   1.50 kB |
+chunk-AOHBAA7V.js   | -                            | 193 bytes |
+
+                    | Initial total                | 121.23 kB
+
+Lazy chunk files    | Names                        |  Raw size
+chunk-KQCURJAX.js   | cart-component               |  19.86 kB |
+chunk-PEBWLMUH.js   | product-list-component       |  18.35 kB |
+chunk-FG2FFDSY.js   | currency-list-component      |  16.04 kB |
+chunk-TGCHJH5O.js   | exchange-dashboard-component |  15.85 kB |
+chunk-I3PSU6BV.js   | mosaic-component             |  14.23 kB |
+chunk-MZBAGJ65.js   | finance-dashboard-component  |  13.60 kB |
+chunk-6IRHR54C.js   | app-shell-component          |  13.11 kB |
+chunk-ZUUNEZHX.js   | purchase-history-component   |  10.04 kB |
+chunk-WVCENY4I.js   | login-component              |   8.69 kB |
+chunk-2BDP2IVP.js   | reports-component            |   8.35 kB |
+chunk-H2KTWQGJ.js   | purchase-detail-component    |   7.93 kB |
+chunk-QLBZMH74.js   | initial-expenses-component   |   6.83 kB |
+chunk-4YOUPW7X.js   | math-expenses-component      |   6.66 kB |
+chunk-IISEDB7N.js   | home-expenses-component      |   6.66 kB |
+chunk-VCFKS5GQ.js   | declaration-component        |   6.64 kB |
+...and 12 more lazy chunks files. Use "--verbose" to show all the files.
+
+Application bundle generation complete. [0.326 seconds]
+
+Page reload sent to client(s).
+❯ Changes detected. Rebuilding...
+✔ Changes detected. Rebuilding...
+Initial chunk files | Names                  | Raw size
+styles.css          | styles                 | 21.46 kB |
+main.js             | main                   |  6.13 kB |
+
+Lazy chunk files    | Names                  | Raw size
+chunk-TT2PWGYT.js   | product-list-component | 32.36 kB |
+
+Application bundle generation complete. [0.474 seconds]
+
+Page reload sent to client(s).
+❯ Changes detected. Rebuilding...
+✔ Changes detected. Rebuilding...
+Initial chunk files | Names                      | Raw size
+main.js             | main                       |  6.13 kB |
+
+Lazy chunk files    | Names                      | Raw size
+chunk-NOTVU2JW.js   | product-list-component     | 21.04 kB |
+chunk-BSP2WFJK.js   | purchase-history-component | 12.31 kB |
+chunk-BKDHRKYW.js   | -                          | 11.48 kB |
+
+Application bundle generation complete. [0.559 seconds]
+
+Page reload sent to client(s).
+❯ Changes detected. Rebuilding...
+✔ Changes detected. Rebuilding...
+Initial chunk files | Names                        |  Raw size
+polyfills.js        | polyfills                    |  89.77 kB |
+styles.css          | styles                       |  21.46 kB |
+main.js             | main                         |   6.13 kB |
+chunk-YWFJDGHP.js   | -                            |   2.48 kB |
+chunk-Y5RQAIA6.js   | -                            |   1.50 kB |
+chunk-AOHBAA7V.js   | -                            | 193 bytes |
+
+                    | Initial total                | 121.53 kB
+
+Lazy chunk files    | Names                        |  Raw size
+chunk-NOTVU2JW.js   | product-list-component       |  21.04 kB |
+chunk-KQCURJAX.js   | cart-component               |  19.86 kB |
+chunk-FG2FFDSY.js   | currency-list-component      |  16.04 kB |
+chunk-TGCHJH5O.js   | exchange-dashboard-component |  15.85 kB |
+chunk-I3PSU6BV.js   | mosaic-component             |  14.23 kB |
+chunk-MZBAGJ65.js   | finance-dashboard-component  |  13.60 kB |
+chunk-6IRHR54C.js   | app-shell-component          |  13.11 kB |
+chunk-BSP2WFJK.js   | purchase-history-component   |  12.31 kB |
+chunk-BKDHRKYW.js   | -                            |  11.48 kB |
+chunk-WVCENY4I.js   | login-component              |   8.69 kB |
+chunk-2BDP2IVP.js   | reports-component            |   8.35 kB |
+chunk-H2KTWQGJ.js   | purchase-detail-component    |   7.93 kB |
+chunk-QLBZMH74.js   | initial-expenses-component   |   6.83 kB |
+chunk-4YOUPW7X.js   | math-expenses-component      |   6.66 kB |
+chunk-IISEDB7N.js   | home-expenses-component      |   6.66 kB |
+...and 13 more lazy chunks files. Use "--verbose" to show all the files.
+
+Application bundle generation complete. [0.044 seconds]
+
+❯ Changes detected. Rebuilding...
+✔ Changes detected. Rebuilding...
+Initial chunk files | Names                        |  Raw size
+polyfills.js        | polyfills                    |  89.77 kB |
+styles.css          | styles                       |  21.46 kB |
+main.js             | main                         |   6.13 kB |
+chunk-YWFJDGHP.js   | -                            |   2.48 kB |
+chunk-Y5RQAIA6.js   | -                            |   1.50 kB |
+chunk-AOHBAA7V.js   | -                            | 193 bytes |
+
+                    | Initial total                | 121.53 kB
+
+Lazy chunk files    | Names                        |  Raw size
+chunk-NOTVU2JW.js   | product-list-component       |  21.04 kB |
+chunk-KQCURJAX.js   | cart-component               |  19.86 kB |
+chunk-FG2FFDSY.js   | currency-list-component      |  16.04 kB |
+chunk-TGCHJH5O.js   | exchange-dashboard-component |  15.85 kB |
+chunk-I3PSU6BV.js   | mosaic-component             |  14.23 kB |
+chunk-MZBAGJ65.js   | finance-dashboard-component  |  13.60 kB |
+chunk-6IRHR54C.js   | app-shell-component          |  13.11 kB |
+chunk-BSP2WFJK.js   | purchase-history-component   |  12.31 kB |
+chunk-BKDHRKYW.js   | -                            |  11.48 kB |
+chunk-WVCENY4I.js   | login-component              |   8.69 kB |
+chunk-2BDP2IVP.js   | reports-component            |   8.35 kB |
+chunk-H2KTWQGJ.js   | purchase-detail-component    |   7.93 kB |
+chunk-QLBZMH74.js   | initial-expenses-component   |   6.83 kB |
+chunk-4YOUPW7X.js   | math-expenses-component      |   6.66 kB |
+chunk-IISEDB7N.js   | home-expenses-component      |   6.66 kB |
+...and 13 more lazy chunks files. Use "--verbose" to show all the files.
+
+Application bundle generation complete. [0.085 seconds]
+
+❯ Changes detected. Rebuilding...
+✔ Changes detected. Rebuilding...
+Initial chunk files | Names                        |  Raw size
+polyfills.js        | polyfills                    |  89.77 kB |
+styles.css          | styles                       |  21.46 kB |
+main.js             | main                         |   6.13 kB |
+chunk-YWFJDGHP.js   | -                            |   2.48 kB |
+chunk-Y5RQAIA6.js   | -                            |   1.50 kB |
+chunk-AOHBAA7V.js   | -                            | 193 bytes |
+
+                    | Initial total                | 121.53 kB
+
+Lazy chunk files    | Names                        |  Raw size
+chunk-NOTVU2JW.js   | product-list-component       |  21.04 kB |
+chunk-KQCURJAX.js   | cart-component               |  19.86 kB |
+chunk-FG2FFDSY.js   | currency-list-component      |  16.04 kB |
+chunk-TGCHJH5O.js   | exchange-dashboard-component |  15.85 kB |
+chunk-I3PSU6BV.js   | mosaic-component             |  14.23 kB |
+chunk-MZBAGJ65.js   | finance-dashboard-component  |  13.60 kB |
+chunk-6IRHR54C.js   | app-shell-component          |  13.11 kB |
+chunk-BSP2WFJK.js   | purchase-history-component   |  12.31 kB |
+chunk-BKDHRKYW.js   | -                            |  11.48 kB |
+chunk-WVCENY4I.js   | login-component              |   8.69 kB |
+chunk-2BDP2IVP.js   | reports-component            |   8.35 kB |
+chunk-H2KTWQGJ.js   | purchase-detail-component    |   7.93 kB |
+chunk-QLBZMH74.js   | initial-expenses-component   |   6.83 kB |
+chunk-4YOUPW7X.js   | math-expenses-component      |   6.66 kB |
+chunk-IISEDB7N.js   | home-expenses-component      |   6.66 kB |
+...and 13 more lazy chunks files. Use "--verbose" to show all the files.
+
+Application bundle generation complete. [0.050 seconds]
+
+❯ Changes detected. Rebuilding...
+✔ Changes detected. Rebuilding...
+Initial chunk files | Names                        |  Raw size
+polyfills.js        | polyfills                    |  89.77 kB |
+styles.css          | styles                       |  21.46 kB |
+main.js             | main                         |   6.13 kB |
+chunk-YWFJDGHP.js   | -                            |   2.48 kB |
+chunk-Y5RQAIA6.js   | -                            |   1.50 kB |
+chunk-AOHBAA7V.js   | -                            | 193 bytes |
+
+                    | Initial total                | 121.53 kB
+
+Lazy chunk files    | Names                        |  Raw size
+chunk-NOTVU2JW.js   | product-list-component       |  21.04 kB |
+chunk-KQCURJAX.js   | cart-component               |  19.86 kB |
+chunk-FG2FFDSY.js   | currency-list-component      |  16.04 kB |
+chunk-TGCHJH5O.js   | exchange-dashboard-component |  15.85 kB |
+chunk-I3PSU6BV.js   | mosaic-component             |  14.23 kB |
+chunk-MZBAGJ65.js   | finance-dashboard-component  |  13.60 kB |
+chunk-6IRHR54C.js   | app-shell-component          |  13.11 kB |
+chunk-BSP2WFJK.js   | purchase-history-component   |  12.31 kB |
+chunk-BKDHRKYW.js   | -                            |  11.48 kB |
+chunk-WVCENY4I.js   | login-component              |   8.69 kB |
+chunk-2BDP2IVP.js   | reports-component            |   8.35 kB |
+chunk-H2KTWQGJ.js   | purchase-detail-component    |   7.93 kB |
+chunk-QLBZMH74.js   | initial-expenses-component   |   6.83 kB |
+chunk-4YOUPW7X.js   | math-expenses-component      |   6.66 kB |
+chunk-IISEDB7N.js   | home-expenses-component      |   6.66 kB |
+...and 13 more lazy chunks files. Use "--verbose" to show all the files.
+
+Application bundle generation complete. [0.042 seconds]
+
+❯ Changes detected. Rebuilding...
+✔ Changes detected. Rebuilding...
+Initial chunk files | Names                       | Raw size
+main.js             | main                        |  6.13 kB |
+
+Lazy chunk files    | Names                       | Raw size
+chunk-HJVWBBBM.js   | finance-dashboard-component | 13.60 kB |
+chunk-RY2BKK5W.js   | initial-expenses-component  |  6.83 kB |
+chunk-G4LBS7R5.js   | math-expenses-component     |  6.66 kB |
+chunk-564HJ2FP.js   | home-expenses-component     |  6.66 kB |
+chunk-PLCLZNAD.js   | declaration-component       |  6.64 kB |
+chunk-JWKXDRG2.js   | savings-component           |  6.53 kB |
+chunk-ZWRGJTBU.js   | income-component            |  6.50 kB |
+chunk-4QYGDSKP.js   | -                           |  2.45 kB |
+chunk-XY5D3XKD.js   | finance-routes              |  1.62 kB |
+
+Application bundle generation complete. [0.914 seconds]
+
+Page reload sent to client(s).
+❯ Changes detected. Rebuilding...
+✔ Changes detected. Rebuilding...
+Application bundle generation failed. [0.515 seconds]
+
+[31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mNG8002: Can't bind to 'feature' since it isn't a known property of 'app-finance-list-base'.
+1. If 'app-finance-list-base' is an Angular component and it has 'feature' input, then verify that it is included in the '@Component.imports' of this component.
+2. If 'app-finance-list-base' is a Web Component then add 'CUSTOM_ELEMENTS_SCHEMA' to the '@Component.schemas' of this component to suppress this message.
+3. To allow any property add 'NO_ERRORS_SCHEMA' to the '@Component.schemas' of this component.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/features/finance/initial-expenses.component.ts:8:36:
+[37m      8 │ ...inance-list-base [32m[feature]="'initial-expenses'"[37m></app-finance-li...
+        ╵                     [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+❯ Changes detected. Rebuilding...
+✔ Changes detected. Rebuilding...
+Application bundle generation failed. [1.198 seconds]
+
+[31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mNG8002: Can't bind to 'feature' since it isn't a known property of 'app-finance-list-base'.
+1. If 'app-finance-list-base' is an Angular component and it has 'feature' input, then verify that it is included in the '@Component.imports' of this component.
+2. If 'app-finance-list-base' is a Web Component then add 'CUSTOM_ELEMENTS_SCHEMA' to the '@Component.schemas' of this component to suppress this message.
+3. To allow any property add 'NO_ERRORS_SCHEMA' to the '@Component.schemas' of this component.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/features/finance/initial-expenses.component.ts:8:36:
+[37m      8 │ ...inance-list-base [32m[feature]="'initial-expenses'"[37m></app-finance-li...
+        ╵                     [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mNG8002: Can't bind to 'feature' since it isn't a known property of 'app-finance-list-base'.
+1. If 'app-finance-list-base' is an Angular component and it has 'feature' input, then verify that it is included in the '@Component.imports' of this component.
+2. If 'app-finance-list-base' is a Web Component then add 'CUSTOM_ELEMENTS_SCHEMA' to the '@Component.schemas' of this component to suppress this message.
+3. To allow any property add 'NO_ERRORS_SCHEMA' to the '@Component.schemas' of this component.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/features/finance/math-expenses.component.ts:8:36:
+[37m      8 │ ...<app-finance-list-base [32m[feature]="'math'"[37m></app-finance-list-base>`
+        ╵                           [32m~~~~~~~~~~~~~~~~~~[0m
+
+
+❯ Changes detected. Rebuilding...
+✔ Changes detected. Rebuilding...
+Application bundle generation failed. [0.292 seconds]
+
+[31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mNG8002: Can't bind to 'feature' since it isn't a known property of 'app-finance-list-base'.
+1. If 'app-finance-list-base' is an Angular component and it has 'feature' input, then verify that it is included in the '@Component.imports' of this component.
+2. If 'app-finance-list-base' is a Web Component then add 'CUSTOM_ELEMENTS_SCHEMA' to the '@Component.schemas' of this component to suppress this message.
+3. To allow any property add 'NO_ERRORS_SCHEMA' to the '@Component.schemas' of this component.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/features/finance/home-expenses.component.ts:8:36:
+[37m      8 │ ...<app-finance-list-base [32m[feature]="'home'"[37m></app-finance-list-base>`
+        ╵                           [32m~~~~~~~~~~~~~~~~~~[0m
+
+
+[31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mNG8002: Can't bind to 'feature' since it isn't a known property of 'app-finance-list-base'.
+1. If 'app-finance-list-base' is an Angular component and it has 'feature' input, then verify that it is included in the '@Component.imports' of this component.
+2. If 'app-finance-list-base' is a Web Component then add 'CUSTOM_ELEMENTS_SCHEMA' to the '@Component.schemas' of this component to suppress this message.
+3. To allow any property add 'NO_ERRORS_SCHEMA' to the '@Component.schemas' of this component.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/features/finance/initial-expenses.component.ts:8:36:
+[37m      8 │ ...inance-list-base [32m[feature]="'initial-expenses'"[37m></app-finance-li...
+        ╵                     [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mNG8002: Can't bind to 'feature' since it isn't a known property of 'app-finance-list-base'.
+1. If 'app-finance-list-base' is an Angular component and it has 'feature' input, then verify that it is included in the '@Component.imports' of this component.
+2. If 'app-finance-list-base' is a Web Component then add 'CUSTOM_ELEMENTS_SCHEMA' to the '@Component.schemas' of this component to suppress this message.
+3. To allow any property add 'NO_ERRORS_SCHEMA' to the '@Component.schemas' of this component.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/features/finance/math-expenses.component.ts:8:36:
+[37m      8 │ ...<app-finance-list-base [32m[feature]="'math'"[37m></app-finance-list-base>`
+        ╵                           [32m~~~~~~~~~~~~~~~~~~[0m
+
+
+❯ Changes detected. Rebuilding...
+✔ Changes detected. Rebuilding...
+Application bundle generation failed. [0.253 seconds]
+
+[31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mTS2306: File '/app/src/app/features/finance/savings.component.ts' is not a module.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/features/finance/finance.routes.ts:33:36:
+[37m      33 │ ...ponent: () => import([32m'./savings.component'[37m).then((m) => m.Savin...
+         ╵                         [32m~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mNG8002: Can't bind to 'feature' since it isn't a known property of 'app-finance-list-base'.
+1. If 'app-finance-list-base' is an Angular component and it has 'feature' input, then verify that it is included in the '@Component.imports' of this component.
+2. If 'app-finance-list-base' is a Web Component then add 'CUSTOM_ELEMENTS_SCHEMA' to the '@Component.schemas' of this component to suppress this message.
+3. To allow any property add 'NO_ERRORS_SCHEMA' to the '@Component.schemas' of this component.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/features/finance/home-expenses.component.ts:8:36:
+[37m      8 │ ...<app-finance-list-base [32m[feature]="'home'"[37m></app-finance-list-base>`
+        ╵                           [32m~~~~~~~~~~~~~~~~~~[0m
+
+
+[31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mNG8002: Can't bind to 'feature' since it isn't a known property of 'app-finance-list-base'.
+1. If 'app-finance-list-base' is an Angular component and it has 'feature' input, then verify that it is included in the '@Component.imports' of this component.
+2. If 'app-finance-list-base' is a Web Component then add 'CUSTOM_ELEMENTS_SCHEMA' to the '@Component.schemas' of this component to suppress this message.
+3. To allow any property add 'NO_ERRORS_SCHEMA' to the '@Component.schemas' of this component.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/features/finance/initial-expenses.component.ts:8:36:
+[37m      8 │ ...inance-list-base [32m[feature]="'initial-expenses'"[37m></app-finance-li...
+        ╵                     [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mNG8002: Can't bind to 'feature' since it isn't a known property of 'app-finance-list-base'.
+1. If 'app-finance-list-base' is an Angular component and it has 'feature' input, then verify that it is included in the '@Component.imports' of this component.
+2. If 'app-finance-list-base' is a Web Component then add 'CUSTOM_ELEMENTS_SCHEMA' to the '@Component.schemas' of this component to suppress this message.
+3. To allow any property add 'NO_ERRORS_SCHEMA' to the '@Component.schemas' of this component.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/features/finance/math-expenses.component.ts:8:36:
+[37m      8 │ ...<app-finance-list-base [32m[feature]="'math'"[37m></app-finance-list-base>`
+        ╵                           [32m~~~~~~~~~~~~~~~~~~[0m
+
+
+❯ Changes detected. Rebuilding...
+✔ Changes detected. Rebuilding...
+Application bundle generation failed. [0.293 seconds]
+
+[31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mNG8002: Can't bind to 'feature' since it isn't a known property of 'app-finance-list-base'.
+1. If 'app-finance-list-base' is an Angular component and it has 'feature' input, then verify that it is included in the '@Component.imports' of this component.
+2. If 'app-finance-list-base' is a Web Component then add 'CUSTOM_ELEMENTS_SCHEMA' to the '@Component.schemas' of this component to suppress this message.
+3. To allow any property add 'NO_ERRORS_SCHEMA' to the '@Component.schemas' of this component.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/features/finance/home-expenses.component.ts:8:36:
+[37m      8 │ ...<app-finance-list-base [32m[feature]="'home'"[37m></app-finance-list-base>`
+        ╵                           [32m~~~~~~~~~~~~~~~~~~[0m
+
+
+[31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mNG8002: Can't bind to 'feature' since it isn't a known property of 'app-finance-list-base'.
+1. If 'app-finance-list-base' is an Angular component and it has 'feature' input, then verify that it is included in the '@Component.imports' of this component.
+2. If 'app-finance-list-base' is a Web Component then add 'CUSTOM_ELEMENTS_SCHEMA' to the '@Component.schemas' of this component to suppress this message.
+3. To allow any property add 'NO_ERRORS_SCHEMA' to the '@Component.schemas' of this component.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/features/finance/initial-expenses.component.ts:8:36:
+[37m      8 │ ...inance-list-base [32m[feature]="'initial-expenses'"[37m></app-finance-li...
+        ╵                     [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mNG8002: Can't bind to 'feature' since it isn't a known property of 'app-finance-list-base'.
+1. If 'app-finance-list-base' is an Angular component and it has 'feature' input, then verify that it is included in the '@Component.imports' of this component.
+2. If 'app-finance-list-base' is a Web Component then add 'CUSTOM_ELEMENTS_SCHEMA' to the '@Component.schemas' of this component to suppress this message.
+3. To allow any property add 'NO_ERRORS_SCHEMA' to the '@Component.schemas' of this component.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/features/finance/math-expenses.component.ts:8:36:
+[37m      8 │ ...<app-finance-list-base [32m[feature]="'math'"[37m></app-finance-list-base>`
+        ╵                           [32m~~~~~~~~~~~~~~~~~~[0m
+
+
+[31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mNG8002: Can't bind to 'feature' since it isn't a known property of 'app-finance-list-base'.
+1. If 'app-finance-list-base' is an Angular component and it has 'feature' input, then verify that it is included in the '@Component.imports' of this component.
+2. If 'app-finance-list-base' is a Web Component then add 'CUSTOM_ELEMENTS_SCHEMA' to the '@Component.schemas' of this component to suppress this message.
+3. To allow any property add 'NO_ERRORS_SCHEMA' to the '@Component.schemas' of this component.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/features/finance/savings.component.ts:8:36:
+[37m      8 │ ...app-finance-list-base [32m[feature]="'savings'"[37m></app-finance-list-b...
+        ╵                          [32m~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+❯ Changes detected. Rebuilding...
+✔ Changes detected. Rebuilding...
+Application bundle generation failed. [0.300 seconds]
+
+[31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mNG8002: Can't bind to 'feature' since it isn't a known property of 'app-finance-list-base'.
+1. If 'app-finance-list-base' is an Angular component and it has 'feature' input, then verify that it is included in the '@Component.imports' of this component.
+2. If 'app-finance-list-base' is a Web Component then add 'CUSTOM_ELEMENTS_SCHEMA' to the '@Component.schemas' of this component to suppress this message.
+3. To allow any property add 'NO_ERRORS_SCHEMA' to the '@Component.schemas' of this component.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/features/finance/home-expenses.component.ts:8:36:
+[37m      8 │ ...<app-finance-list-base [32m[feature]="'home'"[37m></app-finance-list-base>`
+        ╵                           [32m~~~~~~~~~~~~~~~~~~[0m
+
+
+[31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mNG8002: Can't bind to 'feature' since it isn't a known property of 'app-finance-list-base'.
+1. If 'app-finance-list-base' is an Angular component and it has 'feature' input, then verify that it is included in the '@Component.imports' of this component.
+2. If 'app-finance-list-base' is a Web Component then add 'CUSTOM_ELEMENTS_SCHEMA' to the '@Component.schemas' of this component to suppress this message.
+3. To allow any property add 'NO_ERRORS_SCHEMA' to the '@Component.schemas' of this component.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/features/finance/income.component.ts:8:36:
+[37m      8 │ ...app-finance-list-base [32m[feature]="'income'"[37m [isExpense]="false"><...
+        ╵                          [32m~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mNG8002: Can't bind to 'isExpense' since it isn't a known property of 'app-finance-list-base'.
+1. If 'app-finance-list-base' is an Angular component and it has 'isExpense' input, then verify that it is included in the '@Component.imports' of this component.
+2. If 'app-finance-list-base' is a Web Component then add 'CUSTOM_ELEMENTS_SCHEMA' to the '@Component.schemas' of this component to suppress this message.
+3. To allow any property add 'NO_ERRORS_SCHEMA' to the '@Component.schemas' of this component.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/features/finance/income.component.ts:8:57:
+[37m      8 │ ...e [feature]="'income'" [32m[isExpense]="false"[37m></app-finance-list-ba...
+        ╵                           [32m~~~~~~~~~~~~~~~~~~~[0m
+
+
+[31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mNG8002: Can't bind to 'feature' since it isn't a known property of 'app-finance-list-base'.
+1. If 'app-finance-list-base' is an Angular component and it has 'feature' input, then verify that it is included in the '@Component.imports' of this component.
+2. If 'app-finance-list-base' is a Web Component then add 'CUSTOM_ELEMENTS_SCHEMA' to the '@Component.schemas' of this component to suppress this message.
+3. To allow any property add 'NO_ERRORS_SCHEMA' to the '@Component.schemas' of this component.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/features/finance/initial-expenses.component.ts:8:36:
+[37m      8 │ ...inance-list-base [32m[feature]="'initial-expenses'"[37m></app-finance-li...
+        ╵                     [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mNG8002: Can't bind to 'feature' since it isn't a known property of 'app-finance-list-base'.
+1. If 'app-finance-list-base' is an Angular component and it has 'feature' input, then verify that it is included in the '@Component.imports' of this component.
+2. If 'app-finance-list-base' is a Web Component then add 'CUSTOM_ELEMENTS_SCHEMA' to the '@Component.schemas' of this component to suppress this message.
+3. To allow any property add 'NO_ERRORS_SCHEMA' to the '@Component.schemas' of this component.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/features/finance/math-expenses.component.ts:8:36:
+[37m      8 │ ...<app-finance-list-base [32m[feature]="'math'"[37m></app-finance-list-base>`
+        ╵                           [32m~~~~~~~~~~~~~~~~~~[0m
+
+
+[31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mNG8002: Can't bind to 'feature' since it isn't a known property of 'app-finance-list-base'.
+1. If 'app-finance-list-base' is an Angular component and it has 'feature' input, then verify that it is included in the '@Component.imports' of this component.
+2. If 'app-finance-list-base' is a Web Component then add 'CUSTOM_ELEMENTS_SCHEMA' to the '@Component.schemas' of this component to suppress this message.
+3. To allow any property add 'NO_ERRORS_SCHEMA' to the '@Component.schemas' of this component.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/features/finance/savings.component.ts:8:36:
+[37m      8 │ ...app-finance-list-base [32m[feature]="'savings'"[37m></app-finance-list-b...
+        ╵                          [32m~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+❯ Changes detected. Rebuilding...
+✔ Changes detected. Rebuilding...
+Application bundle generation failed. [0.286 seconds]
+
+[31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mNG8002: Can't bind to 'feature' since it isn't a known property of 'app-finance-list-base'.
+1. If 'app-finance-list-base' is an Angular component and it has 'feature' input, then verify that it is included in the '@Component.imports' of this component.
+2. If 'app-finance-list-base' is a Web Component then add 'CUSTOM_ELEMENTS_SCHEMA' to the '@Component.schemas' of this component to suppress this message.
+3. To allow any property add 'NO_ERRORS_SCHEMA' to the '@Component.schemas' of this component.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/features/finance/declaration.component.ts:8:36:
+[37m      8 │ ...p-finance-list-base [32m[feature]="'declaration'"[37m></app-finance-list...
+        ╵                        [32m~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mNG8002: Can't bind to 'feature' since it isn't a known property of 'app-finance-list-base'.
+1. If 'app-finance-list-base' is an Angular component and it has 'feature' input, then verify that it is included in the '@Component.imports' of this component.
+2. If 'app-finance-list-base' is a Web Component then add 'CUSTOM_ELEMENTS_SCHEMA' to the '@Component.schemas' of this component to suppress this message.
+3. To allow any property add 'NO_ERRORS_SCHEMA' to the '@Component.schemas' of this component.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/features/finance/home-expenses.component.ts:8:36:
+[37m      8 │ ...<app-finance-list-base [32m[feature]="'home'"[37m></app-finance-list-base>`
+        ╵                           [32m~~~~~~~~~~~~~~~~~~[0m
+
+
+[31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mNG8002: Can't bind to 'feature' since it isn't a known property of 'app-finance-list-base'.
+1. If 'app-finance-list-base' is an Angular component and it has 'feature' input, then verify that it is included in the '@Component.imports' of this component.
+2. If 'app-finance-list-base' is a Web Component then add 'CUSTOM_ELEMENTS_SCHEMA' to the '@Component.schemas' of this component to suppress this message.
+3. To allow any property add 'NO_ERRORS_SCHEMA' to the '@Component.schemas' of this component.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/features/finance/income.component.ts:8:36:
+[37m      8 │ ...app-finance-list-base [32m[feature]="'income'"[37m [isExpense]="false"><...
+        ╵                          [32m~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mNG8002: Can't bind to 'isExpense' since it isn't a known property of 'app-finance-list-base'.
+1. If 'app-finance-list-base' is an Angular component and it has 'isExpense' input, then verify that it is included in the '@Component.imports' of this component.
+2. If 'app-finance-list-base' is a Web Component then add 'CUSTOM_ELEMENTS_SCHEMA' to the '@Component.schemas' of this component to suppress this message.
+3. To allow any property add 'NO_ERRORS_SCHEMA' to the '@Component.schemas' of this component.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/features/finance/income.component.ts:8:57:
+[37m      8 │ ...e [feature]="'income'" [32m[isExpense]="false"[37m></app-finance-list-ba...
+        ╵                           [32m~~~~~~~~~~~~~~~~~~~[0m
+
+
+[31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mNG8002: Can't bind to 'feature' since it isn't a known property of 'app-finance-list-base'.
+1. If 'app-finance-list-base' is an Angular component and it has 'feature' input, then verify that it is included in the '@Component.imports' of this component.
+2. If 'app-finance-list-base' is a Web Component then add 'CUSTOM_ELEMENTS_SCHEMA' to the '@Component.schemas' of this component to suppress this message.
+3. To allow any property add 'NO_ERRORS_SCHEMA' to the '@Component.schemas' of this component.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/features/finance/initial-expenses.component.ts:8:36:
+[37m      8 │ ...inance-list-base [32m[feature]="'initial-expenses'"[37m></app-finance-li...
+        ╵                     [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mNG8002: Can't bind to 'feature' since it isn't a known property of 'app-finance-list-base'.
+1. If 'app-finance-list-base' is an Angular component and it has 'feature' input, then verify that it is included in the '@Component.imports' of this component.
+2. If 'app-finance-list-base' is a Web Component then add 'CUSTOM_ELEMENTS_SCHEMA' to the '@Component.schemas' of this component to suppress this message.
+3. To allow any property add 'NO_ERRORS_SCHEMA' to the '@Component.schemas' of this component.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/features/finance/math-expenses.component.ts:8:36:
+[37m      8 │ ...<app-finance-list-base [32m[feature]="'math'"[37m></app-finance-list-base>`
+        ╵                           [32m~~~~~~~~~~~~~~~~~~[0m
+
+
+[31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mNG8002: Can't bind to 'feature' since it isn't a known property of 'app-finance-list-base'.
+1. If 'app-finance-list-base' is an Angular component and it has 'feature' input, then verify that it is included in the '@Component.imports' of this component.
+2. If 'app-finance-list-base' is a Web Component then add 'CUSTOM_ELEMENTS_SCHEMA' to the '@Component.schemas' of this component to suppress this message.
+3. To allow any property add 'NO_ERRORS_SCHEMA' to the '@Component.schemas' of this component.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/features/finance/savings.component.ts:8:36:
+[37m      8 │ ...app-finance-list-base [32m[feature]="'savings'"[37m></app-finance-list-b...
+        ╵                          [32m~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+❯ Changes detected. Rebuilding...
+✔ Changes detected. Rebuilding...
+Application bundle generation failed. [3.226 seconds]
+
+[31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mNG8002: Can't bind to 'feature' since it isn't a known property of 'app-finance-list-base'.
+1. If 'app-finance-list-base' is an Angular component and it has 'feature' input, then verify that it is included in the '@Component.imports' of this component.
+2. If 'app-finance-list-base' is a Web Component then add 'CUSTOM_ELEMENTS_SCHEMA' to the '@Component.schemas' of this component to suppress this message.
+3. To allow any property add 'NO_ERRORS_SCHEMA' to the '@Component.schemas' of this component.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/features/finance/declaration.component.ts:8:36:
+[37m      8 │ ...p-finance-list-base [32m[feature]="'declaration'"[37m></app-finance-list...
+        ╵                        [32m~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mNG8002: Can't bind to 'feature' since it isn't a known property of 'app-finance-list-base'.
+1. If 'app-finance-list-base' is an Angular component and it has 'feature' input, then verify that it is included in the '@Component.imports' of this component.
+2. If 'app-finance-list-base' is a Web Component then add 'CUSTOM_ELEMENTS_SCHEMA' to the '@Component.schemas' of this component to suppress this message.
+3. To allow any property add 'NO_ERRORS_SCHEMA' to the '@Component.schemas' of this component.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/features/finance/home-expenses.component.ts:8:36:
+[37m      8 │ ...<app-finance-list-base [32m[feature]="'home'"[37m></app-finance-list-base>`
+        ╵                           [32m~~~~~~~~~~~~~~~~~~[0m
+
+
+[31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mNG8002: Can't bind to 'feature' since it isn't a known property of 'app-finance-list-base'.
+1. If 'app-finance-list-base' is an Angular component and it has 'feature' input, then verify that it is included in the '@Component.imports' of this component.
+2. If 'app-finance-list-base' is a Web Component then add 'CUSTOM_ELEMENTS_SCHEMA' to the '@Component.schemas' of this component to suppress this message.
+3. To allow any property add 'NO_ERRORS_SCHEMA' to the '@Component.schemas' of this component.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/features/finance/income.component.ts:8:36:
+[37m      8 │ ...app-finance-list-base [32m[feature]="'income'"[37m [isExpense]="false"><...
+        ╵                          [32m~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mNG8002: Can't bind to 'isExpense' since it isn't a known property of 'app-finance-list-base'.
+1. If 'app-finance-list-base' is an Angular component and it has 'isExpense' input, then verify that it is included in the '@Component.imports' of this component.
+2. If 'app-finance-list-base' is a Web Component then add 'CUSTOM_ELEMENTS_SCHEMA' to the '@Component.schemas' of this component to suppress this message.
+3. To allow any property add 'NO_ERRORS_SCHEMA' to the '@Component.schemas' of this component.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/features/finance/income.component.ts:8:57:
+[37m      8 │ ...e [feature]="'income'" [32m[isExpense]="false"[37m></app-finance-list-ba...
+        ╵                           [32m~~~~~~~~~~~~~~~~~~~[0m
+
+
+[31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mNG8002: Can't bind to 'feature' since it isn't a known property of 'app-finance-list-base'.
+1. If 'app-finance-list-base' is an Angular component and it has 'feature' input, then verify that it is included in the '@Component.imports' of this component.
+2. If 'app-finance-list-base' is a Web Component then add 'CUSTOM_ELEMENTS_SCHEMA' to the '@Component.schemas' of this component to suppress this message.
+3. To allow any property add 'NO_ERRORS_SCHEMA' to the '@Component.schemas' of this component.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/features/finance/initial-expenses.component.ts:8:36:
+[37m      8 │ ...inance-list-base [32m[feature]="'initial-expenses'"[37m></app-finance-li...
+        ╵                     [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mNG8002: Can't bind to 'feature' since it isn't a known property of 'app-finance-list-base'.
+1. If 'app-finance-list-base' is an Angular component and it has 'feature' input, then verify that it is included in the '@Component.imports' of this component.
+2. If 'app-finance-list-base' is a Web Component then add 'CUSTOM_ELEMENTS_SCHEMA' to the '@Component.schemas' of this component to suppress this message.
+3. To allow any property add 'NO_ERRORS_SCHEMA' to the '@Component.schemas' of this component.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/features/finance/math-expenses.component.ts:8:36:
+[37m      8 │ ...<app-finance-list-base [32m[feature]="'math'"[37m></app-finance-list-base>`
+        ╵                           [32m~~~~~~~~~~~~~~~~~~[0m
+
+
+[31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mNG8002: Can't bind to 'feature' since it isn't a known property of 'app-finance-list-base'.
+1. If 'app-finance-list-base' is an Angular component and it has 'feature' input, then verify that it is included in the '@Component.imports' of this component.
+2. If 'app-finance-list-base' is a Web Component then add 'CUSTOM_ELEMENTS_SCHEMA' to the '@Component.schemas' of this component to suppress this message.
+3. To allow any property add 'NO_ERRORS_SCHEMA' to the '@Component.schemas' of this component.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/features/finance/savings.component.ts:8:36:
+[37m      8 │ ...app-finance-list-base [32m[feature]="'savings'"[37m></app-finance-list-b...
+        ╵                          [32m~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+❯ Changes detected. Rebuilding...
+✔ Changes detected. Rebuilding...
+Application bundle generation failed. [0.394 seconds]
+
+[31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mNG8002: Can't bind to 'feature' since it isn't a known property of 'app-finance-list-base'.
+1. If 'app-finance-list-base' is an Angular component and it has 'feature' input, then verify that it is included in the '@Component.imports' of this component.
+2. If 'app-finance-list-base' is a Web Component then add 'CUSTOM_ELEMENTS_SCHEMA' to the '@Component.schemas' of this component to suppress this message.
+3. To allow any property add 'NO_ERRORS_SCHEMA' to the '@Component.schemas' of this component.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/features/finance/declaration.component.ts:8:36:
+[37m      8 │ ...p-finance-list-base [32m[feature]="'declaration'"[37m></app-finance-list...
+        ╵                        [32m~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mNG8002: Can't bind to 'feature' since it isn't a known property of 'app-finance-list-base'.
+1. If 'app-finance-list-base' is an Angular component and it has 'feature' input, then verify that it is included in the '@Component.imports' of this component.
+2. If 'app-finance-list-base' is a Web Component then add 'CUSTOM_ELEMENTS_SCHEMA' to the '@Component.schemas' of this component to suppress this message.
+3. To allow any property add 'NO_ERRORS_SCHEMA' to the '@Component.schemas' of this component.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/features/finance/home-expenses.component.ts:8:36:
+[37m      8 │ ...<app-finance-list-base [32m[feature]="'home'"[37m></app-finance-list-base>`
+        ╵                           [32m~~~~~~~~~~~~~~~~~~[0m
+
+
+[31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mNG8002: Can't bind to 'feature' since it isn't a known property of 'app-finance-list-base'.
+1. If 'app-finance-list-base' is an Angular component and it has 'feature' input, then verify that it is included in the '@Component.imports' of this component.
+2. If 'app-finance-list-base' is a Web Component then add 'CUSTOM_ELEMENTS_SCHEMA' to the '@Component.schemas' of this component to suppress this message.
+3. To allow any property add 'NO_ERRORS_SCHEMA' to the '@Component.schemas' of this component.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/features/finance/income.component.ts:8:36:
+[37m      8 │ ...app-finance-list-base [32m[feature]="'income'"[37m [isExpense]="false"><...
+        ╵                          [32m~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mNG8002: Can't bind to 'isExpense' since it isn't a known property of 'app-finance-list-base'.
+1. If 'app-finance-list-base' is an Angular component and it has 'isExpense' input, then verify that it is included in the '@Component.imports' of this component.
+2. If 'app-finance-list-base' is a Web Component then add 'CUSTOM_ELEMENTS_SCHEMA' to the '@Component.schemas' of this component to suppress this message.
+3. To allow any property add 'NO_ERRORS_SCHEMA' to the '@Component.schemas' of this component.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/features/finance/income.component.ts:8:57:
+[37m      8 │ ...e [feature]="'income'" [32m[isExpense]="false"[37m></app-finance-list-ba...
+        ╵                           [32m~~~~~~~~~~~~~~~~~~~[0m
+
+
+[31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mNG8002: Can't bind to 'feature' since it isn't a known property of 'app-finance-list-base'.
+1. If 'app-finance-list-base' is an Angular component and it has 'feature' input, then verify that it is included in the '@Component.imports' of this component.
+2. If 'app-finance-list-base' is a Web Component then add 'CUSTOM_ELEMENTS_SCHEMA' to the '@Component.schemas' of this component to suppress this message.
+3. To allow any property add 'NO_ERRORS_SCHEMA' to the '@Component.schemas' of this component.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/features/finance/initial-expenses.component.ts:8:36:
+[37m      8 │ ...inance-list-base [32m[feature]="'initial-expenses'"[37m></app-finance-li...
+        ╵                     [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mNG8002: Can't bind to 'feature' since it isn't a known property of 'app-finance-list-base'.
+1. If 'app-finance-list-base' is an Angular component and it has 'feature' input, then verify that it is included in the '@Component.imports' of this component.
+2. If 'app-finance-list-base' is a Web Component then add 'CUSTOM_ELEMENTS_SCHEMA' to the '@Component.schemas' of this component to suppress this message.
+3. To allow any property add 'NO_ERRORS_SCHEMA' to the '@Component.schemas' of this component.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/features/finance/math-expenses.component.ts:8:36:
+[37m      8 │ ...<app-finance-list-base [32m[feature]="'math'"[37m></app-finance-list-base>`
+        ╵                           [32m~~~~~~~~~~~~~~~~~~[0m
+
+
+[31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mNG8002: Can't bind to 'feature' since it isn't a known property of 'app-finance-list-base'.
+1. If 'app-finance-list-base' is an Angular component and it has 'feature' input, then verify that it is included in the '@Component.imports' of this component.
+2. If 'app-finance-list-base' is a Web Component then add 'CUSTOM_ELEMENTS_SCHEMA' to the '@Component.schemas' of this component to suppress this message.
+3. To allow any property add 'NO_ERRORS_SCHEMA' to the '@Component.schemas' of this component.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/features/finance/savings.component.ts:8:36:
+[37m      8 │ ...app-finance-list-base [32m[feature]="'savings'"[37m></app-finance-list-b...
+        ╵                          [32m~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+❯ Changes detected. Rebuilding...
+✔ Changes detected. Rebuilding...
+Application bundle generation failed. [0.118 seconds]
+
+[31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mNG8002: Can't bind to 'feature' since it isn't a known property of 'app-finance-list-base'.
+1. If 'app-finance-list-base' is an Angular component and it has 'feature' input, then verify that it is included in the '@Component.imports' of this component.
+2. If 'app-finance-list-base' is a Web Component then add 'CUSTOM_ELEMENTS_SCHEMA' to the '@Component.schemas' of this component to suppress this message.
+3. To allow any property add 'NO_ERRORS_SCHEMA' to the '@Component.schemas' of this component.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/features/finance/declaration.component.ts:8:36:
+[37m      8 │ ...p-finance-list-base [32m[feature]="'declaration'"[37m></app-finance-list...
+        ╵                        [32m~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mNG8002: Can't bind to 'feature' since it isn't a known property of 'app-finance-list-base'.
+1. If 'app-finance-list-base' is an Angular component and it has 'feature' input, then verify that it is included in the '@Component.imports' of this component.
+2. If 'app-finance-list-base' is a Web Component then add 'CUSTOM_ELEMENTS_SCHEMA' to the '@Component.schemas' of this component to suppress this message.
+3. To allow any property add 'NO_ERRORS_SCHEMA' to the '@Component.schemas' of this component.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/features/finance/home-expenses.component.ts:8:36:
+[37m      8 │ ...<app-finance-list-base [32m[feature]="'home'"[37m></app-finance-list-base>`
+        ╵                           [32m~~~~~~~~~~~~~~~~~~[0m
+
+
+[31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mNG8002: Can't bind to 'feature' since it isn't a known property of 'app-finance-list-base'.
+1. If 'app-finance-list-base' is an Angular component and it has 'feature' input, then verify that it is included in the '@Component.imports' of this component.
+2. If 'app-finance-list-base' is a Web Component then add 'CUSTOM_ELEMENTS_SCHEMA' to the '@Component.schemas' of this component to suppress this message.
+3. To allow any property add 'NO_ERRORS_SCHEMA' to the '@Component.schemas' of this component.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/features/finance/income.component.ts:8:36:
+[37m      8 │ ...app-finance-list-base [32m[feature]="'income'"[37m [isExpense]="false"><...
+        ╵                          [32m~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mNG8002: Can't bind to 'isExpense' since it isn't a known property of 'app-finance-list-base'.
+1. If 'app-finance-list-base' is an Angular component and it has 'isExpense' input, then verify that it is included in the '@Component.imports' of this component.
+2. If 'app-finance-list-base' is a Web Component then add 'CUSTOM_ELEMENTS_SCHEMA' to the '@Component.schemas' of this component to suppress this message.
+3. To allow any property add 'NO_ERRORS_SCHEMA' to the '@Component.schemas' of this component.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/features/finance/income.component.ts:8:57:
+[37m      8 │ ...e [feature]="'income'" [32m[isExpense]="false"[37m></app-finance-list-ba...
+        ╵                           [32m~~~~~~~~~~~~~~~~~~~[0m
+
+
+[31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mNG8002: Can't bind to 'feature' since it isn't a known property of 'app-finance-list-base'.
+1. If 'app-finance-list-base' is an Angular component and it has 'feature' input, then verify that it is included in the '@Component.imports' of this component.
+2. If 'app-finance-list-base' is a Web Component then add 'CUSTOM_ELEMENTS_SCHEMA' to the '@Component.schemas' of this component to suppress this message.
+3. To allow any property add 'NO_ERRORS_SCHEMA' to the '@Component.schemas' of this component.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/features/finance/initial-expenses.component.ts:8:36:
+[37m      8 │ ...inance-list-base [32m[feature]="'initial-expenses'"[37m></app-finance-li...
+        ╵                     [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mNG8002: Can't bind to 'feature' since it isn't a known property of 'app-finance-list-base'.
+1. If 'app-finance-list-base' is an Angular component and it has 'feature' input, then verify that it is included in the '@Component.imports' of this component.
+2. If 'app-finance-list-base' is a Web Component then add 'CUSTOM_ELEMENTS_SCHEMA' to the '@Component.schemas' of this component to suppress this message.
+3. To allow any property add 'NO_ERRORS_SCHEMA' to the '@Component.schemas' of this component.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/features/finance/math-expenses.component.ts:8:36:
+[37m      8 │ ...<app-finance-list-base [32m[feature]="'math'"[37m></app-finance-list-base>`
+        ╵                           [32m~~~~~~~~~~~~~~~~~~[0m
+
+
+[31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mNG8002: Can't bind to 'feature' since it isn't a known property of 'app-finance-list-base'.
+1. If 'app-finance-list-base' is an Angular component and it has 'feature' input, then verify that it is included in the '@Component.imports' of this component.
+2. If 'app-finance-list-base' is a Web Component then add 'CUSTOM_ELEMENTS_SCHEMA' to the '@Component.schemas' of this component to suppress this message.
+3. To allow any property add 'NO_ERRORS_SCHEMA' to the '@Component.schemas' of this component.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/features/finance/savings.component.ts:8:36:
+[37m      8 │ ...app-finance-list-base [32m[feature]="'savings'"[37m></app-finance-list-b...
+        ╵                          [32m~~~~~~~~~~~~~~~~~~~~~[0m

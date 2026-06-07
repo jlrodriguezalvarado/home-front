@@ -1,0 +1,21 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --primary: #009966;
+  --secondary: #00B082;
+  --tertiary: #00C5D3;
+  --scaffold: #F3F6F8;
+}
+
+.dark {
+  --scaffold: #0D1016;
+  --surface: #121722;
+}
+
+body {
+  @apply bg-light-scaffold dark:bg-dark-scaffold text-gray-900 dark:text-gray-100 transition-colors duration-200;
+  margin: 0;
+  font-family: Roboto, "Helvetica Neue", sans-serif;
+}
