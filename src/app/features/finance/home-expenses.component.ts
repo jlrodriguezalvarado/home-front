@@ -5,6 +5,7 @@ import { FinanceListBaseComponent } from './finance-list-base.component';
   selector: 'app-home-expenses',
   standalone: true,
   imports: [FinanceListBaseComponent],
-  template: `<app-finance-list-base [feature]="'home'"></app-finance-list-base>`
+  templateUrl: './home-expenses.component.html',
+  styleUrl: './home-expenses.component.scss',
 })
 export class HomeExpensesComponent {}

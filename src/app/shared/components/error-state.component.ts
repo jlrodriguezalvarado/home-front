@@ -5,16 +5,8 @@ import { CommonModule } from '@angular/common';
   selector: 'app-error-state',
   standalone: true,
   imports: [CommonModule],
-  template: `
-    <div class="flex flex-col items-center justify-center py-12 text-center space-y-4">
-      <div class="text-6xl text-red-500">⚠️</div>
-      <h3 class="text-xl font-bold text-red-600">{{ title }}</h3>
-      <p class="text-gray-500 max-w-xs">{{ message }}</p>
-      <button (click)="retry.emit()" class="px-6 py-2 bg-primary text-white font-bold rounded-lg hover:bg-secondary">
-        Retry
-      </button>
-    </div>
-  `
+  templateUrl: './error-state.component.html',
+  styleUrl: './error-state.component.scss',
 })
 export class ErrorStateComponent {
   @Input() title = 'Something went wrong';

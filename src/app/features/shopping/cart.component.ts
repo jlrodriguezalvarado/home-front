@@ -1,132 +1,299 @@
-import { Component, inject } from '@angular/core';
+import { Component, effect, inject, OnInit, computed, signal } from '@angular/core';
+
 import { CommonModule } from '@angular/common';
+
 import { FormsModule } from '@angular/forms';
+
 import { CartService } from './cart.service';
+
 import { PurchaseRepository } from './purchase.repository';
+
 import { I18nService } from '../../core/i18n/i18n.service';
+
 import { Router } from '@angular/router';
 
+import { CommerceRepository } from '../commerce/commerce.repository';
+import { ProductFilterStorageService } from '../products/product-filter-storage.service';
+
+import { Commerce } from '../../core/api/models';
+
+import { CartItem } from '../../core/models/shopping.models';
+
+import { QuantityEditorComponent } from '../../shared/components/quantity-editor.component';
+
+import {
+
+  formatPrice,
+
+  formatUnitPrice,
+
+  lineTotal,
+
+  moneyDecimalString,
+
+  quantityStringForPurchase,
+
+} from './utils/price.utils';
+
+import { isPresentationUnitKg } from './utils/presentation-unit.utils';
+import { formatCartListMessage } from './utils/cart-list-message.utils';
+import { ToastService } from '../../shared/services/toast.service';
+import { ConfirmService } from '../../shared/services/confirm.service';
+
+
+
 @Component({
+
   selector: 'app-cart',
+
   standalone: true,
-  imports: [CommonModule, FormsModule],
-  template: `
-    <div class="space-y-6 pb-20 md:pb-0">
-      <div class="flex items-center justify-between">
-        <h1 class="text-3xl font-bold">{{ i18n.t('shoppingCart') }}</h1>
-        <div class="flex gap-2" *ngIf="cart.items().length > 0">
-           <button (click)="cart.updatePrices()" class="px-4 py-2 bg-secondary text-white rounded-lg text-sm font-bold">
-             Update Prices
-           </button>
-           <select [(ngModel)]="filterCommerce" class="px-4 py-2 rounded-lg border dark:border-gray-800 bg-white dark:bg-dark-surface text-sm">
-             <option value="">All Commerces</option>
-             <option *ngFor="let group of cart.totalByCommerce()" [value]="group.commerceName">{{ group.commerceName }}</option>
-           </select>
-        </div>
-      </div>
 
-      <div *ngIf="cart.items().length === 0" class="flex flex-col items-center justify-center py-20 text-gray-500">
-        <div class="text-6xl mb-4">🛒</div>
-        <p>Your cart is empty</p>
-      </div>
+  imports: [CommonModule, FormsModule, QuantityEditorComponent],
 
-      <div *ngFor="let group of filteredGroups()" class="bg-white dark:bg-dark-surface rounded-2xl shadow-sm border dark:border-gray-800 overflow-hidden">
-        <div class="bg-gray-50 dark:bg-gray-800/50 px-6 py-3 border-b dark:border-gray-800 flex justify-between items-center">
-          <span class="font-bold">{{ group.commerceName }}</span>
-          <span class="text-primary font-bold">{{ group.subtotal }}</span>
-        </div>
-        <div class="divide-y dark:divide-gray-800">
-          <div *ngFor="let item of group.items" class="p-6 flex items-center gap-4">
-            <div class="w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-lg overflow-hidden">
-              <img *ngIf="item.product.image" [src]="item.product.image" class="w-full h-full object-cover">
-            </div>
-            <div class="flex-1">
-              <div class="font-medium">{{ item.product.name }}</div>
-              <div class="text-sm text-gray-500">
-                {{ item.product.price }} / {{ item.product.unit }}
-                <span class="ml-2 text-xs bg-gray-100 dark:bg-gray-800 px-1 rounded">{{ item.product.unit === 'kg' ? 'WEIGHT' : 'UNIT' }}</span>
-              </div>
-            </div>
-            <div class="flex items-center gap-2">
-              <button (click)="updateQty(item.product.id, item.quantity, -1)" class="w-8 h-8 rounded-full border dark:border-gray-700 flex items-center justify-center">-</button>
-              <input type="text" [(ngModel)]="item.quantity" (change)="cart.updateQuantity(item.product.id, item.quantity)"
-                     class="w-12 text-center bg-transparent border-b dark:border-gray-700">
-              <button (click)="updateQty(item.product.id, item.quantity, 1)" class="w-8 h-8 rounded-full border dark:border-gray-700 flex items-center justify-center">+</button>
-            </div>
-            <button (click)="cart.removeFromCart(item.product.id)" class="text-red-500 ml-4">×</button>
-          </div>
-        </div>
-        <div class="p-4 bg-gray-50 dark:bg-gray-800/30 flex flex-wrap gap-2">
-          <button (click)="copyMessage(group)" class="px-4 py-2 bg-gray-200 dark:bg-gray-700 rounded-lg text-sm font-bold">
-            Copy
-          </button>
-          <button (click)="sendWhatsApp(group)" class="px-4 py-2 bg-green-500 text-white rounded-lg text-sm font-bold">
-            WhatsApp
-          </button>
-          <button (click)="confirmPurchase(group)" class="flex-1 bg-primary text-white py-2 rounded-lg font-bold hover:bg-secondary">
-            {{ i18n.t('confirmPurchase') }}
-          </button>
-        </div>
-      </div>
-    </div>
-  `
+  templateUrl: './cart.component.html',
+  styleUrl: './cart.component.scss',
 })
-export class CartComponent {
+
+export class CartComponent implements OnInit {
+
   cart = inject(CartService);
+
   i18n = inject(I18nService);
-  filterCommerce = '';
+
   purchaseRepo = inject(PurchaseRepository);
+
+  commerceRepo = inject(CommerceRepository);
+
+  productFilter = inject(ProductFilterStorageService);
+
   router = inject(Router);
+  toast = inject(ToastService);
+  confirm = inject(ConfirmService);
 
-  filteredGroups() {
-    const groups = this.cart.totalByCommerce();
-    if (!this.filterCommerce) return groups;
-    return groups.filter((g) => g.commerceName === this.filterCommerce);
+
+
+  commerces = signal<Commerce[]>([]);
+
+  filterCommerceId = signal<string | null>(null);
+
+
+
+  commerceIds = computed(() => this.cart.commerceIds());
+
+  sortedCommerceIds = computed(() => {
+    const ids = this.commerceIds();
+    const commerces = this.commerces();
+    return [...ids].sort((a, b) => {
+      const nameA = commerces.find((c) => c.id === a)?.name ?? a;
+      const nameB = commerces.find((c) => c.id === b)?.name ?? b;
+      return nameA.localeCompare(nameB);
+    });
+  });
+
+  visibleItems = computed(() => {
+    const id = this.filterCommerceId();
+    if (id == null) return [];
+    return this.itemsForCommerce(id);
+  });
+
+  itemsForCommerce(commerceId: string): CartItem[] {
+    return this.cart.itemsByCommerce()[commerceId] ?? [];
   }
 
-  updateQty(id: string, current: string, delta: number) {
-    const step = 1; // Could be 0.1 for kg if needed
-    const next = Math.max(0, parseFloat(current) + delta * step).toString();
-    this.cart.updateQuantity(id, next);
+
+
+  visibleCount = computed(() => this.cart.visibleQuantityCountFor(this.visibleItems()));
+
+
+
+  isPresentationUnitKg = isPresentationUnitKg;
+
+  formatUnitPrice = formatUnitPrice;
+
+
+
+  constructor() {
+    effect(() => {
+      const ids = this.cart.commerceIds();
+      if (ids.length === 0) {
+        this.filterCommerceId.set(null);
+        return;
+      }
+      const current = this.filterCommerceId();
+      if (current == null || !ids.includes(current)) {
+        this.applyDefaultCommerceFilter();
+      }
+    });
   }
 
-  confirmPurchase(group: any) {
-    if (!confirm(this.i18n.t('confirmPurchase') + '?')) return;
+  ngOnInit() {
+    this.commerceRepo.list().subscribe((res) => {
+      this.commerces.set(res);
+      this.repairAndApplyCommerceFilter();
+    });
+    this.repairAndApplyCommerceFilter();
+  }
+
+  private repairAndApplyCommerceFilter(): void {
+    const productCommerceId = this.productFilter.load()?.commerceId ?? null;
+    this.cart.repairMissingCommerceIds(productCommerceId);
+    this.applyDefaultCommerceFilter();
+  }
+
+  private applyDefaultCommerceFilter(): void {
+    const ids = this.cart.commerceIds();
+    if (ids.length === 0) {
+      this.filterCommerceId.set(null);
+      return;
+    }
+    const effective = this.cart.resolveEffectiveFilterCommerceId();
+    this.filterCommerceId.set(effective);
+  }
+
+
+
+  onFilterCommerceChange(commerceId: string) {
+
+    this.filterCommerceId.set(commerceId);
+
+    this.cart.setFilterCommerceId(commerceId);
+
+  }
+
+
+
+  commerceName(commerceId: string): string {
+    const trimmed = commerceId?.trim();
+    if (!trimmed) return '';
+    return this.commerces().find((c) => c.id === trimmed)?.name ?? trimmed;
+  }
+
+  commerceCurrency(commerceId: string): string {
+    return this.commerces().find((c) => c.id === commerceId)?.currencyCode ?? '';
+  }
+
+  resolveCurrency(items: CartItem[], commerceId: string): string {
+    return this.cart.visibleTotalCurrency(items) ?? this.commerceCurrency(commerceId);
+  }
+
+  formatLineTotal(item: CartItem): string {
+    const currency =
+      item.product.originalCurrency || this.commerceCurrency(item.product.commerceId);
+    return formatPrice(lineTotal(item), currency);
+  }
+
+  formatSubtotal(items: CartItem[], commerceId: string): string {
+    const total = this.cart.visibleTotal(items);
+    return formatPrice(total, this.resolveCurrency(items, commerceId));
+  }
+
+  formatFooterTotal(): string {
+    const commerceId = this.filterCommerceId();
+    const items = this.visibleItems();
+    const total = this.cart.visibleTotal(items);
+    const currency = commerceId ? this.resolveCurrency(items, commerceId) : '';
+    return formatPrice(total, currency);
+  }
+
+  async confirmPurchase() {
+    const items = this.visibleItems();
+    if (items.length === 0) return;
+
+    const confirmed = await this.confirm.confirm(`${this.i18n.t('confirmPurchase')}?`, {
+      confirmLabel: this.i18n.t('confirmPurchase'),
+    });
+    if (!confirmed) return;
+
+    const commerceId = this.filterCommerceId()!;
 
     const data = {
-      commerce: group.items[0].product.commerce.id,
-      items: group.items.map((i: any) => ({
-        product: i.product.id,
-        quantity: i.quantity,
-        price: i.product.price
-      }))
+
+      commerce: commerceId,
+
+      items: items.map((i) => ({
+
+        product: i.product.apiId,
+
+        quantity: quantityStringForPurchase(i.quantity, i.product.presentationUnit),
+
+        price: moneyDecimalString(i.product.originalPrice),
+
+      })),
+
     };
 
+
+
     this.purchaseRepo.create(data).subscribe({
+
       next: () => {
-        group.items.forEach((i: any) => this.cart.removeFromCart(i.product.id));
+
+        this.cart.removeProducts(items.map((i) => i.product.id));
+
+        if (this.cart.items().length === 0) {
+
+          this.filterCommerceId.set(null);
+
+          this.cart.setFilterCommerceId(null);
+
+        } else {
+
+          this.filterCommerceId.set(this.cart.resolveEffectiveFilterCommerceId());
+
+        }
+
         this.router.navigate(['/purchases']);
+
       },
-      error: (err) => alert('Error creating purchase'),
+
+      error: () =>
+        this.toast.error(
+          this.i18n.lang() === 'en' ? 'Error creating purchase' : 'Error al crear la compra',
+        ),
+
     });
+
   }
 
-  private formatMessage(group: any): string {
-    let msg = `*${group.commerceName}*\n\n`;
-    group.items.forEach((item: any) => {
-      msg += `- ${item.product.name}: ${item.quantity} ${item.product.unit} x ${item.product.price}\n`;
-    });
-    msg += `\n*Total: ${group.subtotal}*`;
-    return msg;
+
+
+  private formatMessage(): string {
+    return formatCartListMessage(this.visibleItems());
   }
 
-  copyMessage(group: any) {
-    const msg = this.formatMessage(group);
-    navigator.clipboard.writeText(msg).then(() => alert('Message copied to clipboard'));
+
+
+  copyMessage() {
+
+    navigator.clipboard.writeText(this.formatMessage()).then(() =>
+      this.toast.success(
+        this.i18n.lang() === 'en' ? 'Message copied to clipboard' : 'Mensaje copiado',
+      ),
+    );
+
   }
 
-  sendWhatsApp(group: any) {
-    const msg = encodeURIComponent(this.formatMessage(group));
+
+
+  sendWhatsApp() {
+    const msg = encodeURIComponent(this.formatMessage());
     window.open(`https://wa.me/?text=${msg}`, '_blank');
   }
+
+  async clearCart() {
+    if (this.cart.items().length === 0) return;
+
+    const confirmed = await this.confirm.confirm(this.i18n.t('clearCartConfirm'), {
+      title: this.i18n.t('clearCart'),
+      confirmLabel: this.i18n.t('clearCart'),
+      variant: 'danger',
+    });
+    if (!confirmed) return;
+
+    this.cart.clearCart();
+    this.filterCommerceId.set(null);
+    this.cart.setFilterCommerceId(null);
+    this.toast.success(this.i18n.t('cartCleared'));
+  }
 }
+

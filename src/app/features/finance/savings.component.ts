@@ -5,6 +5,7 @@ import { FinanceListBaseComponent } from './finance-list-base.component';
   selector: 'app-savings',
   standalone: true,
   imports: [FinanceListBaseComponent],
-  template: `<app-finance-list-base [feature]="'savings'"></app-finance-list-base>`
+  templateUrl: './savings.component.html',
+  styleUrl: './savings.component.scss',
 })
 export class SavingsComponent {}

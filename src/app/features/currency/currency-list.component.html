@@ -1,0 +1,52 @@
+
+<div class="space-y-lg">
+  <div class="flex items-center justify-between">
+    <h1 class="page-title">{{ i18n.t('currencies') }}</h1>
+    <button (click)="openDialog()" class="btn-primary flex items-center gap-2">
+      <span class="material-symbols-outlined text-[20px]">add</span>
+      Add Currency
+    </button>
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-md">
+    <div *ngFor="let c of currencies()" class="card-surface p-lg hover:shadow-card-hover transition-shadow">
+      <div class="flex justify-between items-start">
+        <div>
+          <div class="text-headline-md text-on-surface tabular-nums">{{ c.code }}</div>
+          <div class="text-body-md text-on-surface-variant">{{ c.name }}</div>
+        </div>
+        <div class="text-right">
+           <div class="text-headline-md text-primary">{{ c.symbol }}</div>
+           <div class="mt-md flex gap-sm">
+             <button (click)="openDialog(c)" class="text-primary text-label-md hover:underline">Edit</button>
+             <button (click)="deleteCurrency(c)" class="text-error text-label-md hover:underline">{{ i18n.t('delete') }}</button>
+           </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div *ngIf="showDialog" class="fixed inset-0 bg-black/50 flex items-center justify-center p-md z-50">
+    <div class="bg-surface-container-lowest w-full max-w-md p-xl rounded-[24px] border border-outline-variant shadow-card-hover">
+      <h2 class="text-title-lg text-on-surface mb-lg">{{ editingId ? 'Edit' : 'Add' }} Currency</h2>
+      <div class="space-y-md">
+        <div>
+          <label class="text-label-lg text-on-surface-variant block mb-xs">Code</label>
+          <input type="text" [(ngModel)]="form.code" [disabled]="!!editingId" class="input-outlined uppercase">
+        </div>
+        <div>
+          <label class="text-label-lg text-on-surface-variant block mb-xs">Name</label>
+          <input type="text" [(ngModel)]="form.name" class="input-outlined">
+        </div>
+        <div>
+          <label class="text-label-lg text-on-surface-variant block mb-xs">Symbol</label>
+          <input type="text" [(ngModel)]="form.symbol" class="input-outlined">
+        </div>
+        <div class="flex gap-md pt-md">
+           <button (click)="closeDialog()" class="flex-1 py-3 border border-outline-variant rounded-xl text-label-lg">{{ i18n.t('cancel') }}</button>
+           <button (click)="save()" class="flex-1 btn-primary py-3">{{ i18n.t('save') }}</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

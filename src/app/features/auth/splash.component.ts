@@ -5,11 +5,8 @@ import { AuthService } from '../../core/auth/auth.service';
 @Component({
   selector: 'app-splash',
   standalone: true,
-  template: `
-    <div class="h-screen flex flex-col items-center justify-center bg-white dark:bg-dark-scaffold">
-      <div class="text-4xl font-bold text-primary animate-pulse">Home Manager</div>
-    </div>
-  `
+  templateUrl: './splash.component.html',
+  styleUrl: './splash.component.scss',
 })
 export class SplashComponent implements OnInit {
   auth = inject(AuthService);

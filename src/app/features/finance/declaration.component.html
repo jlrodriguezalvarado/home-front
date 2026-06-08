@@ -1,0 +1,82 @@
+
+<div class="space-y-lg">
+  <div class="flex items-center justify-between gap-md">
+    <div>
+      <h2 class="text-title-lg text-on-surface">Declaration</h2>
+      <p class="text-body-md text-on-surface-variant">
+        {{ i18n.lang() === 'en'
+          ? 'Not included in totals — for reporting only'
+          : 'No se incluye en totales — solo para reportes' }}
+      </p>
+    </div>
+    <button (click)="openDialog()" class="btn-primary flex items-center gap-2 shrink-0">
+      <span class="material-symbols-outlined text-[20px]">add</span>
+      {{ i18n.t('newEntry') }}
+    </button>
+  </div>
+
+  <div class="card-surface divide-y divide-outline-variant overflow-hidden">
+    <div *ngFor="let item of entries()" class="p-md cursor-pointer hover:bg-surface-container" (click)="openDialog(item)">
+      <div class="flex justify-between items-start gap-md">
+        <div class="min-w-0 flex-1">
+          <div class="text-label-lg text-on-surface">{{ item.title }}</div>
+          <div class="text-body-md text-on-surface-variant mt-xs line-clamp-2">{{ item.content }}</div>
+          <div *ngIf="item.generalExpenseCategoryName" class="text-body-sm text-on-surface-variant mt-xs">
+            {{ item.generalExpenseCategoryName }}
+          </div>
+        </div>
+        <div *ngIf="item.amount" class="text-numeral-md tabular-nums font-semibold text-on-surface shrink-0">
+          {{ formatMoney(item.amount) }}
+        </div>
+      </div>
+    </div>
+    <div *ngIf="entries().length === 0" class="p-xl text-center text-on-surface-variant text-body-md">
+      {{ i18n.lang() === 'en' ? 'No declarations' : 'Sin declaraciones' }}
+    </div>
+  </div>
+
+  <div *ngIf="showDialog" class="fixed inset-0 bg-black/50 flex items-center justify-center p-md z-50">
+    <div class="bg-surface-container-lowest w-full max-w-lg p-xl rounded-[24px] border border-outline-variant shadow-card-hover max-h-[90vh] overflow-y-auto">
+      <h2 class="text-title-lg text-on-surface mb-lg">
+        {{ editingId
+          ? (i18n.lang() === 'en' ? 'Edit declaration' : 'Editar declaración')
+          : (i18n.lang() === 'en' ? 'Add declaration' : 'Agregar declaración') }}
+      </h2>
+      <div class="space-y-md">
+        <div>
+          <label class="text-label-lg text-on-surface-variant block mb-xs">{{ i18n.lang() === 'en' ? 'Title' : 'Título' }}</label>
+          <input type="text" [(ngModel)]="form.title" class="input-outlined w-full">
+        </div>
+        <div>
+          <label class="text-label-lg text-on-surface-variant block mb-xs">{{ i18n.lang() === 'en' ? 'Content' : 'Contenido' }}</label>
+          <textarea [(ngModel)]="form.content" rows="4" class="input-outlined w-full"></textarea>
+        </div>
+        <div>
+          <label class="text-label-lg text-on-surface-variant block mb-xs">
+            {{ i18n.lang() === 'en' ? 'Amount (optional)' : 'Monto (opcional)' }}
+          </label>
+          <input type="number" step="0.01" [(ngModel)]="form.amount" class="input-outlined w-full">
+        </div>
+        <div>
+          <label class="text-label-lg text-on-surface-variant block mb-xs">{{ i18n.t('category') }}</label>
+          <select [(ngModel)]="form.generalExpenseCategoryId" class="input-outlined w-full">
+            <option value="">{{ i18n.lang() === 'en' ? 'No category' : 'Sin categoría' }}</option>
+            <option *ngFor="let cat of categories()" [value]="cat.id">{{ cat.name }}</option>
+          </select>
+        </div>
+        <div>
+          <label class="text-label-lg text-on-surface-variant block mb-xs">
+            {{ i18n.lang() === 'en' ? 'Notes (optional)' : 'Notas (opcional)' }}
+          </label>
+          <textarea [(ngModel)]="form.notes" rows="2" class="input-outlined w-full"></textarea>
+        </div>
+        <div class="flex gap-md pt-md">
+          <button (click)="closeDialog()" class="flex-1 py-3 border border-outline-variant rounded-xl text-label-lg">
+            {{ i18n.t('cancel') }}
+          </button>
+          <button (click)="save()" [disabled]="saving" class="flex-1 btn-primary py-3">{{ i18n.t('save') }}</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

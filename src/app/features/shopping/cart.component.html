@@ -1,0 +1,234 @@
+
+
+<div class="space-y-lg pb-44 md:pb-0">
+
+  <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-md">
+
+    <div>
+      <h1 class="page-title">{{ i18n.t('shoppingCart') }}</h1>
+      <p *ngIf="visibleItems().length > 0" class="text-body-md text-on-surface-variant mt-xs">
+        {{ visibleCount() }} {{ i18n.lang() === 'en' ? 'items' : 'artículos' }}
+        <span *ngIf="filterCommerceId()">· {{ commerceName(filterCommerceId()!) }}</span>
+      </p>
+    </div>
+
+    <div class="flex flex-wrap gap-sm w-full md:w-auto" *ngIf="sortedCommerceIds().length > 0">
+
+      <button (click)="clearCart()"
+              class="py-2 px-md text-label-md flex-1 md:flex-none rounded-xl border border-error text-error hover:bg-error-container transition-colors flex items-center justify-center gap-1">
+        <span class="material-symbols-outlined text-[18px]">delete_sweep</span>
+        {{ i18n.t('clearCart') }}
+      </button>
+
+      <button (click)="cart.updatePrices()" class="btn-secondary py-2 px-md text-label-md flex-1 md:flex-none">
+
+        {{ i18n.lang() === 'en' ? 'Update Prices' : 'Actualizar precios' }}
+
+      </button>
+
+      <select
+
+        [ngModel]="filterCommerceId()"
+
+        (ngModelChange)="onFilterCommerceChange($event)"
+
+        class="input-outlined py-2 px-md flex-1 md:flex-none md:w-auto text-body-md min-w-0"
+
+      >
+
+        <option *ngFor="let id of sortedCommerceIds()" [ngValue]="id">{{ commerceName(id) }}</option>
+
+      </select>
+
+    </div>
+
+  </div>
+
+
+
+  <div *ngIf="cart.items().length === 0" class="flex flex-col items-center justify-center py-xxl text-on-surface-variant">
+
+    <span class="material-symbols-outlined text-[64px] mb-md">shopping_cart</span>
+
+    <p class="text-body-lg">{{ i18n.lang() === 'en' ? 'Your cart is empty' : 'Tu carrito está vacío' }}</p>
+
+  </div>
+
+
+
+  <div *ngIf="filterCommerceId() as commerceId"
+       class="card-surface overflow-hidden transition-shadow ring-2 ring-primary">
+
+    <div class="bg-surface-container px-lg py-md border-b border-outline-variant flex justify-between items-center">
+
+      <span class="text-label-lg text-on-surface flex items-center gap-2">
+
+        <span class="material-symbols-outlined text-primary">storefront</span>
+
+        {{ commerceName(commerceId) }}
+
+        <span *ngIf="commerceCurrency(commerceId)"
+              class="text-label-md bg-surface px-2 py-0.5 rounded-full text-on-surface-variant">
+          {{ commerceCurrency(commerceId) }}
+        </span>
+
+      </span>
+
+      <span class="text-primary text-numeral-md tabular-nums font-semibold">
+
+        {{ formatSubtotal(itemsForCommerce(commerceId), commerceId) }}
+
+      </span>
+
+    </div>
+
+
+
+    <div class="divide-y divide-outline-variant">
+
+      <div *ngFor="let item of itemsForCommerce(commerceId)"
+           class="p-md md:p-lg flex flex-col sm:flex-row sm:items-center gap-md
+                  md:flex-row md:items-center">
+
+        <div class="flex gap-md flex-1 min-w-0">
+
+        <div class="w-20 h-20 md:w-16 md:h-16 bg-surface-container rounded-xl overflow-hidden shrink-0">
+
+          <img *ngIf="item.product.imageUrl" [src]="item.product.imageUrl" class="w-full h-full object-cover">
+
+          <div *ngIf="!item.product.imageUrl" class="w-full h-full flex items-center justify-center">
+
+            <span class="material-symbols-outlined text-on-surface-variant">image</span>
+
+          </div>
+
+        </div>
+
+        <div class="flex-1 min-w-0">
+
+          <div class="text-label-lg text-on-surface truncate">{{ item.product.name }}</div>
+
+          <div class="text-body-md text-on-surface-variant">
+
+            {{ formatUnitPrice(item.product) }}
+
+            <span class="ml-2 text-label-md bg-surface-container px-2 py-0.5 rounded-full">
+
+              {{ isPresentationUnitKg(item.product.presentationUnit) ? 'KG' : 'UNIT' }}
+
+            </span>
+
+          </div>
+
+          <div class="text-primary text-numeral-md tabular-nums mt-1">
+
+            {{ formatLineTotal(item) }}
+
+          </div>
+
+        </div>
+
+        </div>
+
+        <div class="flex items-center justify-between sm:justify-end gap-sm pl-[92px] sm:pl-0 md:pl-0">
+
+        <app-quantity-editor
+
+          [product]="item.product"
+
+          [quantity]="item.quantity"
+
+          (setQuantity)="cart.setQuantity(item.product.id, $event)"
+
+        />
+
+        <button (click)="cart.removeProduct(item.product.id)" class="text-error hover:opacity-80 p-2">
+
+          <span class="material-symbols-outlined">delete</span>
+
+        </button>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- Desktop actions for filtered commerce -->
+  <div *ngIf="visibleItems().length > 0"
+       class="hidden md:flex card-surface p-md flex-wrap gap-sm items-center justify-between">
+
+    <div class="text-body-md text-on-surface-variant">
+
+      <span class="text-on-surface font-medium">{{ commerceName(filterCommerceId()!) }}</span>
+
+      ·
+
+      {{ visibleCount() }}
+
+      {{ i18n.lang() === 'en' ? 'items' : 'artículos' }}
+
+      ·
+
+      <span class="text-primary font-semibold tabular-nums">{{ formatFooterTotal() }}</span>
+
+    </div>
+
+    <div class="flex flex-wrap gap-sm">
+
+      <button (click)="copyMessage()" class="px-md py-2 bg-surface-container rounded-xl text-label-lg hover:bg-surface-container-high transition-colors">
+
+        {{ i18n.lang() === 'en' ? 'Copy' : 'Copiar' }}
+
+      </button>
+
+      <button (click)="sendWhatsApp()" class="px-md py-2 bg-secondary text-on-secondary rounded-xl text-label-lg">
+
+        WhatsApp
+
+      </button>
+
+      <button (click)="confirmPurchase()" class="flex-1 btn-primary py-2 min-w-[140px]">
+
+        {{ i18n.t('confirmPurchase') }}
+
+      </button>
+
+    </div>
+
+  </div>
+
+  <!-- Mobile summary for filtered commerce -->
+  <div *ngIf="visibleItems().length > 0" class="md:hidden card-surface p-lg border-l-4 border-l-secondary">
+    <div class="text-label-md text-on-surface-variant mb-xs">{{ commerceName(filterCommerceId()!) }}</div>
+    <div class="flex justify-between items-center">
+      <span class="text-title-lg text-on-surface font-bold">{{ i18n.t('subtotal') }}</span>
+      <span class="text-headline-md text-primary tabular-nums font-bold">{{ formatFooterTotal() }}</span>
+    </div>
+  </div>
+
+</div>
+
+<!-- Mobile sticky checkout -->
+<div *ngIf="visibleItems().length > 0"
+     class="md:hidden fixed bottom-20 left-0 right-0 z-30 p-md bg-surface/90 glass border-t border-outline-variant safe-bottom space-y-sm">
+  <div class="flex gap-sm">
+    <button (click)="copyMessage()"
+            class="flex-1 px-md py-3 bg-surface-container rounded-xl text-label-lg flex items-center justify-center gap-2 active:scale-[0.98] transition-transform">
+      <span class="material-symbols-outlined text-[20px]">content_copy</span>
+      {{ i18n.lang() === 'en' ? 'Copy' : 'Copiar' }}
+    </button>
+    <button (click)="sendWhatsApp()"
+            class="flex-1 px-md py-3 bg-secondary text-on-secondary rounded-xl text-label-lg flex items-center justify-center gap-2 active:scale-[0.98] transition-transform">
+      <span class="material-symbols-outlined text-[20px]">share</span>
+      WhatsApp
+    </button>
+  </div>
+  <button (click)="confirmPurchase()"
+          class="w-full btn-primary py-4 flex items-center justify-center gap-2 active:scale-[0.98] transition-transform">
+    {{ i18n.t('confirmPurchase') }}
+    <span class="material-symbols-outlined text-[20px]">chevron_right</span>
+  </button>
+</div>

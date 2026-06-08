@@ -5,6 +5,7 @@ import { FinanceListBaseComponent } from './finance-list-base.component';
   selector: 'app-math-expenses',
   standalone: true,
   imports: [FinanceListBaseComponent],
-  template: `<app-finance-list-base [feature]="'math'"></app-finance-list-base>`
+  templateUrl: './math-expenses.component.html',
+  styleUrl: './math-expenses.component.scss',
 })
 export class MathExpensesComponent {}

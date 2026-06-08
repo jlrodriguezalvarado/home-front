@@ -7,58 +7,8 @@ import JSZip from 'jszip';
   selector: 'app-mosaic',
   standalone: true,
   imports: [CommonModule],
-  template: `
-    <div class="space-y-6 pb-20">
-      <h1 class="text-3xl font-bold">{{ i18n.t('mosaicGrid') }}</h1>
-
-      <div class="flex flex-col md:flex-row gap-8">
-        <!-- Controls -->
-        <div class="w-full md:w-64 space-y-6">
-          <div class="p-6 bg-white dark:bg-dark-surface rounded-2xl border dark:border-gray-800 shadow-sm">
-            <label class="block w-full py-3 bg-primary text-white text-center rounded-lg cursor-pointer font-bold">
-              Upload Image
-              <input type="file" (change)="onFileSelected($event)" accept="image/*" class="hidden">
-            </label>
-
-            <div class="mt-6 space-y-4">
-              <p class="text-sm font-medium">Presets</p>
-              <div class="grid grid-cols-2 gap-2">
-                <button *ngFor="let p of presets" (click)="setPreset(p.rows, p.cols)"
-                        [class.bg-primary]="rows() === p.rows && cols() === p.cols"
-                        [class.text-white]="rows() === p.rows && cols() === p.cols"
-                        class="p-2 border dark:border-gray-700 rounded-lg text-sm transition-colors">
-                  {{ p.rows }}x{{ p.cols }}
-                </button>
-              </div>
-            </div>
-
-            <button *ngIf="imageSrc()" (click)="generateTiles()" [disabled]="generating()"
-                    class="w-full mt-6 py-3 border-2 border-primary text-primary font-bold rounded-lg hover:bg-primary hover:text-white transition-colors">
-              {{ generating() ? '...' : 'Download ZIP' }}
-            </button>
-          </div>
-        </div>
-
-        <!-- Preview -->
-        <div class="flex-1 min-h-[400px] bg-gray-100 dark:bg-gray-800 rounded-2xl overflow-hidden relative flex items-center justify-center p-8">
-          <div *ngIf="!imageSrc()" class="text-gray-400">No image selected</div>
-
-          <div *ngIf="imageSrc()" class="relative border-4 border-dashed border-primary/30"
-               [style.width.px]="previewWidth" [style.height.px]="previewHeight">
-            <img [src]="imageSrc()" class="w-full h-full object-cover opacity-50">
-
-            <!-- Grid overlay -->
-            <div class="absolute inset-0 grid" [style.gridTemplateRows]="'repeat(' + rows() + ', 1fr)'"
-                 [style.gridTemplateColumns]="'repeat(' + cols() + ', 1fr)'">
-              <div *ngFor="let i of gridArray()" class="border border-white/50 bg-primary/10"></div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <canvas #canvas class="hidden"></canvas>
-    </div>
-  `
+  templateUrl: './mosaic.component.html',
+  styleUrl: './mosaic.component.scss',
 })
 export class MosaicComponent {
   i18n = inject(I18nService);
@@ -75,7 +25,7 @@ export class MosaicComponent {
 
   presets = [
     { rows: 3, cols: 3 },
-    { rows: 3, cols: 2 },
+    { rows: 2, cols: 3 },
     { rows: 3, cols: 1 },
     { rows: 2, cols: 2 },
   ];

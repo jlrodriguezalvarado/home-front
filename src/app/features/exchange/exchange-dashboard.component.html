@@ -1,0 +1,58 @@
+
+<div class="space-y-lg">
+  <h1 class="page-title">{{ i18n.t('exchangeRates') }}</h1>
+
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-lg">
+    <div class="card-surface p-lg">
+      <h2 class="text-title-lg text-on-surface mb-md">Calculator</h2>
+      <div class="space-y-md">
+        <div>
+          <label class="text-label-lg text-on-surface-variant block mb-xs">Amount</label>
+          <input type="number" [(ngModel)]="amount" (ngModelChange)="calculate()" class="input-outlined">
+        </div>
+        <div class="flex gap-md items-end">
+          <div class="flex-1">
+            <label class="text-label-lg text-on-surface-variant block mb-xs">From</label>
+            <input type="text" [(ngModel)]="from" (ngModelChange)="calculate()" class="input-outlined uppercase">
+          </div>
+          <button (click)="swap()" class="p-2 mb-1 bg-surface-container rounded-full hover:bg-surface-container-high transition-colors">
+            <span class="material-symbols-outlined">swap_horiz</span>
+          </button>
+          <div class="flex-1">
+            <label class="text-label-lg text-on-surface-variant block mb-xs">To</label>
+            <input type="text" [(ngModel)]="to" (ngModelChange)="calculate()" class="input-outlined uppercase">
+          </div>
+        </div>
+        <div class="p-lg bg-secondary-container/30 rounded-xl text-center">
+          <div class="text-label-md text-on-secondary-container mb-xs">Result</div>
+          <div class="text-display-lg text-primary tabular-nums">{{ result() }}</div>
+        </div>
+
+        <div class="pt-md space-y-md">
+           <div>
+             <label class="text-label-lg text-on-surface-variant block mb-xs">Notes</label>
+             <textarea [(ngModel)]="notes" class="input-outlined" rows="2"></textarea>
+           </div>
+           <button (click)="saveExchange()" [disabled]="!canSave()" class="w-full btn-primary disabled:opacity-50">
+             Save Exchange
+           </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card-surface p-lg">
+      <h2 class="text-title-lg text-on-surface mb-md">Latest Rates</h2>
+      <div class="divide-y divide-outline-variant">
+        <div *ngFor="let rate of rates()" class="py-md flex justify-between items-center">
+          <div class="text-label-lg text-on-surface">
+            <span>{{ rate.from_currency }}</span>
+            <span class="mx-2 text-on-surface-variant">→</span>
+            <span>{{ rate.to_currency }}</span>
+          </div>
+          <span class="text-numeral-md tabular-nums text-primary font-semibold">{{ rate.rate }}</span>
+        </div>
+        <div *ngIf="rates().length === 0" class="py-xl text-center text-on-surface-variant text-body-md">No rates found</div>
+      </div>
+    </div>
+  </div>
+</div>

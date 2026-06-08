@@ -1,8 +1,9 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { environment } from '../../../environments/environment';
+import { HttpParams } from '@angular/common/http';
 import { Observable, map } from 'rxjs';
 import { PaginatedResponse } from '../../core/api/models';
+import { ApiService } from '../../core/api/api.service';
+import { API_ENDPOINTS } from '../../core/api/endpoints';
 
 export interface Purchase {
   id: string;
@@ -11,36 +12,51 @@ export interface Purchase {
   commerceName: string;
   items: any[];
   isFavorite: boolean;
+  favoriteName?: string;
 }
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class PurchaseRepository {
-  private http = inject(HttpClient);
-  private readonly baseUrl = `${environment.API_BASE_URL}purchases/`;
+  private readonly api = inject(ApiService);
 
-  list(page: number = 1): Observable<PaginatedResponse<Purchase>> {
-    return this.http.get<any>(this.baseUrl, { params: { page: page.toString() } }).pipe(
-      map(resp => ({
+  list(page = 1, favorite?: boolean): Observable<PaginatedResponse<Purchase>> {
+    let params = new HttpParams().set('page', page.toString());
+    if (favorite) params = params.set('favorite', 'true');
+
+    return this.api.get<any>(API_ENDPOINTS.purchases.list, { params }).pipe(
+      map((resp) => ({
         ...resp,
-        results: resp.results.map((p: any) => ({
-          id: p.id,
-          date: p.date,
-          total: p.total,
-          commerceName: p.commerce_name,
-          items: p.items,
-          isFavorite: p.is_favorite
-        }))
-      }))
+        results: resp.results.map((p: any) => this.mapPurchase(p)),
+      })),
     );
   }
 
-  create(data: any): Observable<Purchase> {
-    return this.http.post<any>(this.baseUrl, data);
+  create(data: unknown): Observable<Purchase> {
+    return this.api.post<any>(API_ENDPOINTS.purchases.list, data).pipe(
+      map((p) => this.mapPurchase(p)),
+    );
   }
 
-  toggleFavorite(id: string): Observable<void> {
-    return this.http.post<void>(`${this.baseUrl}${id}/favorite/`, {});
+  updateFavorite(id: string, isFavorite: boolean, favoriteName = ''): Observable<Purchase> {
+    return this.api
+      .patch<any>(API_ENDPOINTS.purchases.detail(id), {
+        is_favorite: isFavorite,
+        favorite_name: favoriteName,
+      })
+      .pipe(map((p) => this.mapPurchase(p)));
+  }
+
+  private mapPurchase(p: any): Purchase {
+    return {
+      id: p.id,
+      date: p.date,
+      total: p.total,
+      commerceName: p.commerce_name,
+      items: p.items,
+      isFavorite: p.is_favorite,
+      favoriteName: p.favorite_name,
+    };
   }
 }

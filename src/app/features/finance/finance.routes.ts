@@ -7,12 +7,26 @@ export const FINANCE_ROUTES: Routes = [
       const d = new Date();
       return `${d.getFullYear()}/${d.getMonth() + 1}`;
     },
-    pathMatch: 'full'
+    pathMatch: 'full',
+  },
+  {
+    path: 'years',
+    loadComponent: () => import('./finance-years.component').then((m) => m.FinanceYearsComponent),
+  },
+  {
+    path: 'reports/history',
+    loadComponent: () =>
+      import('./reports-history.component').then((m) => m.FinanceReportsHistoryComponent),
   },
   {
     path: ':year/:month',
-    loadComponent: () => import('./finance-dashboard.component').then(m => m.FinanceDashboardComponent),
+    loadComponent: () => import('./finance-dashboard.component').then((m) => m.FinanceDashboardComponent),
     children: [
+      {
+        path: '',
+        redirectTo: 'initial-expenses',
+        pathMatch: 'full',
+      },
       {
         path: 'initial-expenses',
         loadComponent: () =>
@@ -51,5 +65,5 @@ export const FINANCE_ROUTES: Routes = [
         loadComponent: () => import('./reports.component').then((m) => m.FinanceReportsComponent),
       },
     ],
-  }
+  },
 ];

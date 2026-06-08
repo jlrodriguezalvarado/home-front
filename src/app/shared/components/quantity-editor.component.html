@@ -1,0 +1,37 @@
+<div class="flex items-center gap-xs" [class.gap-sm]="!compact">
+  <button
+    type="button"
+    (click)="decrement()"
+    [class]="compact
+      ? 'w-7 h-7 rounded-full border border-outline-variant flex items-center justify-center hover:bg-surface-container transition-colors shrink-0'
+      : 'w-8 h-8 rounded-full border border-outline-variant flex items-center justify-center hover:bg-surface-container transition-colors shrink-0'"
+  >
+    <span class="material-symbols-outlined" [class.text-[14px]]="compact" [class.text-[16px]]="!compact">remove</span>
+  </button>
+
+  @if (isKg) {
+    <input
+      type="text"
+      inputmode="decimal"
+      [ngModel]="displayValue"
+      (ngModelChange)="onInputChange($event)"
+      [class]="compact
+        ? 'w-10 text-center bg-transparent border-b border-outline-variant text-label-md tabular-nums'
+        : 'w-14 text-center bg-transparent border-b border-outline-variant text-numeral-md tabular-nums'"
+    />
+  } @else {
+    <span [class]="compact ? 'w-8 text-center text-label-md tabular-nums font-semibold' : 'w-14 text-center text-numeral-md tabular-nums'">
+      {{ quantity | number: '1.0-0' }}
+    </span>
+  }
+
+  <button
+    type="button"
+    (click)="increment()"
+    [class]="compact
+      ? 'w-7 h-7 rounded-full border border-outline-variant flex items-center justify-center hover:bg-surface-container transition-colors shrink-0'
+      : 'w-8 h-8 rounded-full border border-outline-variant flex items-center justify-center hover:bg-surface-container transition-colors shrink-0'"
+  >
+    <span class="material-symbols-outlined" [class.text-[14px]]="compact" [class.text-[16px]]="!compact">add</span>
+  </button>
+</div>

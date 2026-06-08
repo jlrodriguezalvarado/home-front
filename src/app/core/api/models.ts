@@ -17,12 +17,12 @@ export interface Category {
   name: string;
 }
 
-export interface Product {
+export interface Currency {
   id: string;
+  code: string;
   name: string;
-  price: string;
-  image: string | null;
-  commerce: Commerce;
-  category: Category | null;
-  unit: string;
+  symbol: string;
+  active: boolean;
 }
+
+export type { Product, CartItem } from '../models/shopping.models';

@@ -5,6 +5,7 @@ import { FinanceListBaseComponent } from './finance-list-base.component';
   selector: 'app-initial-expenses',
   standalone: true,
   imports: [FinanceListBaseComponent],
-  template: `<app-finance-list-base [feature]="'initial-expenses'"></app-finance-list-base>`
+  templateUrl: './initial-expenses.component.html',
+  styleUrl: './initial-expenses.component.scss',
 })
 export class InitialExpensesComponent {}

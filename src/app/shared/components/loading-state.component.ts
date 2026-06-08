@@ -5,12 +5,8 @@ import { CommonModule } from '@angular/common';
   selector: 'app-loading-state',
   standalone: true,
   imports: [CommonModule],
-  template: `
-    <div class="flex flex-col items-center justify-center py-12 space-y-4">
-      <div class="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
-      <p class="text-gray-500 font-medium">{{ message }}</p>
-    </div>
-  `
+  templateUrl: './loading-state.component.html',
+  styleUrl: './loading-state.component.scss',
 })
 export class LoadingStateComponent {
   @Input() message = 'Loading...';

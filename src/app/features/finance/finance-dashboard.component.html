@@ -1,0 +1,57 @@
+
+<div class="space-y-lg">
+  <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-md">
+    <h1 class="page-title">{{ i18n.t('finances') }}</h1>
+    <div class="flex gap-sm items-center flex-wrap">
+      <a routerLink="/finance/years" class="p-2 border border-outline-variant rounded-xl hover:bg-surface-container transition-colors" [title]="i18n.lang() === 'en' ? 'Years' : 'Años'">
+        <span class="material-symbols-outlined">calendar_month</span>
+      </a>
+      <a routerLink="/finance/reports/history" class="p-2 border border-outline-variant rounded-xl hover:bg-surface-container transition-colors" [title]="i18n.lang() === 'en' ? 'Report history' : 'Historial de reportes'">
+        <span class="material-symbols-outlined">history</span>
+      </a>
+      <button (click)="prevMonth()" class="p-2 border border-outline-variant rounded-xl hover:bg-surface-container transition-colors">
+        <span class="material-symbols-outlined">chevron_left</span>
+      </button>
+      <span class="px-md py-2 card-surface text-label-lg tabular-nums">{{ month() }}/{{ year() }}</span>
+      <button (click)="nextMonth()" class="p-2 border border-outline-variant rounded-xl hover:bg-surface-container transition-colors">
+        <span class="material-symbols-outlined">chevron_right</span>
+      </button>
+    </div>
+  </div>
+
+  <p class="text-body-md text-on-surface-variant">
+    {{ i18n.lang() === 'en'
+      ? 'Declaration and general expense categories are not included in these totals.'
+      : 'Las declaraciones y categorías de gasto general no se incluyen en estos totales.' }}
+  </p>
+
+  <div *ngIf="loading()" class="text-center py-xl text-on-surface-variant">
+    {{ i18n.lang() === 'en' ? 'Loading summary...' : 'Cargando resumen...' }}
+  </div>
+
+  <div *ngIf="!loading() && summary() as s" class="grid grid-cols-2 md:grid-cols-3 gap-sm">
+    <div *ngFor="let m of metrics()" class="card-surface p-md">
+      <div class="text-label-sm text-on-surface-variant leading-tight">{{ metricLabel(m) }}</div>
+      <div class="text-numeral-md tabular-nums font-semibold mt-xs" [ngClass]="m.colorClass">
+        {{ formatMoney(m.value) }}
+      </div>
+    </div>
+  </div>
+
+  <div *ngIf="!loading() && !summary()" class="card-surface p-xl text-center text-on-surface-variant">
+    {{ i18n.lang() === 'en'
+      ? 'No summary available for this month. Create the financial month on the server first.'
+      : 'No hay resumen para este mes. Crea el mes financiero en el servidor primero.' }}
+  </div>
+
+  <nav class="flex gap-sm overflow-x-auto pb-sm border-b border-outline-variant hide-scrollbar -mx-margin-mobile px-margin-mobile md:mx-0 md:px-0">
+    <a *ngFor="let tab of tabs"
+       [routerLink]="tab.path"
+       routerLinkActive="text-primary border-b-2 border-primary"
+       class="px-md py-2 text-label-lg whitespace-nowrap text-on-surface-variant hover:text-primary transition-colors">
+       {{ tabLabel(tab) }}
+    </a>
+  </nav>
+
+  <router-outlet></router-outlet>
+</div>

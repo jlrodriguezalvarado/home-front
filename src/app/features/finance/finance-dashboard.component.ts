@@ -1,90 +1,61 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, effect, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
 import { FinanceRepository, FinanceSummary } from './finance.repository';
+import { FinanceRefreshService } from './finance-refresh.service';
+import { formatFinanceMoney } from './finance.utils';
 import { I18nService } from '../../core/i18n/i18n.service';
+import { ToastService } from '../../shared/services/toast.service';
+
+interface SummaryMetric {
+  labelEn: string;
+  labelEs: string;
+  value: string;
+  colorClass: string;
+}
 
 @Component({
   selector: 'app-finance-dashboard',
   standalone: true,
   imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive],
-  template: `
-    <div class="space-y-6">
-      <div class="flex items-center justify-between">
-        <h1 class="text-3xl font-bold">{{ i18n.t('finance') }}</h1>
-        <div class="flex gap-2">
-          <button (click)="prevMonth()" class="p-2 border dark:border-gray-700 rounded-lg">←</button>
-          <span class="px-4 py-2 bg-white dark:bg-dark-surface rounded-lg font-bold">{{ year() }}/{{ month() }}</span>
-          <button (click)="nextMonth()" class="p-2 border dark:border-gray-700 rounded-lg">→</button>
-        </div>
-      </div>
-
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div class="p-6 bg-green-50 dark:bg-green-900/20 rounded-2xl border border-green-100 dark:border-green-900/30">
-          <div class="text-sm text-green-600 dark:text-green-400">Income</div>
-          <div class="text-2xl font-bold text-green-700 dark:text-green-300">{{ summary()?.totalIncome || '0.00' }}</div>
-        </div>
-        <div class="p-6 bg-red-50 dark:bg-red-900/20 rounded-2xl border border-red-100 dark:border-red-900/30">
-          <div class="text-sm text-red-600 dark:text-red-400">Expenses</div>
-          <div class="text-2xl font-bold text-red-700 dark:text-red-300">{{ summary()?.totalExpenses || '0.00' }}</div>
-        </div>
-        <div class="p-6 bg-blue-50 dark:bg-blue-900/20 rounded-2xl border border-blue-100 dark:border-blue-100/30">
-          <div class="text-sm text-blue-600 dark:text-blue-400">Balance</div>
-          <div class="text-2xl font-bold text-blue-700 dark:text-blue-300">{{ summary()?.balance || '0.00' }}</div>
-        </div>
-      </div>
-
-      <nav class="flex gap-4 overflow-x-auto pb-2 border-b dark:border-gray-800">
-        <a *ngFor="let tab of tabs"
-           [routerLink]="tab.path"
-           routerLinkActive="text-primary border-b-2 border-primary"
-           class="px-4 py-2 text-sm font-medium whitespace-nowrap">
-           {{ tab.label }}
-        </a>
-      </nav>
-
-      <router-outlet></router-outlet>
-
-      <div *ngIf="isSummary()" class="bg-white dark:bg-dark-surface p-6 rounded-2xl shadow-sm border dark:border-gray-800">
-        <h2 class="text-xl font-bold mb-4">Expenses by Category</h2>
-        <div class="space-y-4">
-          <div *ngFor="let cat of summary()?.categories" class="flex flex-col gap-1">
-            <div class="flex justify-between text-sm">
-              <span>{{ cat.name }}</span>
-              <span class="font-bold">{{ cat.total }}</span>
-            </div>
-            <div class="w-full h-2 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
-              <div class="h-full bg-primary" style="width: 50%"></div> <!-- Mock width for now -->
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  `
+  templateUrl: './finance-dashboard.component.html',
+  styleUrl: './finance-dashboard.component.scss',
 })
 export class FinanceDashboardComponent implements OnInit {
   route = inject(ActivatedRoute);
   router = inject(Router);
   repo = inject(FinanceRepository);
+  refresh = inject(FinanceRefreshService);
   i18n = inject(I18nService);
+  toast = inject(ToastService);
 
   year = signal('');
   month = signal('');
   summary = signal<FinanceSummary | null>(null);
+  loading = signal(false);
+
+  formatMoney = formatFinanceMoney;
 
   tabs = [
-    { path: 'initial-expenses', label: 'Initial' },
-    { path: 'math', label: 'Math' },
-    { path: 'home', label: 'Home' },
-    { path: 'savings', label: 'Savings' },
-    { path: 'income', label: 'Income' },
-    { path: 'declaration', label: 'Declaration' },
-    { path: 'exchange-history', label: 'Exchange' },
-    { path: 'reports', label: 'Reports' },
+    { path: 'initial-expenses', labelEn: 'Initial', labelEs: 'Inicial' },
+    { path: 'math', labelEn: 'Math', labelEs: 'Math' },
+    { path: 'home', labelEn: 'Home', labelEs: 'Hogar' },
+    { path: 'savings', labelEn: 'Savings', labelEs: 'Ahorros' },
+    { path: 'income', labelEn: 'Income', labelEs: 'Ingresos' },
+    { path: 'exchange-history', labelEn: 'Exchange', labelEs: 'Cambio' },
+    { path: 'declaration', labelEn: 'Declaration', labelEs: 'Declaración' },
+    { path: 'reports', labelEn: 'Reports', labelEs: 'Reportes' },
   ];
 
+  constructor() {
+    effect(() => {
+      if (this.refresh.tick() === 0) return;
+      if (this.year() && this.month()) this.loadSummary();
+    });
+  }
+
   ngOnInit() {
-    this.route.params.subscribe(params => {
+    this.route.params.subscribe((params) => {
       this.year.set(params['year']);
       this.month.set(params['month']);
       this.loadSummary();
@@ -92,7 +63,56 @@ export class FinanceDashboardComponent implements OnInit {
   }
 
   loadSummary() {
-    this.repo.getMonthlySummary(this.year(), this.month()).subscribe(res => this.summary.set(res));
+    const year = this.year();
+    const month = this.month();
+    if (!year || !month) return;
+
+    this.loading.set(true);
+    this.repo.getMonthlySummary(year, month).subscribe({
+      next: (res) => {
+        this.summary.set(res);
+        this.loading.set(false);
+      },
+      error: () => {
+        this.summary.set(null);
+        this.loading.set(false);
+        this.toast.error(
+          this.i18n.lang() === 'en'
+            ? 'Could not load month summary'
+            : 'No se pudo cargar el resumen del mes',
+        );
+      },
+    });
+  }
+
+  metrics(): SummaryMetric[] {
+    const s = this.summary();
+    if (!s) return [];
+    return [
+      { labelEn: 'Month income', labelEs: 'Ingreso del mes', value: s.totalIncome, colorClass: 'text-secondary' },
+      { labelEn: 'Month expense', labelEs: 'Gasto del mes', value: s.totalExpenses, colorClass: 'text-error' },
+      { labelEn: 'Initial month expense', labelEs: 'Gasto inicial del mes', value: s.initialMonthExpense, colorClass: 'text-orange-600' },
+      { labelEn: 'Current global savings', labelEs: 'Ahorro global actual', value: s.currentGlobalSavings, colorClass: 'text-amber-700' },
+      { labelEn: 'Previous global savings', labelEs: 'Ahorro global anterior', value: s.previousGlobalSavings, colorClass: 'text-amber-900' },
+      { labelEn: 'Total global savings', labelEs: 'Ahorro global total', value: s.totalGlobalSavings, colorClass: 'text-teal-600' },
+      { labelEn: 'Next month expense', labelEs: 'Gasto próximo mes', value: s.nextMonthExpense, colorClass: 'text-purple-600' },
+      { labelEn: 'Initial month remainder', labelEs: 'Remanente inicial del mes', value: s.initialMonthRemainder, colorClass: 'text-blue-grey' },
+      { labelEn: 'Available', labelEs: 'Disponible', value: s.balance, colorClass: 'text-primary' },
+      { labelEn: 'Available next month', labelEs: 'Disponible próximo mes', value: s.availableNextMonth, colorClass: 'text-indigo-600' },
+      { labelEn: 'Cash', labelEs: 'Efectivo', value: s.cash, colorClass: 'text-green-600' },
+      { labelEn: 'Total math', labelEs: 'Total math', value: s.totalMath, colorClass: 'text-purple-700' },
+      { labelEn: 'Total Mach', labelEs: 'Total Mach', value: s.totalMach, colorClass: 'text-cyan-600' },
+      { labelEn: 'Total Mach (CLP)', labelEs: 'Total Mach (CLP)', value: s.totalMachInClp, colorClass: 'text-cyan-700' },
+      { labelEn: 'Previous month remainder', labelEs: 'Remanente mes anterior', value: s.previousMonthRemainder, colorClass: 'text-on-surface-variant' },
+    ];
+  }
+
+  metricLabel(m: SummaryMetric): string {
+    return this.i18n.lang() === 'en' ? m.labelEn : m.labelEs;
+  }
+
+  tabLabel(tab: { labelEn: string; labelEs: string }): string {
+    return this.i18n.lang() === 'en' ? tab.labelEn : tab.labelEs;
   }
 
   isSummary() {
@@ -102,14 +122,20 @@ export class FinanceDashboardComponent implements OnInit {
   prevMonth() {
     let y = parseInt(this.year());
     let m = parseInt(this.month()) - 1;
-    if (m === 0) { m = 12; y--; }
+    if (m === 0) {
+      m = 12;
+      y--;
+    }
     this.router.navigate(['/finance', y, m]);
   }
 
   nextMonth() {
     let y = parseInt(this.year());
     let m = parseInt(this.month()) + 1;
-    if (m === 13) { m = 1; y++; }
+    if (m === 13) {
+      m = 1;
+      y++;
+    }
     this.router.navigate(['/finance', y, m]);
   }
 }

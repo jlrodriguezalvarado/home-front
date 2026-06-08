@@ -1,32 +1,134 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, OnInit, signal } from '@angular/core';
+
 import { CommonModule } from '@angular/common';
+
+import { RouterLink } from '@angular/router';
+
 import { I18nService, AppStringKey } from '../../core/i18n/i18n.service';
 
-@Component({
-  selector: 'app-dashboard',
-  standalone: true,
-  imports: [CommonModule],
-  template: `
-    <div class="space-y-6">
-      <h1 class="text-3xl font-bold">{{ t('dashboard') }}</h1>
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <div class="p-6 bg-white dark:bg-dark-surface rounded-2xl shadow-sm border dark:border-gray-800">
-          <h2 class="text-xl font-bold mb-2">{{ t('products') }}</h2>
-          <p class="text-gray-500">Manage your product list</p>
-        </div>
-        <div class="p-6 bg-white dark:bg-dark-surface rounded-2xl shadow-sm border dark:border-gray-800">
-          <h2 class="text-xl font-bold mb-2">{{ t('shoppingCart') }}</h2>
-          <p class="text-gray-500">Check your current cart</p>
-        </div>
-        <div class="p-6 bg-white dark:bg-dark-surface rounded-2xl shadow-sm border dark:border-gray-800">
-          <h2 class="text-xl font-bold mb-2">{{ t('finance') }}</h2>
-          <p class="text-gray-500">Monthly financial overview</p>
-        </div>
-      </div>
-    </div>
-  `
-})
-export class DashboardComponent {
-  i18n = inject(I18nService);
-  t(key: AppStringKey) { return this.i18n.t(key); }
+import { CartService } from '../shopping/cart.service';
+
+import { PurchaseRepository, Purchase } from '../shopping/purchase.repository';
+
+import { formatPrice, singleAggregateCurrency } from '../shopping/utils/price.utils';
+
+
+
+interface QuickAction {
+
+  path: string;
+
+  label: AppStringKey;
+
+  icon: string;
+
 }
+
+
+
+@Component({
+
+  selector: 'app-dashboard',
+
+  standalone: true,
+
+  imports: [CommonModule, RouterLink],
+
+  templateUrl: './dashboard.component.html',
+  styleUrl: './dashboard.component.scss',
+})
+
+export class DashboardComponent implements OnInit {
+
+  i18n = inject(I18nService);
+
+  cart = inject(CartService);
+
+  purchaseRepo = inject(PurchaseRepository);
+
+
+
+  purchases = signal<Purchase[]>([]);
+
+
+
+  quickActions: QuickAction[] = [
+
+    { path: '/products', label: 'products', icon: 'inventory_2' },
+
+    { path: '/cart', label: 'cart', icon: 'shopping_cart' },
+
+    { path: '/currencies', label: 'currencies', icon: 'payments' },
+
+    { path: '/finance', label: 'finances', icon: 'account_balance_wallet' },
+
+  ];
+
+
+
+  ngOnInit() {
+
+    this.purchaseRepo.list(1).subscribe({
+
+      next: (res) => this.purchases.set(res.results.slice(0, 5)),
+
+      error: () => this.purchases.set([]),
+
+    });
+
+  }
+
+
+
+  t(key: AppStringKey) {
+
+    return this.i18n.t(key);
+
+  }
+
+
+
+  cartTotalLabel(): string {
+
+    const items = this.cart.items();
+
+    const currency = singleAggregateCurrency(items);
+
+    return formatPrice(this.cart.grandTotal(), currency ?? '');
+
+  }
+
+
+
+  cartStoreCount(): number {
+
+    return this.cart.commerceIds().length;
+
+  }
+
+
+
+  cartProgress(): number {
+
+    return Math.min((this.cart.grandTotal() / 5000) * 100, 100);
+
+  }
+
+
+
+  purchaseProgress(): number {
+
+    return Math.min((this.purchases().length / 10) * 100, 100);
+
+  }
+
+
+
+  formatMoney(value: string): string {
+
+    return `$${value}`;
+
+  }
+
+}
+

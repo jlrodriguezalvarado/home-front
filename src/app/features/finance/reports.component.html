@@ -1,0 +1,31 @@
+
+<div class="space-y-lg">
+  <h2 class="text-title-lg text-on-surface">PDF Report</h2>
+  <p class="text-body-md text-on-surface-variant">
+    {{ i18n.lang() === 'en'
+      ? 'Generate yearly report (all months with data) for'
+      : 'Generar reporte anual (todos los meses con datos) para' }}
+    <strong>{{ year }}</strong>
+    {{ i18n.lang() === 'en' ? 'triggered from month' : 'desde el mes' }}
+    <strong>{{ month }}</strong>.
+  </p>
+
+  <button (click)="generate()" [disabled]="busy()" class="btn-primary flex items-center gap-2">
+    <span class="material-symbols-outlined text-[20px]">picture_as_pdf</span>
+    {{ busy()
+      ? (i18n.lang() === 'en' ? 'Generating...' : 'Generando...')
+      : (i18n.lang() === 'en' ? 'Generate report' : 'Generar reporte') }}
+  </button>
+
+  <div *ngIf="lastReport() as report" class="card-surface p-lg">
+    <div class="text-label-lg text-on-surface">{{ i18n.lang() === 'en' ? 'Last report' : 'Último reporte' }}</div>
+    <div class="text-body-md text-on-surface-variant mt-xs">
+      {{ i18n.lang() === 'en' ? 'Status' : 'Estado' }}: {{ report.status }}
+    </div>
+    <a *ngIf="report.fileUrl" [href]="report.fileUrl" target="_blank" rel="noopener"
+       class="inline-flex items-center gap-1 text-primary mt-sm text-label-lg">
+      <span class="material-symbols-outlined text-[18px]">download</span>
+      {{ i18n.lang() === 'en' ? 'Download PDF' : 'Descargar PDF' }}
+    </a>
+  </div>
+</div>

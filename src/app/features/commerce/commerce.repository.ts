@@ -1,27 +1,27 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { environment } from '../../../environments/environment';
 import { Observable, map } from 'rxjs';
-import { Commerce } from '../../core/api/models';
+import { Commerce, PaginatedResponse } from '../../core/api/models';
+import { ApiService } from '../../core/api/api.service';
+import { API_ENDPOINTS } from '../../core/api/endpoints';
+import { resolveMediaUrl } from '../../core/api/api-url';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class CommerceRepository {
-  private http = inject(HttpClient);
-  private readonly baseUrl = `${environment.API_BASE_URL}commerces/`;
+  private readonly api = inject(ApiService);
 
   list(): Observable<Commerce[]> {
-    const apiBase = environment.API_BASE_URL.replace('/api/', '');
-    return this.http.get<any[]>(this.baseUrl).pipe(
-      map((items) =>
-        items.map((c) => ({
+    return this.api.get<any[] | PaginatedResponse<any>>(API_ENDPOINTS.commerces.list).pipe(
+      map((res) => {
+        const items = Array.isArray(res) ? res : (res.results ?? []);
+        return items.map((c) => ({
           id: c.id,
           name: c.name,
-          logo: c.logo ? (c.logo.startsWith('http') ? c.logo : `${apiBase}${c.logo}`) : null,
+          logo: resolveMediaUrl(c.logo),
           currencyCode: c.currency_code,
-        })),
-      ),
+        }));
+      }),
     );
   }
 }

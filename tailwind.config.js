@@ -1,30 +1,85 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
-  content: [
-    "./src/**/*.{html,ts}",
-  ],
+  content: ['./src/**/*.{html,ts}'],
   darkMode: 'class',
   theme: {
     extend: {
       colors: {
-        primary: {
-          DEFAULT: '#009966',
-        },
-        secondary: {
-          DEFAULT: '#00B082',
-        },
-        tertiary: {
-          DEFAULT: '#00C5D3',
-        },
-        light: {
-          scaffold: '#F3F6F8',
-        },
-        dark: {
-          scaffold: '#0D1016',
-          surface: '#121722',
-        }
-      }
+        primary: 'var(--md-primary)',
+        'on-primary': 'var(--md-on-primary)',
+        'primary-container': 'var(--md-primary-container)',
+        'on-primary-container': 'var(--md-on-primary-container)',
+        secondary: 'var(--md-secondary)',
+        'on-secondary': 'var(--md-on-secondary)',
+        'secondary-container': 'var(--md-secondary-container)',
+        'on-secondary-container': 'var(--md-on-secondary-container)',
+        tertiary: 'var(--md-tertiary)',
+        'on-tertiary': 'var(--md-on-tertiary)',
+        'tertiary-container': 'var(--md-tertiary-container)',
+        'on-tertiary-container': 'var(--md-on-tertiary-container)',
+        surface: 'var(--md-surface)',
+        'surface-dim': 'var(--md-surface-dim)',
+        'surface-bright': 'var(--md-surface-bright)',
+        'surface-container-lowest': 'var(--md-surface-container-lowest)',
+        'surface-container-low': 'var(--md-surface-container-low)',
+        'surface-container': 'var(--md-surface-container)',
+        'surface-container-high': 'var(--md-surface-container-high)',
+        'surface-container-highest': 'var(--md-surface-container-highest)',
+        'surface-variant': 'var(--md-surface-variant)',
+        background: 'var(--md-background)',
+        'on-background': 'var(--md-on-background)',
+        'on-surface': 'var(--md-on-surface)',
+        'on-surface-variant': 'var(--md-on-surface-variant)',
+        outline: 'var(--md-outline)',
+        'outline-variant': 'var(--md-outline-variant)',
+        error: 'var(--md-error)',
+        'on-error': 'var(--md-on-error)',
+        'error-container': 'var(--md-error-container)',
+        'on-error-container': 'var(--md-on-error-container)',
+        'inverse-surface': 'var(--md-inverse-surface)',
+        'inverse-on-surface': 'var(--md-inverse-on-surface)',
+        'inverse-primary': 'var(--md-inverse-primary)',
+      },
+      borderRadius: {
+        sm: '0.25rem',
+        DEFAULT: '0.5rem',
+        md: '0.75rem',
+        lg: '1rem',
+        xl: '1.5rem',
+        xxl: '1.5rem',
+        full: '9999px',
+      },
+      spacing: {
+        xs: '4px',
+        sm: '8px',
+        md: '16px',
+        lg: '24px',
+        xl: '32px',
+        xxl: '48px',
+        gutter: '24px',
+        'margin-mobile': '16px',
+        'margin-desktop': '32px',
+      },
+      fontFamily: {
+        sans: ['"Plus Jakarta Sans"', 'system-ui', 'sans-serif'],
+      },
+      fontSize: {
+        'display-lg': ['56px', { lineHeight: '64px', letterSpacing: '-0.02em', fontWeight: '700' }],
+        'headline-lg': ['32px', { lineHeight: '40px', letterSpacing: '-0.01em', fontWeight: '700' }],
+        'headline-lg-mobile': ['28px', { lineHeight: '36px', fontWeight: '700' }],
+        'headline-md': ['24px', { lineHeight: '32px', fontWeight: '600' }],
+        'title-lg': ['20px', { lineHeight: '28px', fontWeight: '600' }],
+        'body-lg': ['16px', { lineHeight: '24px', fontWeight: '400' }],
+        'body-md': ['14px', { lineHeight: '20px', fontWeight: '400' }],
+        'label-lg': ['14px', { lineHeight: '20px', letterSpacing: '0.1px', fontWeight: '600' }],
+        'label-md': ['12px', { lineHeight: '16px', fontWeight: '500' }],
+        'numeral-md': ['16px', { fontWeight: '500' }],
+      },
+      boxShadow: {
+        card: '0px 2px 4px rgba(0,0,0,0.05)',
+        'card-hover': '0px 10px 20px rgba(0,0,0,0.08)',
+      },
     },
   },
   plugins: [],
-}
+};

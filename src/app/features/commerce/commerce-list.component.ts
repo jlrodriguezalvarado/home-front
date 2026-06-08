@@ -1,10 +1,14 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { I18nService } from '../../core/i18n/i18n.service';
 
 @Component({
   selector: 'app-commerce-list',
   standalone: true,
   imports: [CommonModule],
-  template: `<div class="p-8"><h1 class="text-3xl font-bold">Commerces</h1><p class="text-gray-500 mt-4">Coming soon...</p></div>`
+  templateUrl: './commerce-list.component.html',
+  styleUrl: './commerce-list.component.scss',
 })
-export class CommerceListComponent {}
+export class CommerceListComponent {
+  i18n = inject(I18nService);
+}

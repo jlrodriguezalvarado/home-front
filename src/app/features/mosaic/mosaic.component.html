@@ -1,0 +1,51 @@
+
+<div class="space-y-lg">
+  <h1 class="page-title">{{ i18n.t('instagramTool') }}</h1>
+
+  <div class="flex flex-col-reverse md:flex-row gap-lg">
+    <div class="w-full md:w-72 space-y-md shrink-0">
+      <div class="card-surface p-lg">
+        <label class="block w-full py-3 btn-primary text-center cursor-pointer">
+          <span class="material-symbols-outlined text-[18px] align-middle mr-1">upload</span>
+          Upload Image
+          <input type="file" (change)="onFileSelected($event)" accept="image/*" class="hidden">
+        </label>
+
+        <div class="mt-lg space-y-md">
+          <p class="text-label-lg text-on-surface-variant">Grid Presets</p>
+          <div class="grid grid-cols-2 gap-sm">
+            <button *ngFor="let p of presets" (click)="setPreset(p.rows, p.cols)"
+                    [class.bg-primary]="rows() === p.rows && cols() === p.cols"
+                    [class.text-on-primary]="rows() === p.rows && cols() === p.cols"
+                    class="p-2 border border-outline-variant rounded-xl text-label-md transition-colors hover:bg-surface-container">
+              {{ p.rows }}x{{ p.cols }}
+            </button>
+          </div>
+        </div>
+
+        <button *ngIf="imageSrc()" (click)="generateTiles()" [disabled]="generating()"
+                class="w-full mt-lg py-3 border-2 border-primary text-primary text-label-lg font-semibold rounded-xl hover:bg-primary hover:text-on-primary transition-colors disabled:opacity-50">
+          {{ generating() ? '...' : 'Download ZIP' }}
+        </button>
+      </div>
+    </div>
+
+    <div class="flex-1 min-h-[280px] md:min-h-[400px] bg-surface-container rounded-xl overflow-hidden relative flex items-center justify-center p-md md:p-xl border border-outline-variant border-dashed">
+      <div *ngIf="!imageSrc()" class="text-on-surface-variant text-body-md flex flex-col items-center gap-sm">
+        <span class="material-symbols-outlined text-[48px]">image</span>
+        No image selected
+      </div>
+
+      <div *ngIf="imageSrc()" class="relative border-4 border-dashed border-primary/30 rounded-lg overflow-hidden"
+           [style.width.px]="previewWidth" [style.height.px]="previewHeight">
+        <img [src]="imageSrc()" class="w-full h-full object-cover opacity-50">
+        <div class="absolute inset-0 grid" [style.gridTemplateRows]="'repeat(' + rows() + ', 1fr)'"
+             [style.gridTemplateColumns]="'repeat(' + cols() + ', 1fr)'">
+          <div *ngFor="let i of gridArray()" class="border border-white/50 bg-primary/10"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <canvas #canvas class="hidden"></canvas>
+</div>

@@ -1,0 +1,11 @@
+
+<div class="flex flex-col items-center justify-center py-12 text-center space-y-4">
+  <div class="w-16 h-16 rounded-2xl bg-error-container flex items-center justify-center">
+    <span class="material-symbols-outlined text-[32px] text-error">error</span>
+  </div>
+  <h3 class="text-title-lg text-error">{{ title }}</h3>
+  <p class="text-on-surface-variant text-body-md max-w-xs">{{ message }}</p>
+  <button (click)="retry.emit()" class="btn-primary">
+    Retry
+  </button>
+</div>
