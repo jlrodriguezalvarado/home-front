@@ -6,6 +6,7 @@ describe('finance-form-rules', () => {
     amount: '10.00',
     notes: '',
     isCash: false,
+    isRecurring: false,
     categoryId: '',
     savingsAccountTypeId: '',
     incomeAccountId: '',
@@ -36,5 +37,11 @@ describe('finance-form-rules', () => {
     expect(
       validateFinanceListForm('income', { ...base, description: '', incomeAccountId: 'acc-1' }),
     ).toBeNull();
+  });
+
+  it('requires positive amount for income', () => {
+    expect(
+      validateFinanceListForm('income', { ...base, description: '', amount: '0', incomeAccountId: 'acc-1' }),
+    ).toBe('amount_positive');
   });
 });

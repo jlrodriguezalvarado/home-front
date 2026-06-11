@@ -1,0 +1,13 @@
+.cash-entry-row {
+  background-color: rgba(254, 249, 195, 0.75);
+}
+:host-context(.dark) .cash-entry-row {
+  background-color: rgba(120, 53, 15, 0.22);
+}
+.pending-entry-row {
+  border-left: 3px dashed var(--outline-variant, #cac4d0);
+}
+.spent-entry-row {
+  border-left: 4px solid var(--spent-color, #888);
+  background-color: color-mix(in srgb, var(--spent-color, #888) 14%, transparent);
+}

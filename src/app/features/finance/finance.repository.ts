@@ -1,9 +1,17 @@
 import { Injectable, inject } from '@angular/core';
-import { Observable, map, switchMap, of, throwError, timer, takeWhile, last } from 'rxjs';
+import { Observable, map, switchMap, of, throwError } from 'rxjs';
 import { ApiService } from '../../core/api/api.service';
 import { API_ENDPOINTS, getFinanceResource } from '../../core/api/endpoints';
+import { IncomeAccount, AppCurrency } from './models/finance.models';
+import { IncomeAccountService } from './services/income-account.service';
+import { SavingsAccountTypeService } from './services/savings-account-type.service';
 
 const FINANCE_PAGE_SIZE = { perPage: '200' };
+
+export interface FinanceSummaryTotal {
+  amount: string;
+  currency: AppCurrency;
+}
 
 export interface FinanceSummary {
   financialMonthId: string;
@@ -21,9 +29,7 @@ export interface FinanceSummary {
   previousGlobalSavings: string;
   totalGlobalSavings: string;
   cash: string;
-  totalMath: string;
-  totalMach: string;
-  totalMachInClp: string;
+  total: FinanceSummaryTotal;
 }
 
 export interface FinanceEntry {
@@ -38,7 +44,38 @@ export interface FinanceEntry {
   incomeAccountId?: string;
   incomeAccountName?: string;
   isCash?: boolean;
+  isRecurring?: boolean;
+  isSpent?: boolean;
+  color?: string | null;
   notes?: string;
+}
+
+export interface RecurringExpenseReplicateItem {
+  expenseType: string;
+  id?: string;
+  sourceId?: string;
+  name: string;
+  amount?: string;
+  isRecurring?: boolean;
+  categoryId?: string;
+  reason?: string;
+}
+
+export interface RecurringExpenseReplicateResult {
+  financialMonthId: string;
+  previousMonthId: string;
+  created: {
+    initialExpenseItems: RecurringExpenseReplicateItem[];
+    mathExpenseItems: RecurringExpenseReplicateItem[];
+    homeExpenseItems: RecurringExpenseReplicateItem[];
+  };
+  skipped: {
+    initialExpenseItems: RecurringExpenseReplicateItem[];
+    mathExpenseItems: RecurringExpenseReplicateItem[];
+    homeExpenseItems: RecurringExpenseReplicateItem[];
+  };
+  createdCount: number;
+  skippedCount: number;
 }
 
 export interface FinanceExchangeHistoryItem {
@@ -68,18 +105,6 @@ export interface FinanceDeclaration {
   notes?: string;
 }
 
-export interface FinanceReport {
-  id: string;
-  year?: number;
-  triggeredFromMonth?: number;
-  status: string;
-  fileUrl?: string;
-  includedMonths?: number[];
-  message?: string;
-  errorMessage?: string;
-  createdAt?: string;
-}
-
 export interface FinancialYear {
   id: string;
   year: number;
@@ -95,11 +120,15 @@ interface FinancialMonthRef {
 })
 export class FinanceRepository {
   private readonly api = inject(ApiService);
+  private readonly incomeAccountService = inject(IncomeAccountService);
+  private readonly savingsAccountTypeService = inject(SavingsAccountTypeService);
 
-  getMonthlySummary(year: string, month: string): Observable<FinanceSummary> {
+  getMonthlySummary(year: string, month: string, options?: { currency?: string }): Observable<FinanceSummary> {
+    const params: Record<string, string> = { year, month };
+    if (options?.currency) params['currency'] = options.currency;
     return this.api
       .get<Record<string, unknown>>(API_ENDPOINTS.finance.monthSummary, {
-        params: { year, month },
+        params,
       })
       .pipe(map((res) => this.mapSummary(res, year, month)));
   }
@@ -208,10 +237,26 @@ export class FinanceRepository {
       .pipe(map((res) => this.mapDeclaration(res)));
   }
 
-  listExpenseCategories(): Observable<FinanceCategory[]> {
+  listInitialExpenseCategories(): Observable<FinanceCategory[]> {
     return this.api
-      .get<unknown>(API_ENDPOINTS.finance.expenseCategories, { params: FINANCE_PAGE_SIZE })
+      .get<unknown>(API_ENDPOINTS.finance.initialExpenseCategories, { params: FINANCE_PAGE_SIZE })
       .pipe(map((res) => this.decodeList(res).map((item) => this.mapCategory(item))));
+  }
+
+  createInitialExpenseCategory(name: string): Observable<FinanceCategory> {
+    return this.api
+      .post<Record<string, unknown>>(API_ENDPOINTS.finance.initialExpenseCategories, { name })
+      .pipe(map((res) => this.mapCategory(res)));
+  }
+
+  updateInitialExpenseCategory(id: string, name: string): Observable<FinanceCategory> {
+    return this.api
+      .patch<Record<string, unknown>>(`${API_ENDPOINTS.finance.initialExpenseCategories}${id}/`, { name })
+      .pipe(map((res) => this.mapCategory(res)));
+  }
+
+  deleteInitialExpenseCategory(id: string): Observable<void> {
+    return this.api.delete<void>(`${API_ENDPOINTS.finance.initialExpenseCategories}${id}/`);
   }
 
   listGeneralExpenseCategories(): Observable<FinanceCategory[]> {
@@ -221,52 +266,14 @@ export class FinanceRepository {
   }
 
   listSavingsAccountTypes(): Observable<FinanceCategory[]> {
-    return this.api
-      .get<unknown>(API_ENDPOINTS.finance.savingsAccountTypes, { params: FINANCE_PAGE_SIZE })
-      .pipe(map((res) => this.decodeList(res).map((item) => this.mapCategory(item))));
+    return this.savingsAccountTypeService.list({ isActive: true }).pipe(
+      map((types) => types.map((type) => ({ id: type.id, name: type.name }))),
+    );
   }
 
   listIncomeAccounts(): Observable<FinanceCategory[]> {
-    return this.api
-      .get<unknown>(API_ENDPOINTS.finance.incomeAccounts, {
-        params: { is_active: 'true', ordering: 'name', ...FINANCE_PAGE_SIZE },
-      })
-      .pipe(map((res) => this.decodeList(res).map((item) => this.mapCategory(item))));
-  }
-
-  generateReport(year: number, triggeredFromMonth?: number): Observable<FinanceReport> {
-    const body: Record<string, unknown> = { year };
-    if (triggeredFromMonth != null) body['triggered_from_month'] = triggeredFromMonth;
-    return this.api
-      .post<Record<string, unknown>>(API_ENDPOINTS.finance.reportsGenerate, body)
-      .pipe(map((res) => this.mapReport(res)));
-  }
-
-  listReports(): Observable<FinanceReport[]> {
-    return this.api
-      .get<unknown>(API_ENDPOINTS.finance.reports, { params: FINANCE_PAGE_SIZE })
-      .pipe(map((res) => this.decodeList(res).map((item) => this.mapReport(item))));
-  }
-
-  getReport(id: string): Observable<FinanceReport> {
-    return this.api
-      .get<Record<string, unknown>>(`${API_ENDPOINTS.finance.reports}${id}/`)
-      .pipe(map((res) => this.mapReport(res)));
-  }
-
-  waitForReportCompletion(
-    initial: FinanceReport,
-    pollIntervalMs = 2000,
-    timeoutMs = 300000,
-  ): Observable<FinanceReport> {
-    const deadline = Date.now() + timeoutMs;
-    return timer(0, pollIntervalMs).pipe(
-      switchMap(() => {
-        if (Date.now() > deadline) return of(initial);
-        return this.getReport(initial.id);
-      }),
-      takeWhile((report) => isReportPending(report) && Date.now() <= deadline, true),
-      last(),
+    return this.incomeAccountService.list({ isActive: true, ordering: 'name' }).pipe(
+      map((accounts) => accounts.map((account) => this.mapIncomeAccountOption(account))),
     );
   }
 
@@ -317,6 +324,14 @@ export class FinanceRepository {
     const resource = getFinanceResource(feature);
     if (!resource) return throwError(() => new Error(`Unknown finance feature: ${feature}`));
     return this.api.delete<void>(`${resource}${id}/`);
+  }
+
+  replicateRecurringExpenses(financialMonthId: string): Observable<RecurringExpenseReplicateResult> {
+    return this.api
+      .post<Record<string, unknown>>(API_ENDPOINTS.finance.recurringExpensesReplicate, {
+        financial_month: financialMonthId,
+      })
+      .pipe(map((res) => this.mapRecurringReplicateResult(res)));
   }
 
   resolveFinancialMonth(year: string, month: string): Observable<string | null> {
@@ -372,9 +387,22 @@ export class FinanceRepository {
       previousGlobalSavings: String(summary['previous_global_savings'] ?? '0'),
       totalGlobalSavings: String(summary['total_global_savings'] ?? '0'),
       cash: String(summary['cash'] ?? '0'),
-      totalMath: String(summary['total_math'] ?? '0'),
-      totalMach: String(summary['total_mach'] ?? '0'),
-      totalMachInClp: String(summary['total_mach_in_clp'] ?? '0'),
+      total: this.mapSummaryTotal(summary['total']),
+    };
+  }
+
+  private mapSummaryTotal(raw: unknown): FinanceSummaryTotal {
+    const obj = (raw && typeof raw === 'object' ? raw : {}) as Record<string, unknown>;
+    const currencyRaw = (obj['currency'] && typeof obj['currency'] === 'object' ? obj['currency'] : {}) as Record<string, unknown>;
+    return {
+      amount: String(obj['amount'] ?? '0'),
+      currency: {
+        id: String(currencyRaw['id'] ?? ''),
+        code: String(currencyRaw['code'] ?? 'USD'),
+        name: String(currencyRaw['name'] ?? ''),
+        symbol: String(currencyRaw['symbol'] ?? '$'),
+        isActive: currencyRaw['is_active'] !== false && currencyRaw['active'] !== false,
+      },
     };
   }
 
@@ -382,19 +410,21 @@ export class FinanceRepository {
     const createdAt = res['created_at'] ? String(res['created_at']).split('T')[0] : '';
     const savingsType = res['savings_account_type'];
     const incomeAccount = res['income_account'];
+    const categoryRef = res['category'] ?? res['expense_category'] ?? res['category_id'];
     return {
       id: String(res['id'] ?? ''),
       date: String(res['date'] ?? createdAt),
       amount: String(res['amount'] ?? ''),
       description: String(res['name'] ?? res['title'] ?? res['description'] ?? res['notes'] ?? ''),
-      categoryName: res['category_name']
-        ? String(res['category_name'])
-        : res['expense_category_name']
-          ? String(res['expense_category_name'])
-          : undefined,
-      categoryId: this.foreignKeyId(
-        res['expense_category'] ?? res['category'] ?? res['category_id'],
-      ),
+      categoryName:
+        typeof categoryRef === 'object' && categoryRef !== null
+          ? String((categoryRef as Record<string, unknown>)['name'] ?? '')
+          : res['category_name']
+            ? String(res['category_name'])
+            : res['expense_category_name']
+              ? String(res['expense_category_name'])
+              : undefined,
+      categoryId: this.foreignKeyId(categoryRef),
       savingsAccountTypeId: this.foreignKeyId(savingsType),
       savingsAccountTypeName:
         typeof savingsType === 'object' && savingsType !== null
@@ -406,6 +436,9 @@ export class FinanceRepository {
           ? String((incomeAccount as Record<string, unknown>)['name'] ?? '')
           : undefined,
       isCash: res['is_cash'] === true,
+      isRecurring: res['is_recurring'] === true,
+      isSpent: res['is_spent'] === true,
+      color: res['color'] != null ? String(res['color']) : null,
       notes: res['notes'] ? String(res['notes']) : undefined,
     };
   }
@@ -447,23 +480,10 @@ export class FinanceRepository {
     };
   }
 
-  private mapReport(res: Record<string, unknown>): FinanceReport {
-    const included = res['included_months'];
+  private mapIncomeAccountOption(account: IncomeAccount): FinanceCategory {
     return {
-      id: String(res['id'] ?? ''),
-      year: res['year'] != null ? Number(res['year']) : undefined,
-      triggeredFromMonth:
-        res['triggered_from_month'] != null
-          ? Number(res['triggered_from_month'])
-          : res['month'] != null
-            ? Number(res['month'])
-            : undefined,
-      status: String(res['status'] ?? 'unknown'),
-      fileUrl: res['file_url'] ? String(res['file_url']) : res['download_url'] ? String(res['download_url']) : undefined,
-      includedMonths: Array.isArray(included) ? included.map((m) => Number(m)) : undefined,
-      message: res['message'] ? String(res['message']) : undefined,
-      errorMessage: res['error_message'] ? String(res['error_message']) : undefined,
-      createdAt: res['created_at'] ? String(res['created_at']) : undefined,
+      id: account.id,
+      name: account.name,
     };
   }
 
@@ -516,28 +536,64 @@ export class FinanceRepository {
     };
     if (financialMonthId) payload['financial_month'] = financialMonthId;
     if (feature === 'initial-expenses' && (data['categoryId'] ?? data['category_id'])) {
-      payload['expense_category'] = data['categoryId'] ?? data['category_id'];
+      payload['category'] = data['categoryId'] ?? data['category_id'];
     }
     if (feature === 'savings' && (data['savingsAccountTypeId'] ?? data['savings_account_type'])) {
       payload['savings_account_type'] = data['savingsAccountTypeId'] ?? data['savings_account_type'];
     }
+    if (feature === 'savings' && data['notes'] != null) {
+      payload['notes'] = String(data['notes']).trim();
+    }
+    if (this.isExpenseFeature(feature)) {
+      payload['is_recurring'] = data['isRecurring'] === true || data['is_recurring'] === true;
+    }
     return payload;
   }
-}
 
-export function isReportPending(report: FinanceReport): boolean {
-  const s = report.status.toLowerCase();
-  return s === 'pending' || s === 'processing' || s === 'queued';
-}
+  private isExpenseFeature(feature: string): boolean {
+    return feature === 'initial-expenses' || feature === 'math' || feature === 'home';
+  }
 
-export function isReportReady(report: FinanceReport): boolean {
-  const s = report.status.toLowerCase();
-  if (s === 'failed' || s === 'error') return false;
-  const done = s === 'completed' || s === 'ready' || s === 'done';
-  return done && !!report.fileUrl;
-}
+  private mapRecurringReplicateItem(res: Record<string, unknown>): RecurringExpenseReplicateItem {
+    return {
+      expenseType: String(res['expense_type'] ?? ''),
+      id: res['id'] != null ? String(res['id']) : undefined,
+      sourceId: res['source_id'] != null ? String(res['source_id']) : undefined,
+      name: String(res['name'] ?? ''),
+      amount: res['amount'] != null ? String(res['amount']) : undefined,
+      isRecurring: res['is_recurring'] === true,
+      categoryId: res['category_id'] != null ? String(res['category_id']) : undefined,
+      reason: res['reason'] != null ? String(res['reason']) : undefined,
+    };
+  }
 
-export function isReportFailed(report: FinanceReport): boolean {
-  const s = report.status.toLowerCase();
-  return s === 'failed' || s === 'error';
+  private mapRecurringReplicateGroup(res: unknown): {
+    initialExpenseItems: RecurringExpenseReplicateItem[];
+    mathExpenseItems: RecurringExpenseReplicateItem[];
+    homeExpenseItems: RecurringExpenseReplicateItem[];
+  } {
+    const group = (res as Record<string, unknown>) ?? {};
+    return {
+      initialExpenseItems: this.decodeList(group['initial_expense_items']).map((item) =>
+        this.mapRecurringReplicateItem(item),
+      ),
+      mathExpenseItems: this.decodeList(group['math_expense_items']).map((item) =>
+        this.mapRecurringReplicateItem(item),
+      ),
+      homeExpenseItems: this.decodeList(group['home_expense_items']).map((item) =>
+        this.mapRecurringReplicateItem(item),
+      ),
+    };
+  }
+
+  private mapRecurringReplicateResult(res: Record<string, unknown>): RecurringExpenseReplicateResult {
+    return {
+      financialMonthId: String(res['financial_month_id'] ?? ''),
+      previousMonthId: String(res['previous_month_id'] ?? ''),
+      created: this.mapRecurringReplicateGroup(res['created']),
+      skipped: this.mapRecurringReplicateGroup(res['skipped']),
+      createdCount: Number(res['created_count'] ?? 0),
+      skippedCount: Number(res['skipped_count'] ?? 0),
+    };
+  }
 }

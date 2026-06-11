@@ -29,7 +29,7 @@
   <div *ngIf="showDialog" class="fixed inset-0 bg-black/50 flex items-center justify-center p-md z-50">
     <div class="bg-surface-container-lowest w-full max-w-md p-xl rounded-[24px] border border-outline-variant shadow-card-hover">
       <h2 class="text-title-lg text-on-surface mb-lg">{{ editingId ? 'Edit' : 'Add' }} Currency</h2>
-      <div class="space-y-md">
+      <div class="space-y-md" appDialogForm (dialogSubmit)="save()">
         <div>
           <label class="text-label-lg text-on-surface-variant block mb-xs">Code</label>
           <input type="text" [(ngModel)]="form.code" [disabled]="!!editingId" class="input-outlined uppercase">

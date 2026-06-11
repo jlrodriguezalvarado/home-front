@@ -7,6 +7,7 @@ export interface FinanceListFormData {
   amount: string;
   notes: string;
   isCash: boolean;
+  isRecurring: boolean;
   categoryId: string;
   savingsAccountTypeId: string;
   incomeAccountId: string;
@@ -15,6 +16,7 @@ export interface FinanceListFormData {
 export type FinanceFormErrorKey =
   | 'amount_required'
   | 'amount_invalid'
+  | 'amount_positive'
   | 'name_required'
   | 'expense_category_required'
   | 'savings_account_type_required'
@@ -27,6 +29,10 @@ export function validateFinanceListForm(
   const amount = String(form.amount ?? '').trim();
   if (!amount) return 'amount_required';
   if (!DECIMAL_AMOUNT_PATTERN.test(amount)) return 'amount_invalid';
+  const amountValue = Number(amount);
+  if (feature === 'income' && (!Number.isFinite(amountValue) || amountValue <= 0)) {
+    return 'amount_positive';
+  }
 
   if (feature === 'income') {
     if (!form.incomeAccountId) return 'income_account_required';
@@ -50,6 +56,7 @@ export function financeFormErrorMessage(key: FinanceFormErrorKey, lang: 'en' | '
   const messages: Record<FinanceFormErrorKey, { en: string; es: string }> = {
     amount_required: { en: 'Amount is required', es: 'El monto es obligatorio' },
     amount_invalid: { en: 'Amount format is invalid', es: 'El formato del monto no es válido' },
+    amount_positive: { en: 'Amount must be greater than zero', es: 'El monto debe ser mayor que cero' },
     name_required: { en: 'Name is required', es: 'El nombre es obligatorio' },
     expense_category_required: { en: 'Category is required', es: 'La categoría es obligatoria' },
     savings_account_type_required: {

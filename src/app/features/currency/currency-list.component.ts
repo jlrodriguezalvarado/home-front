@@ -5,11 +5,12 @@ import { CurrencyRepository } from './currency.repository';
 import { Currency } from '../../core/api/models';
 import { I18nService } from '../../core/i18n/i18n.service';
 import { ConfirmService } from '../../shared/services/confirm.service';
+import { DialogFormDirective } from '../../shared/directives/dialog-form.directive';
 
 @Component({
   selector: 'app-currency-list',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, DialogFormDirective],
   templateUrl: './currency-list.component.html',
   styleUrl: './currency-list.component.scss',
 })

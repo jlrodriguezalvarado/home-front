@@ -1,5 +1,6 @@
 import { HttpInterceptorFn, HttpErrorResponse } from '@angular/common/http';
 import { inject } from '@angular/core';
+import { Router } from '@angular/router';
 import { AuthService } from '../auth/auth.service';
 import { catchError, switchMap, throwError } from 'rxjs';
 
@@ -9,8 +10,13 @@ function isPublicAuthRequest(url: string): boolean {
 
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const authService = inject(AuthService);
+  const router = inject(Router);
   const accessToken = authService.getAccessToken();
   const skipAuth = isPublicAuthRequest(req.url);
+  const clearSessionAndRedirect = () => {
+    authService.logout();
+    router.navigate(['/login']);
+  };
 
   const headers: Record<string, string> = {
     Accept: 'application/json',
@@ -39,7 +45,7 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
             return next(retryReq);
           }),
           catchError((err) => {
-            authService.logout();
+            clearSessionAndRedirect();
             return throwError(() => err);
           }),
         );
