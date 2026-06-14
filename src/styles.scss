@@ -140,7 +140,7 @@ body {
   }
 
   .nav-item-active {
-    @apply flex items-center gap-4 bg-secondary-container text-on-secondary-container
+    @apply flex items-center gap-4 bg-[#106243] text-white
            rounded-xl px-4 py-3 mx-2 transition-all duration-150;
   }
 
