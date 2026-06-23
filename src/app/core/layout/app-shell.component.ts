@@ -6,6 +6,7 @@ import { ThemeService } from '../theme/theme.service';
 import { AuthService } from '../auth/auth.service';
 import { ChatSessionService } from '../../features/chat/services/chat-session.service';
 import { ChatNotificationService } from '../../features/chat/services/chat-notification.service';
+import { PullToRefreshDirective } from '../../shared/directives/pull-to-refresh.directive';
 
 interface NavItem {
   path: string;
@@ -16,7 +17,7 @@ interface NavItem {
 @Component({
   selector: 'app-app-shell',
   standalone: true,
-  imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive],
+  imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive, PullToRefreshDirective],
   templateUrl: './app-shell.component.html',
   styleUrl: './app-shell.component.scss',
 })

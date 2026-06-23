@@ -182,3 +182,29 @@ body {
     }
   }
 }
+
+.ptr-indicator {
+  height: 0;
+  opacity: 0;
+}
+
+.ptr-indicator.ptr-animate {
+  transition: height 0.2s ease, opacity 0.2s ease;
+}
+
+.ptr-icon {
+  transition: transform 0.1s linear;
+}
+
+.ptr-icon.ptr-spin {
+  animation: ptr-spin 0.9s linear infinite;
+}
+
+@keyframes ptr-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}

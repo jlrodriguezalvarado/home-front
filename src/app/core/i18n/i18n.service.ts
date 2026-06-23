@@ -149,6 +149,11 @@ export const APP_STRINGS = {
   defaultContactName: 'defaultContactName',
   customContactNameHint: 'customContactNameHint',
   renameContactFailed: 'renameContactFailed',
+  pullToRefresh: 'pullToRefresh',
+  releaseToRefresh: 'releaseToRefresh',
+  checkingUpdate: 'checkingUpdate',
+  updatingApp: 'updatingApp',
+  refreshFailed: 'refreshFailed',
 } as const;
 
 export type AppStringKey = keyof typeof APP_STRINGS;
@@ -300,6 +305,11 @@ const EN: Record<AppStringKey, string> = {
   defaultContactName: 'Original name',
   customContactNameHint: 'You are using a custom name visible only to you in this chat',
   renameContactFailed: 'Could not update contact name',
+  pullToRefresh: 'Pull down to refresh',
+  releaseToRefresh: 'Release to refresh',
+  checkingUpdate: 'Checking for updates...',
+  updatingApp: 'New version available. Updating...',
+  refreshFailed: 'Could not refresh the app',
 };
 
 const ES: Record<AppStringKey, string> = {
@@ -449,6 +459,11 @@ const ES: Record<AppStringKey, string> = {
   defaultContactName: 'Nombre original',
   customContactNameHint: 'Estás usando un nombre personalizado visible solo para ti en este chat',
   renameContactFailed: 'No se pudo actualizar el nombre del contacto',
+  pullToRefresh: 'Desliza hacia abajo para actualizar',
+  releaseToRefresh: 'Suelta para actualizar',
+  checkingUpdate: 'Buscando actualizaciones...',
+  updatingApp: 'Nueva versión disponible. Actualizando...',
+  refreshFailed: 'No se pudo actualizar la app',
 };
 
 @Injectable({
