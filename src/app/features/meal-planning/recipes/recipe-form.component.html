@@ -1,0 +1,100 @@
+<div class="space-y-lg w-full md:max-w-3xl md:mx-auto">
+  <div class="flex items-center gap-md">
+    <a routerLink="/meal-planning/recipes" class="text-primary text-label-lg flex items-center gap-1">
+      <span class="material-symbols-outlined text-[20px]">arrow_back</span>
+      {{ i18n.t('recipes') }}
+    </a>
+  </div>
+  <h1 class="page-title">{{ editingId() ? i18n.t('editRecipe') : i18n.t('newRecipe') }}</h1>
+  <app-loading-state *ngIf="loading()"></app-loading-state>
+  <app-error-state *ngIf="error()" (retry)="ngOnInit()"></app-error-state>
+  <form *ngIf="!loading() && !error()" [formGroup]="form" (ngSubmit)="save()" class="space-y-lg">
+    <div class="card-surface p-lg space-y-md">
+      <div>
+        <label class="text-label-lg text-on-surface-variant block mb-xs">{{ i18n.t('name') }} *</label>
+        <input type="text" formControlName="name" class="input-outlined">
+        <p *ngIf="form.get('name')?.touched && form.get('name')?.invalid" class="text-error text-body-md mt-xs">
+          {{ i18n.lang() === 'en' ? 'Name is required' : 'El nombre es obligatorio' }}
+        </p>
+      </div>
+      <div>
+        <label class="text-label-lg text-on-surface-variant block mb-xs">{{ i18n.t('description') }}</label>
+        <app-rich-text-editor
+          formControlName="description"
+          [placeholder]="i18n.lang() === 'en' ? 'Recipe instructions and notes...' : 'Instrucciones y notas de la receta...'">
+        </app-rich-text-editor>
+      </div>
+      <div>
+        <label class="text-label-lg text-on-surface-variant block mb-xs">{{ i18n.t('link') }}</label>
+        <input type="url" formControlName="link" class="input-outlined" placeholder="https://">
+        <p *ngIf="form.get('link')?.touched && form.get('link')?.invalid" class="text-error text-body-md mt-xs">
+          {{ i18n.lang() === 'en' ? 'Enter a valid URL (http or https)' : 'Introduce una URL válida (http o https)' }}
+        </p>
+      </div>
+      <label class="flex items-center gap-sm text-body-md text-on-surface">
+        <input type="checkbox" formControlName="isActive">
+        {{ i18n.t('active') }}
+      </label>
+    </div>
+    <div class="card-surface p-lg space-y-md">
+      <div class="flex items-center justify-between">
+        <h2 class="text-title-lg text-on-surface">{{ i18n.t('ingredients') }}</h2>
+        <button type="button" (click)="addIngredientRow()" class="btn-secondary flex items-center gap-1">
+          <span class="material-symbols-outlined text-[18px]">add</span>
+          {{ i18n.t('add') }}
+        </button>
+      </div>
+      <div formArrayName="ingredients" class="space-y-md">
+        <div
+          *ngFor="let row of ingredientsArray.controls; let i = index"
+          [formGroupName]="i"
+          class="border border-outline-variant rounded-xl p-md space-y-sm">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-md">
+            <div>
+              <label class="text-label-lg text-on-surface-variant block mb-xs">{{ i18n.t('ingredient') }} *</label>
+              <select formControlName="ingredient" (change)="onIngredientChange(i)" class="input-outlined">
+                <option value="">—</option>
+                <option *ngFor="let ing of ingredients()" [value]="ing.id">{{ ing.name }}</option>
+              </select>
+            </div>
+            <div>
+              <label class="text-label-lg text-on-surface-variant block mb-xs">{{ i18n.t('defaultProduct') }}</label>
+              <input
+                type="text"
+                class="input-outlined"
+                [value]="associatedProductName(i) ?? '—'"
+                [readonly]="hasIngredientDefaultProduct(i)">
+            </div>
+            <div>
+              <label class="text-label-lg text-on-surface-variant block mb-xs">{{ i18n.t('quantity') }} *</label>
+              <input type="text" formControlName="quantity" class="input-outlined tabular-nums" [attr.inputmode]="isUnitRow(i) ? 'numeric' : 'decimal'" (blur)="onQuantityBlur(i)">
+              <p *ngIf="row.get('quantity')?.touched && row.get('quantity')?.invalid" class="text-error text-body-md mt-xs">
+                {{
+                  row.get('quantity')?.errors?.['integerQuantity']
+                    ? (i18n.lang() === 'en' ? 'Unit quantities must be whole numbers' : 'Las cantidades por unidad deben ser enteras')
+                    : (i18n.lang() === 'en' ? 'Quantity must be greater than 0' : 'La cantidad debe ser mayor que 0')
+                }}
+              </p>
+            </div>
+            <div>
+              <label class="text-label-lg text-on-surface-variant block mb-xs">{{ i18n.t('unit') }}</label>
+              <input type="text" formControlName="unit" class="input-outlined" [readonly]="hasIngredientDefaultProduct(i)">
+            </div>
+            <div class="md:col-span-2">
+              <label class="text-label-lg text-on-surface-variant block mb-xs">{{ i18n.t('notes') }}</label>
+              <input type="text" formControlName="notes" class="input-outlined">
+            </div>
+          </div>
+          <button type="button" (click)="removeIngredientRow(i)" class="text-error text-label-md flex items-center gap-1">
+            <span class="material-symbols-outlined text-[18px]">delete</span>
+            {{ i18n.t('delete') }}
+          </button>
+        </div>
+      </div>
+    </div>
+    <div class="flex gap-md">
+      <a routerLink="/meal-planning/recipes" class="flex-1 py-3 border border-outline-variant rounded-xl text-label-lg text-center">{{ i18n.t('cancel') }}</a>
+      <button type="submit" [disabled]="saving()" class="flex-1 btn-primary py-3">{{ i18n.t('save') }}</button>
+    </div>
+  </form>
+</div>

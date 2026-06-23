@@ -1,0 +1,278 @@
+import { Component, inject, OnInit, signal } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormArray, FormBuilder, ReactiveFormsModule, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { RecipeRepository } from '../repositories/recipe.repository';
+import { IngredientRepository } from '../repositories/ingredient.repository';
+import { ProductRepository } from '../../products/product.repository';
+import { Ingredient, RecipePayload } from '../models/meal-planning.models';
+import { Product } from '../../../core/models/shopping.models';
+import { I18nService } from '../../../core/i18n/i18n.service';
+import { ToastService } from '../../../shared/services/toast.service';
+import { LoadingStateComponent } from '../../../shared/components/loading-state.component';
+import { ErrorStateComponent } from '../../../shared/components/error-state.component';
+import { RichTextEditorComponent } from '../../../shared/components/rich-text-editor.component';
+import { canonicalPresentationUnit, isPresentationUnitKg } from '../../shopping/utils/presentation-unit.utils';
+
+function urlValidator(control: AbstractControl): ValidationErrors | null {
+  const value = String(control.value ?? '').trim();
+  if (!value) return null;
+  try {
+    const url = new URL(value);
+    if (!['http:', 'https:'].includes(url.protocol)) return { invalidUrl: true };
+    return null;
+  } catch {
+    return { invalidUrl: true };
+  }
+}
+
+function quantityValidator(control: AbstractControl): ValidationErrors | null {
+  const value = String(control.value ?? '').trim();
+  if (!value) return { required: true };
+  const normalized = value.replace(',', '.');
+  const num = Number(normalized);
+  if (Number.isNaN(num) || num <= 0) return { positiveQuantity: true };
+  const unit = String(control.parent?.get('unit')?.value ?? '');
+  if (!isPresentationUnitKg(unit) && !Number.isInteger(num)) return { integerQuantity: true };
+  return null;
+}
+
+@Component({
+  selector: 'app-recipe-form',
+  standalone: true,
+  imports: [CommonModule, ReactiveFormsModule, RouterLink, LoadingStateComponent, ErrorStateComponent, RichTextEditorComponent],
+  templateUrl: './recipe-form.component.html',
+  styleUrl: './recipe-form.component.scss',
+})
+export class RecipeFormComponent implements OnInit {
+  private readonly fb = inject(FormBuilder);
+  private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
+  repo = inject(RecipeRepository);
+  ingredientRepo = inject(IngredientRepository);
+  productRepo = inject(ProductRepository);
+  i18n = inject(I18nService);
+  toast = inject(ToastService);
+  ingredients = signal<Ingredient[]>([]);
+  productsById = signal<Record<string, Product>>({});
+  loadingProductsById = signal<Record<string, boolean>>({});
+  loading = signal(false);
+  saving = signal(false);
+  error = signal(false);
+  editingId = signal<string | null>(null);
+  form = this.fb.group({
+    name: ['', Validators.required],
+    description: [''],
+    link: ['', urlValidator],
+    isActive: [true],
+    ingredients: this.fb.array([]),
+  });
+
+  ngOnInit() {
+    const id = this.route.snapshot.paramMap.get('id');
+    this.editingId.set(id);
+    this.loading.set(true);
+    this.ingredientRepo.list({ is_active: true }).subscribe({
+      next: (ingredients) => {
+        this.ingredients.set(ingredients);
+        if (id) {
+          this.loadRecipe(id);
+        } else {
+          this.addIngredientRow();
+          this.loading.set(false);
+        }
+      },
+      error: () => {
+        this.loading.set(false);
+        this.error.set(true);
+      },
+    });
+  }
+
+  get ingredientsArray(): FormArray {
+    return this.form.get('ingredients') as FormArray;
+  }
+
+  loadRecipe(id: string) {
+    this.repo.get(id).subscribe({
+      next: (recipe) => {
+        this.form.patchValue({
+          name: recipe.name,
+          description: recipe.description,
+          link: recipe.link ?? '',
+          isActive: recipe.isActive,
+        });
+        this.ingredientsArray.clear();
+        recipe.ingredients.forEach((row) => {
+          this.ingredientsArray.push(this.createIngredientGroup({
+            ingredient: row.ingredient.id,
+            product: row.product?.id ?? null,
+            quantity: row.quantity,
+            unit: row.unit,
+            notes: row.notes,
+            sortOrder: row.sortOrder,
+          }));
+        });
+        recipe.ingredients.forEach((row, index) => {
+          if (row.product?.id) this.ensureProductLoaded(row.product.id, index);
+        });
+        this.ingredientsArray.controls.forEach((_, index) => this.syncIngredientRow(index));
+        if (recipe.ingredients.length === 0) this.addIngredientRow();
+        this.loading.set(false);
+      },
+      error: () => {
+        this.loading.set(false);
+        this.error.set(true);
+      },
+    });
+  }
+
+  createIngredientGroup(data?: {
+    ingredient?: string;
+    product?: string | null;
+    quantity?: string;
+      unit?: 'kg' | 'unit' | string;
+    notes?: string;
+    sortOrder?: number;
+  }) {
+    return this.fb.group({
+      ingredient: [data?.ingredient ?? '', Validators.required],
+      product: [data?.product ?? null],
+      quantity: [data?.quantity ?? '1', quantityValidator],
+      unit: [data?.unit ?? 'unit'],
+      notes: [data?.notes ?? ''],
+      sortOrder: [data?.sortOrder ?? this.ingredientsArray.length],
+    });
+  }
+
+  addIngredientRow() {
+    this.ingredientsArray.push(this.createIngredientGroup());
+  }
+
+  removeIngredientRow(index: number) {
+    this.ingredientsArray.removeAt(index);
+  }
+
+  onIngredientChange(index: number) {
+    this.syncIngredientRow(index);
+  }
+
+  associatedProductName(index: number): string | null {
+    const group = this.ingredientsArray.at(index);
+    const ingredientId = group.get('ingredient')?.value;
+    const ingredient = this.ingredients().find((i) => i.id === ingredientId);
+    return ingredient?.defaultProduct?.name ?? this.loadedProductName(index);
+  }
+
+  hasIngredientDefaultProduct(index: number): boolean {
+    const group = this.ingredientsArray.at(index);
+    const ingredientId = String(group.get('ingredient')?.value ?? '');
+    const ingredient = this.ingredients().find((i) => i.id === ingredientId);
+    return Boolean(ingredient?.defaultProduct);
+  }
+
+  isUnitRow(index: number): boolean {
+    const group = this.ingredientsArray.at(index);
+    const unit = String(group.get('unit')?.value ?? '');
+    return !isPresentationUnitKg(unit);
+  }
+
+  onQuantityBlur(index: number) {
+    const group = this.ingredientsArray.at(index);
+    const raw = String(group.get('quantity')?.value ?? '').trim();
+    const normalized = raw.replace(',', '.');
+    const num = Number(normalized);
+    if (Number.isNaN(num) || num <= 0) return;
+    if (this.isUnitRow(index)) {
+      group.get('quantity')?.setValue(String(Math.round(num)));
+      return;
+    }
+    group.get('quantity')?.setValue(normalized);
+  }
+
+  private syncIngredientRow(index: number) {
+    const group = this.ingredientsArray.at(index);
+    const ingredientId = String(group.get('ingredient')?.value ?? '');
+    const ingredient = this.ingredients().find((i) => i.id === ingredientId);
+    const productId = ingredient?.defaultProduct?.id ?? null;
+    if (productId) {
+      group.patchValue({ product: productId }, { emitEvent: false });
+      this.ensureProductLoaded(productId, index);
+    } else if (!group.get('product')?.value) {
+      group.patchValue({ product: null }, { emitEvent: false });
+    }
+    group.get('quantity')?.updateValueAndValidity({ emitEvent: false });
+  }
+
+  private loadedProductName(index: number): string | null {
+    const productId = String(this.ingredientsArray.at(index).get('product')?.value ?? '');
+    if (!productId) return null;
+    return this.productsById()[productId]?.name ?? null;
+  }
+
+  private ensureProductLoaded(productId: string, index: number) {
+    if (this.productsById()[productId] || this.loadingProductsById()[productId]) return;
+    this.loadingProductsById.set({ ...this.loadingProductsById(), [productId]: true });
+    this.productRepo.get(productId).subscribe({
+      next: (product) => {
+        this.productsById.set({ ...this.productsById(), [productId]: product });
+        this.loadingProductsById.set({ ...this.loadingProductsById(), [productId]: false });
+        const group = this.ingredientsArray.at(index);
+        if (!group) return;
+        group.patchValue({ unit: canonicalPresentationUnit(product.presentationUnit) }, { emitEvent: false });
+        group.get('quantity')?.updateValueAndValidity({ emitEvent: false });
+      },
+      error: () => {
+        this.loadingProductsById.set({ ...this.loadingProductsById(), [productId]: false });
+      },
+    });
+  }
+
+  save() {
+    if (this.form.invalid) {
+      this.form.markAllAsTouched();
+      this.toast.error(this.i18n.lang() === 'en' ? 'Please fix validation errors' : 'Corrige los errores de validación');
+      return;
+    }
+    const value = this.form.getRawValue();
+    const rows = (value.ingredients ?? []) as Array<{
+      ingredient?: string;
+      product?: string | null;
+      quantity?: string;
+      unit?: string;
+      notes?: string;
+      sortOrder?: number;
+    }>;
+    const linkValue = String(value.link ?? '').trim();
+    const payload: RecipePayload = {
+      name: value.name ?? '',
+      description: value.description ?? '',
+      link: linkValue ? linkValue : null,
+      isActive: value.isActive ?? true,
+      ingredients: rows.map((row, index) => ({
+        ingredient: String(row.ingredient ?? ''),
+        product: row.product ? String(row.product) : null,
+        quantity: String(row.quantity ?? '0').replace(',', '.'),
+        unit: String(row.unit ?? 'unit'),
+        notes: String(row.notes ?? ''),
+        sortOrder: Number(row.sortOrder ?? index),
+      })),
+    };
+    this.saving.set(true);
+    const editingId = this.editingId();
+    const request$ = editingId
+      ? this.repo.update(editingId, payload)
+      : this.repo.create(payload);
+    request$.subscribe({
+      next: () => {
+        this.saving.set(false);
+        this.toast.success(this.i18n.t('save'));
+        this.router.navigate(['/meal-planning/recipes']);
+      },
+      error: () => {
+        this.saving.set(false);
+        this.toast.error(this.i18n.lang() === 'en' ? 'Save failed' : 'Error al guardar');
+      },
+    });
+  }
+}

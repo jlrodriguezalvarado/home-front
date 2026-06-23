@@ -49,6 +49,10 @@ export const routes: Routes = [
         loadComponent: () => import('./features/exchange/exchange-dashboard.component').then(m => m.ExchangeDashboardComponent)
       },
       {
+        path: 'meal-planning',
+        loadChildren: () => import('./features/meal-planning/meal-planning.routes').then(m => m.MEAL_PLANNING_ROUTES),
+      },
+      {
         path: 'finance',
         loadChildren: () => import('./features/finance/finance.routes').then(m => m.FINANCE_ROUTES)
       },

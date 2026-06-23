@@ -13,8 +13,10 @@
     <input
       type="text"
       inputmode="decimal"
-      [ngModel]="displayValue"
+      [ngModel]="inputValue"
       (ngModelChange)="onInputChange($event)"
+      (focus)="onInputFocus()"
+      (blur)="onInputBlur()"
       [class]="compact
         ? 'w-10 text-center bg-transparent border-b border-outline-variant text-label-md tabular-nums'
         : 'w-14 text-center bg-transparent border-b border-outline-variant text-numeral-md tabular-nums'"

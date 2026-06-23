@@ -41,6 +41,12 @@ export class ProductRepository {
     return this.http.get<unknown>(nextUrl).pipe(map((resp) => this.mapPaginatedResponse(resp)));
   }
 
+  get(id: string): Observable<Product> {
+    return this.api.get<unknown>(API_ENDPOINTS.products.detail(id)).pipe(
+      map((resp) => mapApiProductToProduct(resp as Record<string, unknown>)),
+    );
+  }
+
   getCategories(params?: { commerce_id?: string }): Observable<Category[]> {
     let httpParams = new HttpParams();
     if (params?.commerce_id) {

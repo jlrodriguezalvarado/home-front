@@ -1,0 +1,20 @@
+<div class="fixed inset-0 bg-black/50 flex items-center justify-center p-md z-50" (click)="close()">
+  <div class="bg-surface-container-lowest w-full max-w-lg p-xl rounded-[24px] border border-outline-variant shadow-card-hover max-h-[90vh] overflow-y-auto" (click)="$event.stopPropagation()">
+    <h2 class="text-title-lg text-on-surface mb-lg">{{ i18n.t('copyFavoriteMeal') }}</h2>
+    <app-loading-state *ngIf="loading()"></app-loading-state>
+    <app-error-state *ngIf="error()" (retry)="load()"></app-error-state>
+    <app-empty-state *ngIf="!loading() && !error() && meals().length === 0" icon="favorite" [title]="i18n.t('favorites')"></app-empty-state>
+    <div *ngIf="!loading() && !error() && meals().length > 0" class="space-y-sm">
+      <button
+        *ngFor="let meal of meals()"
+        (click)="selectMeal(meal)"
+        type="button"
+        class="card-surface p-md w-full text-left hover:shadow-card-hover transition-shadow">
+        <div class="text-headline-md text-on-surface">{{ meal.mealType.name }}</div>
+        <div class="text-body-md text-on-surface-variant">{{ meal.recipe?.name || meal.name }}</div>
+        <div *ngIf="meal.notes" class="text-body-md text-on-surface-variant mt-xs">{{ meal.notes }}</div>
+      </button>
+    </div>
+    <button (click)="close()" type="button" class="w-full mt-md py-3 border border-outline-variant rounded-xl text-label-lg">{{ i18n.t('cancel') }}</button>
+  </div>
+</div>

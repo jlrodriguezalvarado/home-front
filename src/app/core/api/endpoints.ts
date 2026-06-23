@@ -26,6 +26,46 @@ export const API_ENDPOINTS = {
     list: '/exchange-rates/',
     detail: (id: string) => `/exchange-rates/${id}/`,
   },
+  mealPlanning: {
+    ingredients: {
+      list: '/meal-planning/ingredients/',
+      detail: (id: string) => `/meal-planning/ingredients/${id}/`,
+    },
+    recipes: {
+      list: '/meal-planning/recipes/',
+      detail: (id: string) => `/meal-planning/recipes/${id}/`,
+      toggleFavorite: (id: string) => `/meal-planning/recipes/${id}/toggle-favorite/`,
+      favorites: '/meal-planning/recipes/favorites/',
+    },
+    mealTypes: {
+      list: '/meal-planning/meal-types/',
+      detail: (id: string) => `/meal-planning/meal-types/${id}/`,
+    },
+    weeklyMenus: {
+      list: '/meal-planning/weekly-menus/',
+      detail: (id: string) => `/meal-planning/weekly-menus/${id}/`,
+      current: '/meal-planning/weekly-menus/current/',
+      setCurrent: (id: string) => `/meal-planning/weekly-menus/${id}/set-current/`,
+      toggleFavorite: (id: string) => `/meal-planning/weekly-menus/${id}/toggle-favorite/`,
+      favorites: '/meal-planning/weekly-menus/favorites/',
+      clone: (id: string) => `/meal-planning/weekly-menus/${id}/clone/`,
+      shoppingList: (id: string) => `/meal-planning/weekly-menus/${id}/shopping-list/`,
+    },
+    menuDays: {
+      list: '/meal-planning/menu-days/',
+      detail: (id: string) => `/meal-planning/menu-days/${id}/`,
+      toggleFavorite: (id: string) => `/meal-planning/menu-days/${id}/toggle-favorite/`,
+      favorites: '/meal-planning/menu-days/favorites/',
+      copyFavorite: '/meal-planning/menu-days/copy-favorite/',
+    },
+    menuMeals: {
+      list: '/meal-planning/menu-meals/',
+      detail: (id: string) => `/meal-planning/menu-meals/${id}/`,
+      toggleFavorite: (id: string) => `/meal-planning/menu-meals/${id}/toggle-favorite/`,
+      favorites: '/meal-planning/menu-meals/favorites/',
+      copyFavorite: '/meal-planning/menu-meals/copy-favorite/',
+    },
+  },
   finance: {
     monthSummary: '/finance/month-summary/',
     months: '/finance/months/',

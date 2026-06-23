@@ -1,0 +1,62 @@
+<div class="space-y-lg print:space-y-md">
+  <div class="flex flex-wrap items-center justify-between gap-md print:hidden">
+    <a [routerLink]="['/meal-planning/weekly-menus', shoppingList()?.weeklyMenuId, 'edit']" class="text-primary text-label-lg flex items-center gap-1">
+      <span class="material-symbols-outlined text-[20px]">arrow_back</span>
+      {{ i18n.t('weeklyMenu') }}
+    </a>
+    <div class="flex gap-sm">
+      <button (click)="printList()" class="btn-secondary flex items-center gap-2">
+        <span class="material-symbols-outlined text-[20px]">print</span>
+        {{ i18n.t('print') }}
+      </button>
+      <button (click)="copyToClipboard()" class="btn-secondary flex items-center gap-2">
+        <span class="material-symbols-outlined text-[20px]">content_copy</span>
+        {{ i18n.t('copyToClipboard') }}
+      </button>
+    </div>
+  </div>
+  <h1 class="page-title">{{ i18n.t('shoppingList') }}</h1>
+  <p *ngIf="shoppingList()" class="text-headline-md text-on-surface">{{ shoppingList()!.weeklyMenuName }}</p>
+  <app-loading-state *ngIf="loading()"></app-loading-state>
+  <app-error-state *ngIf="error()" (retry)="ngOnInit()"></app-error-state>
+  <app-empty-state
+    *ngIf="!loading() && !error() && shoppingList() && !shoppingList()!.items.length && !shoppingList()!.withoutProduct.length"
+    icon="shopping_cart"
+    [title]="i18n.t('shoppingList')">
+  </app-empty-state>
+  <div *ngIf="!loading() && !error() && shoppingList()" class="space-y-lg">
+    <section *ngIf="groupedItems().length">
+      <h2 class="text-title-lg text-on-surface mb-md">{{ i18n.t('productsGrouped') }}</h2>
+      <div class="space-y-md">
+        <div *ngFor="let group of groupedItems()" class="card-surface p-lg">
+          <div class="text-headline-md text-primary mb-md">{{ group.commerceName }}</div>
+          <div class="space-y-sm">
+            <div *ngFor="let item of group.items" class="border border-outline-variant rounded-xl p-md">
+              <div class="flex flex-wrap justify-between gap-md">
+                <div>
+                  <div class="text-body-md text-on-surface font-medium">{{ item.productName }}</div>
+                  <div class="text-headline-md text-on-surface tabular-nums">{{ item.totalQuantity }} {{ item.unit }}</div>
+                </div>
+              </div>
+              <div *ngIf="item.recipes.length" class="text-body-md text-on-surface-variant mt-sm">
+                {{ i18n.t('usedInRecipes') }}: {{ recipeUsageText(item.recipes) }}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+    <section *ngIf="shoppingList()!.withoutProduct.length">
+      <h2 class="text-title-lg text-on-surface mb-md">{{ i18n.t('withoutProduct') }}</h2>
+      <div class="card-surface p-lg space-y-sm">
+        <div *ngFor="let item of shoppingList()!.withoutProduct" class="border border-outline-variant rounded-xl p-md">
+          <div class="text-body-md text-on-surface font-medium">{{ item.ingredientName }}</div>
+          <div class="text-headline-md text-on-surface tabular-nums">{{ item.totalQuantity }} {{ item.unit }}</div>
+          <div *ngIf="item.recipes.length" class="text-body-md text-on-surface-variant mt-sm">
+            {{ i18n.t('usedInRecipes') }}: {{ recipeUsageText(item.recipes) }}
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+</div>

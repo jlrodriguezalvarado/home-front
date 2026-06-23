@@ -1,30 +1,38 @@
 
-<div class="space-y-6" *ngIf="purchase">
-  <div class="flex items-center gap-4">
-    <button (click)="back()" class="p-2 bg-gray-100 dark:bg-gray-800 rounded-lg">←</button>
-    <h1 class="text-3xl font-bold">{{ purchase.commerceName }}</h1>
+<app-loading-state *ngIf="loading()"></app-loading-state>
+<app-error-state *ngIf="error()" (retry)="retryLoad()"></app-error-state>
+
+<div class="space-y-lg" *ngIf="purchase && !loading() && !error()">
+  <div class="flex items-center gap-sm min-w-0">
+    <button (click)="back()"
+            class="p-2 border border-outline-variant rounded-xl hover:bg-surface-container transition-colors shrink-0 text-on-surface">
+      <span class="material-symbols-outlined">arrow_back</span>
+    </button>
+    <h1 class="page-title truncate">{{ purchase.commerceName }}</h1>
   </div>
 
-  <div class="bg-white dark:bg-dark-surface rounded-2xl shadow-sm border dark:border-gray-800 overflow-hidden">
-    <div class="p-6 border-b dark:border-gray-800 flex justify-between items-center">
+  <div class="card-surface overflow-hidden">
+    <div class="p-lg border-b border-outline-variant flex justify-between items-center gap-md">
       <div>
-        <div class="text-sm text-gray-500">Date</div>
-        <div class="font-bold">{{ purchase.date | date:'medium' }}</div>
+        <div class="text-label-md text-on-surface-variant">Date</div>
+        <div class="text-label-lg text-on-surface">{{ purchase.date | date:'medium' }}</div>
       </div>
       <div class="text-right">
-        <div class="text-sm text-gray-500">Total</div>
-        <div class="text-2xl font-bold text-primary">{{ purchase.total }}</div>
+        <div class="text-label-md text-on-surface-variant">Total</div>
+        <div class="text-primary text-numeral-md tabular-nums font-semibold">{{ purchase.total }}</div>
       </div>
     </div>
 
-    <div class="divide-y dark:divide-gray-800">
-      <div *ngFor="let item of purchase.items" class="p-6 flex justify-between items-center">
-        <div>
-          <div class="font-medium">{{ item.product.name }}</div>
-          <div class="text-sm text-gray-500">{{ item.quantity }} {{ item.product.unit }} x {{ item.price }}</div>
+    <div class="divide-y divide-outline-variant">
+      <div *ngFor="let item of purchase.items" class="p-md md:p-lg flex justify-between items-center gap-md">
+        <div class="min-w-0 flex-1">
+          <div class="text-label-lg text-on-surface truncate">{{ item.product['name'] }}</div>
+          <div class="text-body-md text-on-surface-variant">
+            {{ item.quantity }} {{ item.product['unit'] }} x {{ unitPriceLabel(item.price) }}
+          </div>
         </div>
-        <div class="font-bold">
-           {{ (item.quantity * item.price).toFixed(2) }}
+        <div class="text-numeral-md tabular-nums font-semibold text-on-surface shrink-0">
+          {{ lineTotalLabel(item) }}
         </div>
       </div>
     </div>

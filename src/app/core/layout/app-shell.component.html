@@ -92,7 +92,7 @@
       <a *ngFor="let item of mobileNavItems"
          [routerLink]="item.path"
          (click)="closeDrawer()"
-         routerLinkActive="text-primary"
+         routerLinkActive="nav-mobile-active"
          [routerLinkActiveOptions]="{exact: item.path === '/'}"
          class="flex flex-col items-center justify-center flex-1 h-full text-on-surface-variant">
         <span class="material-symbols-outlined"

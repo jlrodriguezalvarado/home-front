@@ -1,0 +1,26 @@
+.rich-text-editor {
+  @apply rounded-xl border border-outline-variant bg-surface-container-low overflow-hidden;
+  &--disabled {
+    @apply opacity-60;
+  }
+  &__toolbar {
+    @apply flex flex-wrap items-center gap-1 px-sm py-sm border-b border-outline-variant bg-surface-container;
+  }
+  &__btn {
+    @apply inline-flex items-center justify-center w-9 h-9 rounded-lg text-on-surface-variant
+           hover:bg-surface-container-high transition-colors disabled:cursor-not-allowed;
+  }
+  &__divider {
+    @apply w-px h-6 bg-outline-variant mx-1;
+  }
+  &__content {
+    @apply px-md py-3 text-body-md text-on-surface outline-none;
+    &:empty::before {
+      content: attr(data-placeholder);
+      @apply text-outline-variant pointer-events-none;
+    }
+    &:focus {
+      @apply ring-2 ring-primary ring-inset;
+    }
+  }
+}

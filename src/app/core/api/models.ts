@@ -10,6 +10,7 @@ export interface Commerce {
   name: string;
   logo: string | null;
   currencyCode: string;
+  currencySymbol: string;
 }
 
 export interface Category {

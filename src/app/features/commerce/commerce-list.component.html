@@ -1,14 +1,26 @@
 
 <div class="space-y-lg">
-  <div class="flex items-center justify-between">
-    <h1 class="page-title">{{ i18n.t('stores') }}</h1>
-    <button class="btn-primary flex items-center gap-2" disabled>
-      <span class="material-symbols-outlined text-[20px]">add</span>
-      Add Store
-    </button>
-  </div>
-  <div class="card-surface p-xxl flex flex-col items-center justify-center text-center">
-    <span class="material-symbols-outlined text-[48px] text-on-surface-variant mb-md">storefront</span>
-    <p class="text-body-lg text-on-surface-variant">{{ i18n.t('comingSoon') }}</p>
+  <h1 class="page-title">{{ i18n.t('stores') }}</h1>
+  <app-loading-state *ngIf="loading()"></app-loading-state>
+  <app-error-state *ngIf="!loading() && error()" (retry)="load()"></app-error-state>
+  <app-empty-state
+    *ngIf="!loading() && !error() && commerces().length === 0"
+    icon="storefront"
+    [title]="i18n.lang() === 'en' ? 'No stores yet' : 'Sin tiendas'"
+    [message]="i18n.lang() === 'en' ? 'Stores will appear here once created.' : 'Las tiendas aparecerán aquí cuando se creen.'">
+  </app-empty-state>
+  <div *ngIf="!loading() && !error() && commerces().length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-md">
+    <div *ngFor="let c of commerces()" class="card-surface p-lg hover:shadow-card-hover transition-shadow">
+      <div class="flex items-center gap-md">
+        <div class="w-12 h-12 rounded-xl bg-surface-container flex items-center justify-center shrink-0 overflow-hidden">
+          <img *ngIf="c.logo" [src]="c.logo" [alt]="c.name" class="w-full h-full object-cover">
+          <span *ngIf="!c.logo" class="material-symbols-outlined text-[28px] text-on-surface-variant">storefront</span>
+        </div>
+        <div class="min-w-0">
+          <div class="text-headline-md text-on-surface truncate">{{ c.name }}</div>
+          <div *ngIf="c.currencySymbol" class="text-body-md text-on-surface-variant tabular-nums">{{ c.currencySymbol }}</div>
+        </div>
+      </div>
+    </div>
   </div>
 </div>

@@ -18,8 +18,9 @@ export class CommerceRepository {
         return items.map((c) => ({
           id: c.id,
           name: c.name,
-          logo: resolveMediaUrl(c.logo),
-          currencyCode: c.currency_code,
+          logo: resolveMediaUrl(c.image ?? c.logo),
+          currencyCode: c.default_currency?.code ?? c.currency_code ?? '',
+          currencySymbol: c.default_currency?.symbol ?? '',
         }));
       }),
     );

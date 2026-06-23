@@ -1,0 +1,66 @@
+<div class="space-y-lg">
+  <app-meal-planning-nav></app-meal-planning-nav>
+  <div class="flex flex-wrap items-center justify-between gap-md">
+    <h1 class="page-title">{{ i18n.t('recipes') }}</h1>
+    <a routerLink="/meal-planning/recipes/create" class="btn-primary flex items-center gap-2">
+      <span class="material-symbols-outlined text-[20px]">add</span>
+      {{ i18n.t('newRecipe') }}
+    </a>
+  </div>
+  <div class="flex flex-wrap gap-md">
+    <input
+      type="search"
+      [ngModel]="searchQuery()"
+      (ngModelChange)="onSearchChange($event)"
+      [placeholder]="i18n.t('search')"
+      class="input-outlined flex-1 min-w-[200px]">
+    <button
+      (click)="toggleFavoritesFilter()"
+      class="btn-secondary flex items-center gap-2"
+      [class.nav-item-active]="favoritesOnly()">
+      <span class="material-symbols-outlined text-[20px]" [class.material-symbols-filled]="favoritesOnly()" [class.text-error]="favoritesOnly()">favorite</span>
+      {{ i18n.t('favorites') }}
+    </button>
+  </div>
+  <app-loading-state *ngIf="loading() && recipes().length === 0"></app-loading-state>
+  <app-error-state *ngIf="error()" (retry)="load()"></app-error-state>
+  <app-empty-state
+    *ngIf="!loading() && !error() && recipes().length === 0"
+    icon="restaurant"
+    [title]="i18n.t('recipes')">
+  </app-empty-state>
+  <div *ngIf="!loading() && !error() && recipes().length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-md">
+    <a
+      *ngFor="let recipe of recipes()"
+      [routerLink]="['/meal-planning/recipes', recipe.id, 'edit']"
+      class="card-surface p-lg hover:shadow-card-hover transition-shadow block">
+      <div class="flex justify-between items-start gap-md">
+        <div class="min-w-0">
+          <div class="text-headline-md text-on-surface truncate">{{ recipe.name }}</div>
+          <div *ngIf="recipe.description" class="text-body-md text-on-surface-variant mt-xs line-clamp-2">{{ recipe.description | stripHtml }}</div>
+          <a
+            *ngIf="recipe.link"
+            [href]="recipe.link"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="text-primary text-label-md mt-xs inline-flex items-center gap-1 hover:underline"
+            (click)="$event.stopPropagation()">
+            <span class="material-symbols-outlined text-[16px]">link</span>
+            {{ i18n.t('link') }}
+          </a>
+          <div class="text-body-md text-on-surface-variant mt-sm">
+            {{ recipe.ingredients.length }} {{ i18n.t('ingredients').toLowerCase() }}
+          </div>
+        </div>
+        <div class="flex flex-col gap-sm shrink-0" (click)="$event.preventDefault(); $event.stopPropagation()">
+          <button (click)="toggleFavorite(recipe, $event)" class="text-on-surface-variant hover:text-error transition-colors flex items-center gap-1 text-label-md">
+            <span class="material-symbols-outlined text-[20px]" [class.material-symbols-filled]="recipe.isFavorite" [class.text-error]="recipe.isFavorite">favorite</span>
+          </button>
+          <button (click)="deleteRecipe(recipe, $event)" class="text-error text-label-md hover:underline flex items-center gap-1">
+            <span class="material-symbols-outlined text-[18px]">delete</span>
+          </button>
+        </div>
+      </div>
+    </a>
+  </div>
+</div>

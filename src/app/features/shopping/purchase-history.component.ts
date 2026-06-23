@@ -1,7 +1,13 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
-import { PurchaseRepository, Purchase } from './purchase.repository';
+import { forkJoin } from 'rxjs';
+import {
+  enrichPurchaseCommerceNames,
+  Purchase,
+  PurchaseRepository,
+} from './purchase.repository';
+import { CommerceRepository } from '../commerce/commerce.repository';
 import { CartService } from './cart.service';
 import { I18nService } from '../../core/i18n/i18n.service';
 import { normalizeStoredProduct } from '../products/product.mapper';
@@ -20,6 +26,7 @@ import { ToastService } from '../../shared/services/toast.service';
 })
 export class PurchaseHistoryComponent implements OnInit {
   repo = inject(PurchaseRepository);
+  commerceRepo = inject(CommerceRepository);
   cartService = inject(CartService);
   i18n = inject(I18nService);
   router = inject(Router);
@@ -38,10 +45,14 @@ export class PurchaseHistoryComponent implements OnInit {
   loadPurchases() {
     this.loading.set(true);
     this.error.set(false);
-    this.repo.list(this.currentPage).subscribe({
-      next: (res) => {
-        this.purchases.update((prev) => [...prev, ...res.results]);
-        this.hasMore.set(!!res.next);
+    forkJoin({
+      purchases: this.repo.list(this.currentPage),
+      commerces: this.commerceRepo.list(),
+    }).subscribe({
+      next: ({ purchases, commerces }) => {
+        const enriched = enrichPurchaseCommerceNames(purchases.results, commerces);
+        this.purchases.update((prev) => [...prev, ...enriched]);
+        this.hasMore.set(!!purchases.next);
         this.loading.set(false);
       },
       error: () => {
@@ -84,6 +95,9 @@ export class PurchaseHistoryComponent implements OnInit {
   }
 
   viewDetail(p: Purchase) {
-    this.router.navigate(['/purchases/detail'], { state: { purchase: p } });
+    this.router.navigate(['/purchases/detail'], {
+      state: { purchase: p },
+      queryParams: { id: p.id },
+    });
   }
 }

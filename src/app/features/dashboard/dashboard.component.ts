@@ -4,12 +4,14 @@ import { CommonModule } from '@angular/common';
 
 import { RouterLink } from '@angular/router';
 
+import { forkJoin } from 'rxjs';
+
 import { I18nService, AppStringKey } from '../../core/i18n/i18n.service';
 
 import { CartService } from '../shopping/cart.service';
 
-import { PurchaseRepository, Purchase } from '../shopping/purchase.repository';
-
+import { PurchaseRepository, Purchase, enrichPurchaseCommerceNames } from '../shopping/purchase.repository';
+import { CommerceRepository } from '../commerce/commerce.repository';
 import { formatPrice, singleAggregateCurrency } from '../shopping/utils/price.utils';
 
 
@@ -45,6 +47,7 @@ export class DashboardComponent implements OnInit {
   cart = inject(CartService);
 
   purchaseRepo = inject(PurchaseRepository);
+  commerceRepo = inject(CommerceRepository);
 
 
 
@@ -67,15 +70,16 @@ export class DashboardComponent implements OnInit {
 
 
   ngOnInit() {
-
-    this.purchaseRepo.list(1).subscribe({
-
-      next: (res) => this.purchases.set(res.results.slice(0, 5)),
-
+    forkJoin({
+      purchases: this.purchaseRepo.list(1),
+      commerces: this.commerceRepo.list(),
+    }).subscribe({
+      next: ({ purchases, commerces }) => {
+        const enriched = enrichPurchaseCommerceNames(purchases.results.slice(0, 5), commerces);
+        this.purchases.set(enriched);
+      },
       error: () => this.purchases.set([]),
-
     });
-
   }
 
 
@@ -125,9 +129,7 @@ export class DashboardComponent implements OnInit {
 
 
   formatMoney(value: string): string {
-
-    return `$${value}`;
-
+    return value;
   }
 
 }

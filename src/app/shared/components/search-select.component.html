@@ -1,0 +1,58 @@
+<div class="relative">
+  <button
+    type="button"
+    data-search-select-trigger
+    (click)="toggle()"
+    class="input-outlined w-full text-left flex items-center justify-between gap-sm min-h-[44px]">
+    <span class="truncate" [class.text-on-surface-variant]="!value">{{ selectedLabel() || placeholder }}</span>
+    <span class="material-symbols-outlined text-on-surface-variant shrink-0">{{ open() ? 'expand_less' : 'expand_more' }}</span>
+  </button>
+  <button
+    *ngIf="clearable && value && !open()"
+    type="button"
+    (click)="clear($event)"
+    class="absolute right-10 top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-on-surface">
+    <span class="material-symbols-outlined text-[18px]">close</span>
+  </button>
+</div>
+<div *ngIf="open()" class="fixed inset-0 z-[60]" (click)="close()"></div>
+<div
+  *ngIf="open() && panelStyle() as panel"
+  class="search-select-panel fixed z-[70] bg-surface-container-lowest border border-outline-variant rounded-xl shadow-card-hover overflow-hidden flex flex-col"
+  [style.top]="panel.top"
+  [style.left]="panel.left"
+  [style.width]="panel.width"
+  [style.max-height]="panel.maxHeight"
+  (click)="$event.stopPropagation()">
+  <div class="p-sm border-b border-outline-variant shrink-0">
+    <div class="relative">
+      <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[18px]">search</span>
+      <input
+        type="search"
+        [ngModel]="searchQuery()"
+        (ngModelChange)="onSearchInput($event)"
+        [placeholder]="searchPlaceholder"
+        class="input-outlined pl-10 py-2 w-full">
+    </div>
+  </div>
+  <div class="overflow-y-auto min-h-0 flex-1">
+    <button
+      *ngIf="clearable"
+      type="button"
+      (click)="valueChange.emit(null); close()"
+      class="w-full text-left px-md py-sm text-body-md text-on-surface-variant hover:bg-surface-container-high transition-colors">
+      —
+    </button>
+    <app-loading-state *ngIf="loading" class="block p-md"></app-loading-state>
+    <p *ngIf="!loading && filteredOptions().length === 0" class="px-md py-sm text-body-md text-on-surface-variant">{{ emptyLabel }}</p>
+    <button
+      *ngFor="let opt of filteredOptions()"
+      type="button"
+      (click)="select(opt)"
+      class="w-full text-left px-md py-sm text-body-md text-on-surface hover:bg-surface-container-high transition-colors truncate"
+      [class.bg-primary-container]="opt.value === value"
+      [class.text-on-primary-container]="opt.value === value">
+      {{ opt.label }}
+    </button>
+  </div>
+</div>
