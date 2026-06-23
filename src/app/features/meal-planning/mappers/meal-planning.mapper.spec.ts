@@ -7,6 +7,7 @@ import {
   mapMenuMealPayloadToApi,
   mapRecipeFromApi,
   mapRecipePayloadToApi,
+  mapRecipePayloadToFormData,
   mapShoppingListFromApi,
   mapWeeklyMenuFromApi,
 } from './meal-planning.mapper';
@@ -91,6 +92,8 @@ describe('meal-planning.mapper', () => {
       name: 'Salad',
       description: 'Green salad',
       link: 'https://example.com/salad',
+      image: 'https://cdn.example.com/salad.jpg',
+      video: 'https://cdn.example.com/salad.mp4',
       is_favorite: true,
       is_active: true,
       ingredients: [
@@ -107,6 +110,8 @@ describe('meal-planning.mapper', () => {
     });
     expect(result.isFavorite).toBe(true);
     expect(result.link).toBe('https://example.com/salad');
+    expect(result.image).toBe('https://cdn.example.com/salad.jpg');
+    expect(result.video).toBe('https://cdn.example.com/salad.mp4');
     expect(result.ingredients.length).toBe(1);
     expect(result.ingredients[0].quantity).toBe('2.5');
     expect(result.ingredients[0].ingredient.name).toBe('Lettuce');
@@ -245,6 +250,50 @@ describe('meal-planning.mapper', () => {
       isActive: true,
       ingredients: [],
     })['link']).toBeNull();
+  });
+
+  it('should map recipe clear media flags to API payload', () => {
+    expect(mapRecipePayloadToApi({
+      name: 'Soup',
+      description: '',
+      isActive: true,
+      ingredients: [],
+    }, { clearImage: true, clearVideo: true })).toEqual(jasmine.objectContaining({
+      clear_image: true,
+      clear_video: true,
+    }));
+  });
+
+  it('should map recipe payload to FormData with files and JSON ingredients', () => {
+    const image = new File(['img'], 'photo.jpg', { type: 'image/jpeg' });
+    const formData = mapRecipePayloadToFormData({
+      name: 'Soup',
+      description: 'Hot soup',
+      link: 'https://example.com/soup',
+      isActive: true,
+      ingredients: [{
+        ingredient: 'ing-1',
+        product: null,
+        quantity: '1',
+        unit: 'L',
+        notes: '',
+        sortOrder: 0,
+      }],
+    }, { image });
+    expect(formData.get('name')).toBe('Soup');
+    expect(formData.get('description')).toBe('Hot soup');
+    expect(formData.get('link')).toBe('https://example.com/soup');
+    expect(formData.get('is_active')).toBe('true');
+    expect(formData.get('image')).toBe(image);
+    const ingredients = JSON.parse(String(formData.get('ingredients')));
+    expect(ingredients).toEqual([{
+      ingredient_id: 'ing-1',
+      product_id: null,
+      quantity: '1',
+      unit: 'L',
+      notes: '',
+      sort_order: 0,
+    }]);
   });
 
   it('should map menu meal payload to API snake_case with foreign key ids', () => {

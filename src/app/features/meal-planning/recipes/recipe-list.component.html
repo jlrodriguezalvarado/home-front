@@ -34,6 +34,11 @@
       *ngFor="let recipe of recipes()"
       [routerLink]="['/meal-planning/recipes', recipe.id, 'edit']"
       class="card-surface p-lg hover:shadow-card-hover transition-shadow block">
+      <img
+        *ngIf="recipe.image"
+        [src]="recipe.image"
+        alt=""
+        class="w-full h-36 object-cover rounded-lg mb-md">
       <div class="flex justify-between items-start gap-md">
         <div class="min-w-0">
           <div class="text-headline-md text-on-surface truncate">{{ recipe.name }}</div>

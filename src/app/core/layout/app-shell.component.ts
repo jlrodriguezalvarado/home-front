@@ -4,6 +4,8 @@ import { RouterOutlet, RouterLink, RouterLinkActive, Router } from '@angular/rou
 import { I18nService, AppStringKey } from '../i18n/i18n.service';
 import { ThemeService } from '../theme/theme.service';
 import { AuthService } from '../auth/auth.service';
+import { ChatSessionService } from '../../features/chat/services/chat-session.service';
+import { ChatNotificationService } from '../../features/chat/services/chat-notification.service';
 
 interface NavItem {
   path: string;
@@ -23,6 +25,9 @@ export class AppShellComponent {
   theme = inject(ThemeService);
   auth = inject(AuthService);
   router = inject(Router);
+  chatSession = inject(ChatSessionService);
+  chatNotifications = inject(ChatNotificationService);
+  unreadCount = this.chatNotifications.globalUnreadCount;
 
   drawerOpen = signal(false);
 
@@ -36,6 +41,7 @@ export class AppShellComponent {
     { path: '/meal-planning', label: 'mealPlanning', icon: 'restaurant_menu' },
     { path: '/finance', label: 'finances', icon: 'account_balance_wallet' },
     { path: '/mosaic', label: 'instagramTool', icon: 'grid_view' },
+    { path: '/chat', label: 'chat', icon: 'chat' },
   ];
 
   mobileNavItems: NavItem[] = [
@@ -67,9 +73,15 @@ export class AppShellComponent {
     return url.startsWith(path);
   }
 
+  isInChat(): boolean {
+    return this.isActive('/chat');
+  }
+
   logout() {
     this.closeDrawer();
-    this.auth.logout();
-    this.router.navigate(['/login']);
+    void this.chatSession.stop().then(() => {
+      this.auth.logout();
+      void this.router.navigate(['/login']);
+    });
   }
 }

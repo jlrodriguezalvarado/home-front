@@ -14,10 +14,15 @@
          [routerLink]="item.path"
          routerLinkActive="nav-item-active"
          [routerLinkActiveOptions]="{exact: item.path === '/'}"
-         class="nav-item-inactive">
+         class="nav-item-inactive relative">
         <span class="material-symbols-outlined"
               [class.material-symbols-filled]="isActive(item.path)">{{ item.icon }}</span>
         <span class="text-label-lg">{{ t(item.label) }}</span>
+        <span
+          *ngIf="item.path === '/chat' && unreadCount() > 0"
+          class="absolute top-2 left-7 min-w-[18px] h-[18px] px-1 bg-error text-on-error text-[10px] font-medium rounded-full flex items-center justify-center">
+          {{ unreadCount() > 99 ? '99+' : unreadCount() }}
+        </span>
       </a>
     </nav>
 
@@ -71,9 +76,16 @@
         <button (click)="theme.toggleTheme()" class="text-on-surface-variant hover:text-primary transition-colors p-2">
           <span class="material-symbols-outlined">{{ theme.isDark() ? 'light_mode' : 'dark_mode' }}</span>
         </button>
-        <button class="text-on-surface-variant hover:text-primary transition-colors relative p-2">
+        <button
+          type="button"
+          [routerLink]="['/chat']"
+          class="text-on-surface-variant hover:text-primary transition-colors relative p-2">
           <span class="material-symbols-outlined">notifications</span>
-          <span class="absolute top-1 right-1 w-2 h-2 bg-error rounded-full"></span>
+          <span
+            *ngIf="unreadCount() > 0"
+            class="absolute top-1 right-1 min-w-[16px] h-4 px-1 bg-error text-on-error text-[10px] font-medium rounded-full flex items-center justify-center">
+            {{ unreadCount() > 99 ? '99+' : unreadCount() }}
+          </span>
         </button>
         <div class="h-8 w-8 md:h-10 md:w-10 rounded-full bg-primary-container overflow-hidden border border-outline-variant flex items-center justify-center">
           <span class="material-symbols-outlined text-on-primary text-[18px] md:text-[24px]">person</span>
@@ -81,14 +93,17 @@
       </div>
     </header>
 
-    <div class="flex-1 overflow-auto px-margin-mobile md:px-xl py-md md:py-xl pb-24 md:pb-xl">
+    <div class="flex-1 overflow-auto px-margin-mobile md:px-xl py-md md:py-xl md:pb-xl"
+         [class.pb-24]="!isInChat()"
+         [class.pb-md]="isInChat()">
       <div class="max-w-[1440px] mx-auto w-full">
         <router-outlet></router-outlet>
       </div>
     </div>
 
     <!-- Bottom Nav Mobile -->
-    <nav class="md:hidden fixed bottom-0 left-0 right-0 bg-surface-container-lowest/95 glass border-t border-outline-variant flex justify-around items-center h-20 px-sm z-50 safe-bottom">
+    <nav *ngIf="!isInChat()"
+         class="md:hidden fixed bottom-0 left-0 right-0 bg-surface-container-lowest/95 glass border-t border-outline-variant flex justify-around items-center h-20 px-sm z-50 safe-bottom">
       <a *ngFor="let item of mobileNavItems"
          [routerLink]="item.path"
          (click)="closeDrawer()"

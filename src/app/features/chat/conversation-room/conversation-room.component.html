@@ -1,0 +1,144 @@
+<div class="flex flex-col h-[calc(100vh-120px)] min-h-[400px]">
+  <div class="flex items-center justify-between gap-md mb-md shrink-0">
+    <div class="flex items-center gap-md min-w-0 flex-1">
+      <a routerLink="/chat" class="text-primary flex items-center shrink-0">
+        <span class="material-symbols-outlined">arrow_back</span>
+      </a>
+      <div class="min-w-0 flex-1">
+        <div class="flex items-center gap-sm min-w-0">
+          <h1 class="page-title truncate">{{ conversationTitle() }}</h1>
+          <button
+            *ngIf="canRenameContact()"
+            type="button"
+            (click)="openRenameDialog()"
+            [attr.aria-label]="i18n.t('renameContact')"
+            class="text-on-surface-variant hover:text-primary shrink-0">
+            <span class="material-symbols-outlined text-[20px]">edit</span>
+          </button>
+        </div>
+        <div class="flex items-center gap-1 text-label-md text-on-surface-variant">
+          <span
+            class="material-symbols-outlined text-[14px]"
+            [class.text-primary]="connected()"
+            [class.text-on-surface-variant]="!connected()">
+            circle
+          </span>
+          {{ connected() ? i18n.t('online') : (connecting() ? i18n.t('typing') : i18n.t('offline')) }}
+        </div>
+      </div>
+    </div>
+  </div>
+  <app-loading-state *ngIf="loading() && !conversation()"></app-loading-state>
+  <app-error-state *ngIf="error()" (retry)="loadConversation()"></app-error-state>
+  <div *ngIf="!error()" class="relative flex-1 min-h-0">
+    <div
+      *ngIf="loadingOlder()"
+      class="absolute top-2 left-1/2 -translate-x-1/2 z-10 flex items-center gap-1 rounded-full bg-surface-container-high px-md py-xs text-label-md text-on-surface-variant shadow-sm">
+      <span class="material-symbols-outlined text-[16px] animate-spin">progress_activity</span>
+    </div>
+    <div
+      #messagesContainer
+      (scroll)="onMessagesScroll()"
+      class="h-full overflow-y-auto space-y-sm p-md bg-surface-container-low rounded-xl border border-outline-variant">
+      <app-loading-state *ngIf="loadingInitial()"></app-loading-state>
+      <div *ngIf="!loadingInitial() && messages().length === 0" class="text-center text-body-md text-on-surface-variant py-xl">
+        {{ i18n.t('noMessages') }}
+      </div>
+      <div
+        *ngFor="let message of messages()"
+        class="flex"
+        [class.justify-end]="message.isOwn"
+        [class.justify-start]="!message.isOwn">
+        <div
+          class="max-w-[80%] rounded-xl px-md py-sm relative"
+          [class.bg-primary]="message.isOwn && message.status !== 'failed'"
+          [class.text-on-primary]="message.isOwn && message.status !== 'failed'"
+          [class.bg-surface-container-lowest]="!message.isOwn"
+          [class.text-on-surface]="!message.isOwn"
+          [class.border]="!message.isOwn || message.status === 'failed'"
+          [class.border-outline-variant]="!message.isOwn && message.status !== 'failed'"
+          [class.border-error]="message.status === 'failed'"
+          [class.opacity-70]="message.status === 'pending'"
+          [class.bg-error-container]="message.isOwn && message.status === 'failed'"
+          [class.text-on-error-container]="message.isOwn && message.status === 'failed'">
+          <div *ngIf="!message.isOwn && message.senderName" class="text-label-md text-on-surface-variant mb-xs">
+            {{ message.senderName }}
+          </div>
+          <div class="text-body-md whitespace-pre-wrap break-words">{{ message.body }}</div>
+          <div
+            class="flex items-center gap-1 mt-xs"
+            [class.text-on-primary]="message.isOwn && message.status !== 'failed'"
+            [class.text-on-surface-variant]="!message.isOwn"
+            [class.text-on-error-container]="message.status === 'failed'">
+            <span
+              *ngIf="message.status === 'pending'"
+              class="material-symbols-outlined text-[14px] animate-spin">
+              progress_activity
+            </span>
+            <span
+              *ngIf="message.status === 'failed'"
+              class="material-symbols-outlined text-[14px]">
+              error
+            </span>
+            <span class="text-label-md opacity-70">{{ formatTime(message.createdAt) }}</span>
+            <span *ngIf="message.status === 'failed'" class="text-label-md text-error">
+              {{ i18n.t('messageFailed') }}
+            </span>
+          </div>
+          <div *ngIf="message.status === 'failed'" class="flex gap-sm mt-sm">
+            <button
+              type="button"
+              (click)="retryMessage(message)"
+              class="text-label-md text-primary font-medium">
+              {{ i18n.t('retry') }}
+            </button>
+            <button
+              type="button"
+              (click)="cancelFailedMessage(message)"
+              class="text-label-md text-on-surface-variant">
+              {{ i18n.t('cancel') }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <button
+      *ngIf="newMessagesBelow() > 0"
+      type="button"
+      (click)="scrollToLatest()"
+      class="absolute bottom-4 left-1/2 -translate-x-1/2 z-10 flex items-center gap-1 rounded-full bg-primary px-md py-sm text-label-md text-on-primary shadow-md">
+      <span class="material-symbols-outlined text-[16px]">arrow_downward</span>
+      {{ i18n.t('newMessages') }}
+    </button>
+  </div>
+  <div *ngIf="typingLabel()" class="text-label-md text-on-surface-variant px-md py-xs shrink-0">
+    {{ typingLabel() }}
+  </div>
+  <div class="flex gap-sm mt-md shrink-0">
+    <textarea
+      [ngModel]="messageDraft()"
+      (ngModelChange)="onMessageInput($event)"
+      (keydown)="onKeyDown($event)"
+      [placeholder]="i18n.t('writeMessage')"
+      rows="2"
+      class="input-outlined flex-1 resize-none min-h-[48px]"></textarea>
+    <button
+      type="button"
+      (click)="sendMessage()"
+      class="btn-primary px-md flex items-center gap-1 self-end">
+      <span class="material-symbols-outlined text-[20px]">send</span>
+      {{ i18n.t('send') }}
+    </button>
+  </div>
+  <div *ngIf="showRenameDialog() && otherParticipant()" class="fixed inset-0 bg-black/50 flex items-center justify-center p-md z-50">
+    <div class="bg-surface-container-lowest w-full max-w-md p-xl rounded-[24px] border border-outline-variant shadow-card-hover">
+      <h2 class="text-title-lg text-on-surface mb-lg">{{ i18n.t('renameContact') }}</h2>
+      <app-rename-chat-contact-dialog
+        [conversationId]="conversationId"
+        [participant]="otherParticipant()!"
+        (aliasChanged)="onAliasChanged($event)"
+        (cancelled)="closeRenameDialog()">
+      </app-rename-chat-contact-dialog>
+    </div>
+  </div>
+</div>

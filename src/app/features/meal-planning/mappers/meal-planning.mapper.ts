@@ -17,6 +17,7 @@ import {
   Recipe,
   RecipeIngredient,
   RecipePayload,
+  RecipeWriteOptions,
   ShoppingList,
   ShoppingListItem,
   ShoppingListRecipeUsage,
@@ -158,6 +159,8 @@ export function mapRecipeFromApi(item: unknown): Recipe {
     name: String(data['name'] ?? ''),
     description: String(data['description'] ?? ''),
     link: (data['link'] as string | null | undefined) ?? null,
+    image: (data['image'] as string | null | undefined) ?? null,
+    video: (data['video'] as string | null | undefined) ?? null,
     isFavorite: parseApiBoolean(data['is_favorite'] ?? data['isFavorite'], false),
     isActive: Boolean(data['is_active'] ?? data['isActive'] ?? true),
     ingredients,
@@ -265,21 +268,47 @@ function normalizeRecipeLink(link: string | null | undefined): string | null {
   return trimmed ? trimmed : null;
 }
 
-export function mapRecipePayloadToApi(payload: RecipePayload): Record<string, unknown> {
-  return {
+function mapRecipeIngredientsToApi(payload: RecipePayload): Record<string, unknown>[] {
+  return payload.ingredients.map((row) => ({
+    ingredient_id: row.ingredient,
+    product_id: row.product ?? null,
+    quantity: row.quantity,
+    unit: row.unit,
+    notes: row.notes,
+    sort_order: row.sortOrder,
+  }));
+}
+
+function appendRecipeWriteOptionsToFormData(formData: FormData, options?: RecipeWriteOptions): void {
+  if (options?.image) formData.append('image', options.image);
+  if (options?.video) formData.append('video', options.video);
+  if (options?.clearImage) formData.append('clear_image', 'true');
+  if (options?.clearVideo) formData.append('clear_video', 'true');
+}
+
+export function mapRecipePayloadToApi(payload: RecipePayload, options?: RecipeWriteOptions): Record<string, unknown> {
+  const body: Record<string, unknown> = {
     name: payload.name,
     description: payload.description,
     link: normalizeRecipeLink(payload.link),
     is_active: payload.isActive,
-    ingredients: payload.ingredients.map((row) => ({
-      ingredient_id: row.ingredient,
-      product_id: row.product ?? null,
-      quantity: row.quantity,
-      unit: row.unit,
-      notes: row.notes,
-      sort_order: row.sortOrder,
-    })),
+    ingredients: mapRecipeIngredientsToApi(payload),
   };
+  if (options?.clearImage) body['clear_image'] = true;
+  if (options?.clearVideo) body['clear_video'] = true;
+  return body;
+}
+
+export function mapRecipePayloadToFormData(payload: RecipePayload, options?: RecipeWriteOptions): FormData {
+  const formData = new FormData();
+  formData.append('name', payload.name);
+  formData.append('description', payload.description ?? '');
+  const link = normalizeRecipeLink(payload.link);
+  if (link) formData.append('link', link);
+  formData.append('is_active', String(payload.isActive));
+  formData.append('ingredients', JSON.stringify(mapRecipeIngredientsToApi(payload)));
+  appendRecipeWriteOptionsToFormData(formData, options);
+  return formData;
 }
 
 export function mapMealTypePayloadToApi(payload: MealTypePayload): Record<string, unknown> {

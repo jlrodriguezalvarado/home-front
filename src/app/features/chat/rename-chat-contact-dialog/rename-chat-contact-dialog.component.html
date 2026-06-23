@@ -1,0 +1,41 @@
+<div class="space-y-md" appDialogForm (dialogSubmit)="save()">
+  <div>
+    <label class="text-label-lg text-on-surface-variant block mb-xs">{{ i18n.t('contactDisplayName') }}</label>
+    <input
+      type="text"
+      [ngModel]="displayNameDraft()"
+      (ngModelChange)="displayNameDraft.set($event)"
+      maxlength="255"
+      required
+      class="input-outlined w-full">
+    <p class="text-label-md text-on-surface-variant mt-xs">
+      {{ i18n.t('defaultContactName') }}: {{ participant().user.name }}
+    </p>
+    <p *ngIf="hasCustomName()" class="text-label-md text-primary mt-xs">
+      {{ i18n.t('customContactNameHint') }}
+    </p>
+  </div>
+  <div class="flex flex-wrap gap-sm justify-end pt-sm">
+    <button
+      *ngIf="hasCustomName()"
+      type="button"
+      (click)="restoreDefault()"
+      [disabled]="saving() || restoring()"
+      class="px-md py-2 border border-outline-variant rounded-xl text-label-lg text-on-surface hover:bg-surface-container transition-colors disabled:opacity-50">
+      {{ i18n.t('restoreContactName') }}
+    </button>
+    <button
+      type="button"
+      (click)="cancel()"
+      [disabled]="saving() || restoring()"
+      class="px-md py-2 border border-outline-variant rounded-xl text-label-lg text-on-surface hover:bg-surface-container transition-colors disabled:opacity-50">
+      {{ i18n.t('cancel') }}
+    </button>
+    <button
+      type="submit"
+      [disabled]="!displayNameDraft().trim() || saving() || restoring()"
+      class="btn-primary px-md disabled:opacity-50">
+      {{ i18n.t('save') }}
+    </button>
+  </div>
+</div>

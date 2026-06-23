@@ -19,7 +19,7 @@ export const appConfig: ApplicationConfig = {
       deps: [CartService, CartStorageService],
       multi: true,
     },
-    provideServiceWorker('ngsw-worker.js', {
+    provideServiceWorker('sw.js', {
       enabled: !isDevMode(),
       registrationStrategy: 'registerWhenStable:30000'
     })

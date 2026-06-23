@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService } from '../../core/auth/auth.service';
+import { ChatSessionService } from '../../features/chat/services/chat-session.service';
 import { I18nService, AppStringKey } from '../../core/i18n/i18n.service';
 import { ThemeService } from '../../core/theme/theme.service';
 
@@ -22,6 +23,7 @@ export class LoginComponent {
   error = '';
 
   auth = inject(AuthService);
+  chatSession = inject(ChatSessionService);
   i18n = inject(I18nService);
   theme = inject(ThemeService);
   router = inject(Router);
@@ -38,7 +40,10 @@ export class LoginComponent {
     this.loading = true;
     this.error = '';
     this.auth.login({ email: this.email, password: this.password }).subscribe({
-      next: () => this.router.navigate(['/']),
+      next: () => {
+        this.chatSession.start();
+        void this.router.navigate(['/']);
+      },
       error: () => {
         this.error = this.i18n.lang() === 'en' ? 'Invalid credentials' : 'Credenciales inválidas';
         this.loading = false;

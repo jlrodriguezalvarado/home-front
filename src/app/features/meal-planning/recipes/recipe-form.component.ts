@@ -1,6 +1,7 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, inject, OnDestroy, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormArray, FormBuilder, ReactiveFormsModule, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
+import { HttpErrorResponse } from '@angular/common/http';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { RecipeRepository } from '../repositories/recipe.repository';
 import { IngredientRepository } from '../repositories/ingredient.repository';
@@ -44,7 +45,7 @@ function quantityValidator(control: AbstractControl): ValidationErrors | null {
   templateUrl: './recipe-form.component.html',
   styleUrl: './recipe-form.component.scss',
 })
-export class RecipeFormComponent implements OnInit {
+export class RecipeFormComponent implements OnInit, OnDestroy {
   private readonly fb = inject(FormBuilder);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
@@ -60,6 +61,14 @@ export class RecipeFormComponent implements OnInit {
   saving = signal(false);
   error = signal(false);
   editingId = signal<string | null>(null);
+  existingImage = signal<string | null>(null);
+  existingVideo = signal<string | null>(null);
+  selectedImage = signal<File | null>(null);
+  selectedVideo = signal<File | null>(null);
+  clearImage = signal(false);
+  clearVideo = signal(false);
+  imagePreviewUrl = signal<string | null>(null);
+  videoPreviewUrl = signal<string | null>(null);
   form = this.fb.group({
     name: ['', Validators.required],
     description: [''],
@@ -67,7 +76,6 @@ export class RecipeFormComponent implements OnInit {
     isActive: [true],
     ingredients: this.fb.array([]),
   });
-
   ngOnInit() {
     const id = this.route.snapshot.paramMap.get('id');
     this.editingId.set(id);
@@ -89,6 +97,69 @@ export class RecipeFormComponent implements OnInit {
     });
   }
 
+  ngOnDestroy() {
+    this.revokeObjectUrl(this.imagePreviewUrl());
+    this.revokeObjectUrl(this.videoPreviewUrl());
+  }
+
+  displayImageUrl(): string | null {
+    if (this.imagePreviewUrl()) return this.imagePreviewUrl();
+    if (this.clearImage()) return null;
+    return this.existingImage();
+  }
+
+  displayVideoUrl(): string | null {
+    if (this.videoPreviewUrl()) return this.videoPreviewUrl();
+    if (this.clearVideo()) return null;
+    return this.existingVideo();
+  }
+
+  hasMediaUpload(): boolean {
+    return Boolean(this.selectedImage() || this.selectedVideo());
+  }
+
+  onImageSelected(event: Event) {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) return;
+    this.revokeObjectUrl(this.imagePreviewUrl());
+    this.selectedImage.set(file);
+    this.clearImage.set(false);
+    this.imagePreviewUrl.set(URL.createObjectURL(file));
+  }
+
+  onVideoSelected(event: Event) {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) return;
+    this.revokeObjectUrl(this.videoPreviewUrl());
+    this.selectedVideo.set(file);
+    this.clearVideo.set(false);
+    this.videoPreviewUrl.set(URL.createObjectURL(file));
+  }
+
+  removeImage() {
+    this.revokeObjectUrl(this.imagePreviewUrl());
+    this.selectedImage.set(null);
+    this.imagePreviewUrl.set(null);
+    if (this.existingImage()) this.clearImage.set(true);
+  }
+
+  removeVideo() {
+    this.revokeObjectUrl(this.videoPreviewUrl());
+    this.selectedVideo.set(null);
+    this.videoPreviewUrl.set(null);
+    if (this.existingVideo()) this.clearVideo.set(true);
+  }
+
+  savingLabel(): string {
+    if (!this.saving()) return this.i18n.t('save');
+    if (this.hasMediaUpload()) {
+      return this.i18n.lang() === 'en' ? 'Uploading...' : 'Subiendo...';
+    }
+    return this.i18n.lang() === 'en' ? 'Saving...' : 'Guardando...';
+  }
+
   get ingredientsArray(): FormArray {
     return this.form.get('ingredients') as FormArray;
   }
@@ -96,6 +167,10 @@ export class RecipeFormComponent implements OnInit {
   loadRecipe(id: string) {
     this.repo.get(id).subscribe({
       next: (recipe) => {
+        this.existingImage.set(recipe.image ?? null);
+        this.existingVideo.set(recipe.video ?? null);
+        this.clearImage.set(false);
+        this.clearVideo.set(false);
         this.form.patchValue({
           name: recipe.name,
           description: recipe.description,
@@ -260,19 +335,45 @@ export class RecipeFormComponent implements OnInit {
     };
     this.saving.set(true);
     const editingId = this.editingId();
+    const writeOptions = {
+      image: this.selectedImage() ?? undefined,
+      video: this.selectedVideo() ?? undefined,
+      clearImage: this.clearImage() || undefined,
+      clearVideo: this.clearVideo() || undefined,
+    };
     const request$ = editingId
-      ? this.repo.update(editingId, payload)
-      : this.repo.create(payload);
+      ? this.repo.update(editingId, payload, writeOptions)
+      : this.repo.create(payload, writeOptions.image, writeOptions.video);
     request$.subscribe({
       next: () => {
         this.saving.set(false);
         this.toast.success(this.i18n.t('save'));
         this.router.navigate(['/meal-planning/recipes']);
       },
-      error: () => {
+      error: (err: HttpErrorResponse) => {
         this.saving.set(false);
-        this.toast.error(this.i18n.lang() === 'en' ? 'Save failed' : 'Error al guardar');
+        this.toast.error(this.extractSaveErrorMessage(err));
       },
     });
+  }
+
+  private revokeObjectUrl(url: string | null) {
+    if (url?.startsWith('blob:')) URL.revokeObjectURL(url);
+  }
+
+  private extractSaveErrorMessage(err: HttpErrorResponse): string {
+    const fallback = this.i18n.lang() === 'en' ? 'Save failed' : 'Error al guardar';
+    const body = err.error;
+    if (typeof body === 'string' && body.trim()) return body;
+    if (!body || typeof body !== 'object') return fallback;
+    const record = body as Record<string, unknown>;
+    const detail = record['detail'];
+    if (typeof detail === 'string' && detail.trim()) return detail;
+    for (const key of ['image', 'video', 'non_field_errors']) {
+      const value = record[key];
+      if (Array.isArray(value) && value.length > 0) return String(value[0]);
+      if (typeof value === 'string' && value.trim()) return value;
+    }
+    return fallback;
   }
 }

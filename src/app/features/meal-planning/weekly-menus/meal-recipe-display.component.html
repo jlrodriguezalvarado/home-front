@@ -11,6 +11,8 @@
   </div>
   <p *ngIf="meal.notes && (meal.recipe || meal.name)" class="text-body-md text-on-surface-variant">{{ meal.notes }}</p>
   <ng-container *ngIf="meal.recipe as recipe">
+    <img *ngIf="recipe.image" [src]="recipe.image" alt="" class="w-full max-h-48 object-cover rounded-xl">
+    <video *ngIf="recipe.video" [src]="recipe.video" controls class="w-full max-h-64 rounded-xl"></video>
     <div *ngIf="recipe.description" class="rich-text-content" [innerHTML]="recipe.description"></div>
     <a
       *ngIf="recipeLink(recipe)"

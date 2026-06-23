@@ -59,6 +59,10 @@ export const routes: Routes = [
       {
         path: 'mosaic',
         loadComponent: () => import('./features/mosaic/mosaic.component').then(m => m.MosaicComponent)
+      },
+      {
+        path: 'chat',
+        loadChildren: () => import('./features/chat/chat.routes').then(m => m.CHAT_ROUTES),
       }
     ]
   },

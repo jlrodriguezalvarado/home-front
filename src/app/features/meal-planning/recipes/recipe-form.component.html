@@ -37,6 +37,33 @@
       </label>
     </div>
     <div class="card-surface p-lg space-y-md">
+      <h2 class="text-title-lg text-on-surface">{{ i18n.lang() === 'en' ? 'Media' : 'Multimedia' }}</h2>
+      <div class="space-y-md">
+        <div>
+          <label class="text-label-lg text-on-surface-variant block mb-xs">{{ i18n.lang() === 'en' ? 'Image' : 'Imagen' }}</label>
+          <input type="file" accept="image/*" (change)="onImageSelected($event)" class="input-outlined w-full">
+          <div *ngIf="displayImageUrl() as imageUrl" class="mt-md space-y-sm">
+            <img [src]="imageUrl" alt="" class="max-h-48 rounded-xl object-cover w-full">
+            <button type="button" (click)="removeImage()" class="text-error text-label-md flex items-center gap-1">
+              <span class="material-symbols-outlined text-[18px]">delete</span>
+              {{ i18n.lang() === 'en' ? 'Remove image' : 'Quitar imagen' }}
+            </button>
+          </div>
+        </div>
+        <div>
+          <label class="text-label-lg text-on-surface-variant block mb-xs">{{ i18n.lang() === 'en' ? 'Video' : 'Video' }}</label>
+          <input type="file" accept="video/*" (change)="onVideoSelected($event)" class="input-outlined w-full">
+          <div *ngIf="displayVideoUrl() as videoUrl" class="mt-md space-y-sm">
+            <video [src]="videoUrl" controls class="max-h-64 rounded-xl w-full"></video>
+            <button type="button" (click)="removeVideo()" class="text-error text-label-md flex items-center gap-1">
+              <span class="material-symbols-outlined text-[18px]">delete</span>
+              {{ i18n.lang() === 'en' ? 'Remove video' : 'Quitar video' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-surface p-lg space-y-md">
       <div class="flex items-center justify-between">
         <h2 class="text-title-lg text-on-surface">{{ i18n.t('ingredients') }}</h2>
         <button type="button" (click)="addIngredientRow()" class="btn-secondary flex items-center gap-1">
@@ -94,7 +121,10 @@
     </div>
     <div class="flex gap-md">
       <a routerLink="/meal-planning/recipes" class="flex-1 py-3 border border-outline-variant rounded-xl text-label-lg text-center">{{ i18n.t('cancel') }}</a>
-      <button type="submit" [disabled]="saving()" class="flex-1 btn-primary py-3">{{ i18n.t('save') }}</button>
+      <button type="submit" [disabled]="saving()" class="flex-1 btn-primary py-3 flex items-center justify-center gap-2">
+        <span *ngIf="saving() && hasMediaUpload()" class="material-symbols-outlined text-[20px] animate-spin">progress_activity</span>
+        {{ savingLabel() }}
+      </button>
     </div>
   </form>
 </div>

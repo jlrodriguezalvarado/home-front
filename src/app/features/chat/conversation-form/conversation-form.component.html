@@ -1,0 +1,56 @@
+<div class="space-y-md overflow-y-auto min-h-0 flex-1">
+  <label class="flex items-center gap-sm text-body-md text-on-surface">
+    <input
+      type="checkbox"
+      [ngModel]="isGroup()"
+      (ngModelChange)="onIsGroupChange($event)">
+    {{ i18n.t('groupConversation') }}
+  </label>
+  <div *ngIf="isGroup()">
+    <label class="text-label-lg text-on-surface-variant block mb-xs">{{ i18n.t('name') }}</label>
+    <input
+      type="text"
+      [ngModel]="title()"
+      (ngModelChange)="title.set($event)"
+      class="input-outlined">
+  </div>
+  <div>
+    <label class="text-label-lg text-on-surface-variant block mb-xs">{{ i18n.t('participants') }}</label>
+    <app-search-select
+      [options]="userOptions()"
+      [value]="null"
+      [placeholder]="i18n.t('selectUser')"
+      [searchPlaceholder]="i18n.t('search')"
+      [emptyLabel]="i18n.t('noUsers')"
+      [loading]="usersLoading()"
+      (valueChange)="onUserSelected($event)"
+      (searchChange)="onUserSearchChange($event)">
+    </app-search-select>
+    <app-loading-state *ngIf="usersLoading() && users().length === 0" class="mt-sm block"></app-loading-state>
+    <div *ngIf="selectedParticipants().length > 0" class="flex flex-wrap gap-sm mt-sm">
+      <span
+        *ngFor="let participant of selectedParticipants()"
+        class="inline-flex items-center gap-1 bg-surface-container text-on-surface text-label-md px-sm py-xs rounded-lg">
+        {{ formatUserLabel(participant) }}
+        <button type="button" (click)="removeParticipant(participant.id)" class="text-on-surface-variant hover:text-error">
+          <span class="material-symbols-outlined text-[16px]">close</span>
+        </button>
+      </span>
+    </div>
+    <p class="text-body-md text-on-surface-variant mt-sm">
+      {{ isGroup() ? i18n.t('groupConversation') : i18n.t('directConversation') }}
+    </p>
+  </div>
+  <div class="flex gap-md pt-md">
+    <button type="button" (click)="cancel()" class="flex-1 py-3 border border-outline-variant rounded-xl text-label-lg">
+      {{ i18n.t('cancel') }}
+    </button>
+    <button
+      type="button"
+      (click)="save()"
+      [disabled]="saving()"
+      class="flex-1 btn-primary py-3 disabled:opacity-50">
+      {{ i18n.t('createConversation') }}
+    </button>
+  </div>
+</div>

@@ -18,6 +18,8 @@ export interface RecipeSummary {
   id: string;
   name: string;
   link?: string | null;
+  image?: string | null;
+  video?: string | null;
 }
 
 export type RecipeDetail = Recipe;
@@ -57,6 +59,8 @@ export interface Recipe {
   name: string;
   description: string;
   link?: string | null;
+  image?: string | null;
+  video?: string | null;
   isFavorite: boolean;
   isActive: boolean;
   ingredients: RecipeIngredient[];
@@ -159,6 +163,13 @@ export interface RecipeIngredientPayload {
   unit: string;
   notes: string;
   sortOrder: number;
+}
+
+export interface RecipeWriteOptions {
+  image?: File;
+  video?: File;
+  clearImage?: boolean;
+  clearVideo?: boolean;
 }
 
 export interface MealTypePayload {

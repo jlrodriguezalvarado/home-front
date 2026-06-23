@@ -66,6 +66,27 @@ export const API_ENDPOINTS = {
       copyFavorite: '/meal-planning/menu-meals/copy-favorite/',
     },
   },
+  chat: {
+    conversations: {
+      list: '/chat/conversations/',
+      detail: (id: string) => `/chat/conversations/${id}/`,
+      messages: (id: string) => `/chat/conversations/${id}/messages/`,
+      markRead: (id: string) => `/chat/conversations/${id}/mark-read/`,
+      peerDisplayNames: (conversationId: string) =>
+        `/chat/conversations/${conversationId}/peer-display-names/`,
+      peerDisplayName: (conversationId: string, targetUserId: string) =>
+        `/chat/conversations/${conversationId}/peer-display-names/${targetUserId}/`,
+    },
+    pushSubscriptions: {
+      list: '/chat/push-subscriptions/',
+      create: '/chat/push-subscriptions/',
+      unsubscribe: '/chat/push-subscriptions/unsubscribe/',
+      vapidPublicKey: '/chat/push-subscriptions/vapid-public-key/',
+    },
+    users: {
+      list: '/chat/users/',
+    },
+  },
   finance: {
     monthSummary: '/finance/month-summary/',
     months: '/finance/months/',
