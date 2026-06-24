@@ -1,7 +1,7 @@
 import {
   Directive,
   ElementRef,
-  HostListener,
+  Input,
   OnDestroy,
   OnInit,
   Renderer2,
@@ -21,6 +21,7 @@ const REFRESH_INDICATOR_HEIGHT = 48;
   standalone: true,
 })
 export class PullToRefreshDirective implements OnInit, OnDestroy {
+  @Input() appPullToRefresh = true;
   private readonly el = inject(ElementRef<HTMLElement>);
   private readonly renderer = inject(Renderer2);
   private readonly pwaUpdate = inject(PwaUpdateService);
@@ -32,33 +33,52 @@ export class PullToRefreshDirective implements OnInit, OnDestroy {
   private pulling = false;
   private pullDistance = 0;
   private touchId: number | null = null;
+  private touchTarget: EventTarget | null = null;
+  private readonly touchStartHandler = (event: TouchEvent) => this.onTouchStart(event);
+  private readonly touchMoveHandler = (event: TouchEvent) => this.onTouchMove(event);
+  private readonly touchEndHandler = () => this.onTouchEnd();
   readonly refreshing = signal(false);
 
   ngOnInit(): void {
-    this.renderer.setStyle(this.el.nativeElement, 'overscroll-behavior-y', 'contain');
+    if (!this.appPullToRefresh) {
+      return;
+    }
+    const host = this.el.nativeElement;
+    this.renderer.setStyle(host, 'overscroll-behavior-y', 'contain');
     this.createIndicator();
+    host.addEventListener('touchstart', this.touchStartHandler, { passive: true });
+    host.addEventListener('touchmove', this.touchMoveHandler, { passive: false });
+    host.addEventListener('touchend', this.touchEndHandler, { passive: true });
+    host.addEventListener('touchcancel', this.touchEndHandler, { passive: true });
   }
 
   ngOnDestroy(): void {
+    const host = this.el.nativeElement;
+    host.removeEventListener('touchstart', this.touchStartHandler);
+    host.removeEventListener('touchmove', this.touchMoveHandler);
+    host.removeEventListener('touchend', this.touchEndHandler);
+    host.removeEventListener('touchcancel', this.touchEndHandler);
     this.indicator?.remove();
   }
 
-  @HostListener('touchstart', ['$event'])
-  onTouchStart(event: TouchEvent): void {
+  private onTouchStart(event: TouchEvent): void {
     if (this.refreshing()) {
       return;
     }
-    if (this.el.nativeElement.scrollTop > 0) {
+    const touch = event.touches[0];
+    if (!touch) {
       return;
     }
-    const touch = event.changedTouches[0];
+    this.touchTarget = event.target;
+    if (!this.canPullFromTarget(this.touchTarget)) {
+      return;
+    }
     this.startY = touch.clientY;
     this.pulling = true;
     this.touchId = touch.identifier;
   }
 
-  @HostListener('touchmove', ['$event'])
-  onTouchMove(event: TouchEvent): void {
+  private onTouchMove(event: TouchEvent): void {
     if (!this.pulling || this.refreshing()) {
       return;
     }
@@ -66,8 +86,12 @@ export class PullToRefreshDirective implements OnInit, OnDestroy {
     if (!touch) {
       return;
     }
+    if (!this.canPullFromTarget(this.touchTarget)) {
+      this.resetPull();
+      return;
+    }
     const delta = touch.clientY - this.startY;
-    if (delta <= 0 || this.el.nativeElement.scrollTop > 0) {
+    if (delta <= 0) {
       this.resetPull();
       return;
     }
@@ -76,15 +100,14 @@ export class PullToRefreshDirective implements OnInit, OnDestroy {
     this.updateIndicator();
   }
 
-  @HostListener('touchend', ['$event'])
-  @HostListener('touchcancel', ['$event'])
-  onTouchEnd(): void {
+  private onTouchEnd(): void {
     if (!this.pulling) {
       return;
     }
     const shouldRefresh = this.pullDistance >= PULL_THRESHOLD;
     this.pulling = false;
     this.touchId = null;
+    this.touchTarget = null;
     if (shouldRefresh) {
       void this.triggerRefresh();
       return;
@@ -101,9 +124,30 @@ export class PullToRefreshDirective implements OnInit, OnDestroy {
     this.resetPull(true);
   }
 
+  private canPullFromTarget(target: EventTarget | null): boolean {
+    const host = this.el.nativeElement;
+    let node = target as HTMLElement | null;
+    while (node && host.contains(node)) {
+      if (this.isScrollable(node) && node.scrollTop > 1) {
+        return false;
+      }
+      node = node.parentElement;
+    }
+    return host.scrollTop <= 1;
+  }
+
+  private isScrollable(element: HTMLElement): boolean {
+    const style = getComputedStyle(element);
+    const overflowY = style.overflowY;
+    if (overflowY !== 'auto' && overflowY !== 'scroll' && overflowY !== 'overlay') {
+      return false;
+    }
+    return element.scrollHeight > element.clientHeight + 1;
+  }
+
   private findTouch(event: TouchEvent): Touch | null {
     if (this.touchId === null) {
-      return event.changedTouches[0] ?? null;
+      return event.touches[0] ?? null;
     }
     for (let i = 0; i < event.touches.length; i++) {
       if (event.touches[i].identifier === this.touchId) {
@@ -136,6 +180,7 @@ export class PullToRefreshDirective implements OnInit, OnDestroy {
     this.renderer.addClass(this.labelEl, 'text-[11px]');
     this.renderer.addClass(this.labelEl, 'leading-tight');
     this.renderer.addClass(this.labelEl, 'text-on-surface-variant');
+    this.renderer.setProperty(this.labelEl, 'textContent', this.i18n.t('pullToRefresh'));
     this.renderer.appendChild(this.indicator, this.iconEl);
     this.renderer.appendChild(this.indicator, this.labelEl);
     this.renderer.insertBefore(
@@ -170,13 +215,21 @@ export class PullToRefreshDirective implements OnInit, OnDestroy {
   }
 
   private resetPull(animate = false): void {
+    this.pulling = false;
     this.pullDistance = 0;
-    if (!this.indicator) {
+    if (!this.indicator || !this.iconEl || !this.labelEl) {
       return;
     }
     if (animate) {
       this.renderer.addClass(this.indicator, 'ptr-animate');
+      this.renderer.setStyle(this.indicator, 'height', '0px');
+      this.renderer.setStyle(this.indicator, 'opacity', '0');
+      this.renderer.removeClass(this.iconEl, 'ptr-spin');
+      this.renderer.setProperty(this.iconEl, 'textContent', 'arrow_downward');
+      this.renderer.setStyle(this.iconEl, 'transform', null);
+      this.renderer.setProperty(this.labelEl, 'textContent', this.i18n.t('pullToRefresh'));
       setTimeout(() => this.renderer.removeClass(this.indicator!, 'ptr-animate'), 220);
+      return;
     }
     this.updateIndicator();
   }

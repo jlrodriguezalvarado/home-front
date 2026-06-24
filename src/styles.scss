@@ -59,12 +59,25 @@
   --md-inverse-on-surface: #f8f9ff;
 }
 
+html,
+body {
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+}
+
 body {
   @apply bg-background text-on-surface antialiased transition-colors duration-200;
   margin: 0;
   font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
   -webkit-tap-highlight-color: transparent;
-  min-height: 100dvh;
+}
+
+app-root {
+  display: block;
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
 }
 
 .hide-scrollbar {

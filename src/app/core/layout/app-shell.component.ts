@@ -78,6 +78,10 @@ export class AppShellComponent {
     return this.isActive('/chat');
   }
 
+  isInChatRoom(): boolean {
+    return this.router.url.split('?')[0].startsWith('/chat/conversations/');
+  }
+
   logout() {
     this.closeDrawer();
     void this.chatSession.stop().then(() => {
