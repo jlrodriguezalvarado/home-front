@@ -37,13 +37,19 @@ export class MediaPermissionService {
     this.microphoneState.set(microphone);
   }
 
+  markGranted(kind: MediaPermissionKind): void {
+    this.setState(kind, 'granted');
+  }
+
   async requestPermission(kind: MediaPermissionKind): Promise<MediaPermissionState> {
     if (!this.isSupported()) {
       this.setState(kind, 'unsupported');
       return 'unsupported';
     }
+    // Prefer the simplest constraints on iOS/WebKit. Facing-mode ideals and
+    // resolution targets often cause NotReadableError after a grant.
     const constraints: MediaStreamConstraints = kind === 'camera'
-      ? { video: { facingMode: { ideal: 'environment' } } }
+      ? { video: true }
       : { audio: true };
     try {
       const stream = await navigator.mediaDevices.getUserMedia(constraints);
@@ -51,12 +57,13 @@ export class MediaPermissionService {
         track.stop();
       }
       this.setState(kind, 'granted');
-      await this.refreshStates();
+      // Permissions API is unreliable on iOS; keep local granted state.
+      void this.refreshStates().catch(() => undefined);
       return 'granted';
     } catch {
       await this.refreshStates();
       const state = this.getState(kind);
-      if (state === 'prompt') {
+      if (state === 'prompt' || state === 'granted') {
         this.setState(kind, 'denied');
         return 'denied';
       }
@@ -69,6 +76,11 @@ export class MediaPermissionService {
     await this.refreshStates();
     if (this.isGranted(kind)) return true;
     if (this.getState(kind) === 'denied') return false;
+    // For microphone, a short grant is fine. Camera streams should be opened
+    // by the consumer itself on iOS to avoid stop/restart races.
+    if (kind === 'camera') {
+      return true;
+    }
     return (await this.requestPermission(kind)) === 'granted';
   }
 

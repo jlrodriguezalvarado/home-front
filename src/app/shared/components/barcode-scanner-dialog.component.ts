@@ -42,6 +42,7 @@ export class BarcodeScannerDialogComponent implements OnInit, OnDestroy {
   readonly isIOS = isIOSDevice();
   private scanner?: Html5Qrcode;
   private scanLocked = false;
+  private destroyed = false;
   private readonly scannerId = `barcode-scanner-${Math.random().toString(36).slice(2, 9)}`;
 
   ngOnInit(): void {
@@ -50,6 +51,7 @@ export class BarcodeScannerDialogComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this.destroyed = true;
     document.body.style.overflow = '';
     void this.stopScanner();
   }
@@ -59,17 +61,9 @@ export class BarcodeScannerDialogComponent implements OnInit, OnDestroy {
   }
 
   private async startScanner(): Promise<void> {
-    const hasAccess = await this.mediaPermissions.ensureAccess('camera');
-    if (!hasAccess) {
-      this.starting.set(false);
-      if (this.mediaPermissions.getState('camera') === 'denied') {
-        this.toast.error(this.i18n.t('cameraPermissionDeniedHint'));
-      } else {
-        this.toast.error(this.i18n.t('barcodeScannerCameraError'));
-      }
-      this.close();
-      return;
-    }
+    // Wait one frame so the host has layout before html5-qrcode mounts the video.
+    await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+    if (this.destroyed) return;
     const host = this.scannerHost.nativeElement;
     host.id = this.scannerId;
     this.scanner = new Html5Qrcode(this.scannerId, {
@@ -86,89 +80,78 @@ export class BarcodeScannerDialogComponent implements OnInit, OnDestroy {
       },
       verbose: false,
     });
-    const cameraConfigs: MediaTrackConstraints[] = this.isIOS
-      ? [
-          {
-            facingMode: { ideal: 'environment' },
-            width: { ideal: 1280 },
-            height: { ideal: 720 },
-          },
-          { facingMode: 'environment' },
-        ]
-      : [{ facingMode: 'environment' }];
-    const scanConfig: Html5QrcodeCameraScanConfig = this.isIOS
-      ? {
-          fps: 15,
-          disableFlip: false,
-        }
-      : {
-          fps: 10,
-          aspectRatio: 1.7777778,
-          qrbox: (viewfinderWidth, viewfinderHeight) => {
-            const width = Math.floor(Math.min(viewfinderWidth, viewfinderHeight) * 0.85);
-            return { width, height: Math.floor(width * 0.45) };
-          },
-        };
+    const scanConfig = this.buildScanConfig();
     try {
-      let started = false;
-      for (const cameraConfig of cameraConfigs) {
-        try {
-          await this.scanner.start(
-            cameraConfig,
-            scanConfig,
-            (decodedText) => this.onScanSuccess(decodedText),
-            () => undefined,
-          );
-          started = true;
-          break;
-        } catch {
-          if (this.scanner.isScanning) {
-            await this.scanner.stop();
-          }
-        }
+      // Do not call getUserMedia before html5-qrcode on iOS: releasing the
+      // stream and restarting immediately often fails with NotReadableError.
+      await this.startWithFacingMode(scanConfig);
+      if (this.destroyed) {
+        await this.stopScanner();
+        return;
       }
-      if (!started) {
-        throw new Error('Could not start camera');
-      }
-      if (this.isIOS) {
-        await this.applyIOSCameraTuning();
-      }
+      this.mediaPermissions.markGranted('camera');
       this.starting.set(false);
-    } catch {
+    } catch (error) {
       this.starting.set(false);
-      this.toast.error(this.i18n.t('barcodeScannerCameraError'));
+      this.showStartError(error);
       this.close();
     }
   }
 
-  private async applyIOSCameraTuning(): Promise<void> {
-    if (!this.scanner?.isScanning) return;
-    try {
-      const caps = this.scanner.getRunningTrackCapabilities() as MediaTrackCapabilities & {
-        focusDistance?: { min: number; max: number };
-        zoom?: { min: number; max: number };
+  private buildScanConfig(): Html5QrcodeCameraScanConfig {
+    if (this.isIOS) {
+      return {
+        fps: 12,
+        disableFlip: false,
       };
-      const advanced: MediaTrackConstraintSet[] = [];
-      if (caps.focusDistance) {
-        const focusDistance = Math.min(
-          caps.focusDistance.max,
-          Math.max(caps.focusDistance.min, (caps.focusDistance.min + caps.focusDistance.max) * 0.35),
-        );
-        advanced.push({ focusDistance } as MediaTrackConstraintSet);
-      }
-      if (caps.zoom) {
-        const zoom = Math.min(caps.zoom.max, Math.max(caps.zoom.min, 1));
-        advanced.push({ zoom } as MediaTrackConstraintSet);
-      }
-      await this.scanner.applyVideoConstraints({
-        width: { ideal: Math.min(caps.width?.max ?? 1280, 1280) },
-        height: { ideal: Math.min(caps.height?.max ?? 720, 720) },
-        frameRate: { ideal: Math.min(caps.frameRate?.max ?? 30, 30) },
-        ...(advanced.length > 0 ? { advanced } : {}),
-      });
-    } catch {
-      // Best-effort tuning for iOS autofocus and resolution.
     }
+    return {
+      fps: 10,
+      aspectRatio: 1.7777778,
+      qrbox: (viewfinderWidth, viewfinderHeight) => {
+        const width = Math.floor(Math.min(viewfinderWidth, viewfinderHeight) * 0.85);
+        return { width, height: Math.floor(width * 0.45) };
+      },
+    };
+  }
+
+  private async startWithFacingMode(scanConfig: Html5QrcodeCameraScanConfig): Promise<void> {
+    if (!this.scanner) return;
+    try {
+      await this.scanner.start(
+        { facingMode: 'environment' },
+        scanConfig,
+        (decodedText) => this.onScanSuccess(decodedText),
+        () => undefined,
+      );
+      return;
+    } catch {
+      // Fallback: pick an explicit camera id (more reliable on some iOS builds).
+    }
+    const cameras = await Html5Qrcode.getCameras();
+    if (!cameras.length) {
+      throw new Error('No camera found');
+    }
+    const preferred =
+      cameras.find((camera) => /back|rear|environment|trasera/i.test(camera.label))
+      ?? cameras[cameras.length - 1];
+    await this.scanner.start(
+      preferred.id,
+      scanConfig,
+      (decodedText) => this.onScanSuccess(decodedText),
+      () => undefined,
+    );
+  }
+
+  private showStartError(error: unknown): void {
+    const message = error instanceof Error ? error.message : String(error ?? '');
+    const denied = /NotAllowedError|Permission|denied|secure/i.test(message)
+      || this.mediaPermissions.getState('camera') === 'denied';
+    if (denied) {
+      this.toast.error(this.i18n.t('cameraPermissionDeniedHint'));
+      return;
+    }
+    this.toast.error(this.i18n.t('barcodeScannerCameraError'));
   }
 
   private onScanSuccess(code: string): void {
