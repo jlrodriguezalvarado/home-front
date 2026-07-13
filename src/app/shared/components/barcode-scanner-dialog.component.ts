@@ -12,6 +12,7 @@ import {
 import { CommonModule } from '@angular/common';
 import { Html5Qrcode, Html5QrcodeCameraScanConfig, Html5QrcodeSupportedFormats } from 'html5-qrcode';
 import { I18nService } from '../../core/i18n/i18n.service';
+import { MediaPermissionService } from '../services/media-permission.service';
 import { ToastService } from '../services/toast.service';
 
 function isIOSDevice(): boolean {
@@ -35,6 +36,7 @@ export class BarcodeScannerDialogComponent implements OnInit, OnDestroy {
   @Output() closed = new EventEmitter<void>();
   @ViewChild('scannerHost', { static: true }) scannerHost!: ElementRef<HTMLElement>;
   i18n = inject(I18nService);
+  private mediaPermissions = inject(MediaPermissionService);
   private toast = inject(ToastService);
   starting = signal(true);
   readonly isIOS = isIOSDevice();
@@ -57,6 +59,17 @@ export class BarcodeScannerDialogComponent implements OnInit, OnDestroy {
   }
 
   private async startScanner(): Promise<void> {
+    const hasAccess = await this.mediaPermissions.ensureAccess('camera');
+    if (!hasAccess) {
+      this.starting.set(false);
+      if (this.mediaPermissions.getState('camera') === 'denied') {
+        this.toast.error(this.i18n.t('cameraPermissionDeniedHint'));
+      } else {
+        this.toast.error(this.i18n.t('barcodeScannerCameraError'));
+      }
+      this.close();
+      return;
+    }
     const host = this.scannerHost.nativeElement;
     host.id = this.scannerId;
     this.scanner = new Html5Qrcode(this.scannerId, {
@@ -73,13 +86,16 @@ export class BarcodeScannerDialogComponent implements OnInit, OnDestroy {
       },
       verbose: false,
     });
-    const cameraConfig: MediaTrackConstraints = this.isIOS
-      ? {
-          facingMode: { ideal: 'environment' },
-          width: { ideal: 1280 },
-          height: { ideal: 720 },
-        }
-      : { facingMode: 'environment' };
+    const cameraConfigs: MediaTrackConstraints[] = this.isIOS
+      ? [
+          {
+            facingMode: { ideal: 'environment' },
+            width: { ideal: 1280 },
+            height: { ideal: 720 },
+          },
+          { facingMode: 'environment' },
+        ]
+      : [{ facingMode: 'environment' }];
     const scanConfig: Html5QrcodeCameraScanConfig = this.isIOS
       ? {
           fps: 15,
@@ -94,12 +110,26 @@ export class BarcodeScannerDialogComponent implements OnInit, OnDestroy {
           },
         };
     try {
-      await this.scanner.start(
-        cameraConfig,
-        scanConfig,
-        (decodedText) => this.onScanSuccess(decodedText),
-        () => undefined,
-      );
+      let started = false;
+      for (const cameraConfig of cameraConfigs) {
+        try {
+          await this.scanner.start(
+            cameraConfig,
+            scanConfig,
+            (decodedText) => this.onScanSuccess(decodedText),
+            () => undefined,
+          );
+          started = true;
+          break;
+        } catch {
+          if (this.scanner.isScanning) {
+            await this.scanner.stop();
+          }
+        }
+      }
+      if (!started) {
+        throw new Error('Could not start camera');
+      }
       if (this.isIOS) {
         await this.applyIOSCameraTuning();
       }

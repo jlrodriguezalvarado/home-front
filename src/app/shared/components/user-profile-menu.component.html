@@ -52,6 +52,53 @@
       <p *ngIf="!pushSupported()" class="px-4 py-2 text-body-md text-on-surface-variant">
         {{ t('notificationsNotSupported') }}
       </p>
+      <button
+        *ngIf="mediaSupported()"
+        type="button"
+        (click)="toggleMediaPermission($event, 'camera')"
+        [disabled]="mediaPermissionLoading() === 'camera'"
+        class="profile-menu-item w-full text-left px-4 py-2.5 flex items-center gap-3 hover:bg-surface-container transition-colors disabled:opacity-60">
+        <span class="material-symbols-outlined text-on-surface-variant text-[20px]">
+          {{ cameraGranted() ? 'videocam' : 'videocam_off' }}
+        </span>
+        <span class="text-label-lg text-on-surface flex-1">
+          {{ cameraGranted() ? t('cameraAccess') : t('enableCamera') }}
+        </span>
+        <span
+          class="relative inline-flex h-5 w-9 shrink-0 rounded-full transition-colors"
+          [class.bg-primary]="cameraGranted()"
+          [class.bg-outline-variant]="!cameraGranted()">
+          <span
+            class="absolute top-0.5 h-4 w-4 rounded-full bg-surface shadow transition-transform"
+            [class.translate-x-4]="cameraGranted()"
+            [class.translate-x-0.5]="!cameraGranted()"></span>
+        </span>
+      </button>
+      <button
+        *ngIf="mediaSupported()"
+        type="button"
+        (click)="toggleMediaPermission($event, 'microphone')"
+        [disabled]="mediaPermissionLoading() === 'microphone'"
+        class="profile-menu-item w-full text-left px-4 py-2.5 flex items-center gap-3 hover:bg-surface-container transition-colors disabled:opacity-60">
+        <span class="material-symbols-outlined text-on-surface-variant text-[20px]">
+          {{ microphoneGranted() ? 'mic' : 'mic_off' }}
+        </span>
+        <span class="text-label-lg text-on-surface flex-1">
+          {{ microphoneGranted() ? t('microphoneAccess') : t('enableMicrophone') }}
+        </span>
+        <span
+          class="relative inline-flex h-5 w-9 shrink-0 rounded-full transition-colors"
+          [class.bg-primary]="microphoneGranted()"
+          [class.bg-outline-variant]="!microphoneGranted()">
+          <span
+            class="absolute top-0.5 h-4 w-4 rounded-full bg-surface shadow transition-transform"
+            [class.translate-x-4]="microphoneGranted()"
+            [class.translate-x-0.5]="!microphoneGranted()"></span>
+        </span>
+      </button>
+      <p *ngIf="!mediaSupported()" class="px-4 py-2 text-body-md text-on-surface-variant">
+        {{ t('mediaPermissionsNotSupported') }}
+      </p>
     </div>
     <div class="h-px bg-outline-variant mx-4"></div>
     <div class="py-1">

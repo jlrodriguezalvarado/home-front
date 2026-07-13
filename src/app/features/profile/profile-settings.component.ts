@@ -9,6 +9,7 @@ import { ToastService } from '../../shared/services/toast.service';
 import { DialogFormDirective } from '../../shared/directives/dialog-form.directive';
 import { ChatSessionService } from '../chat/services/chat-session.service';
 import { NotificationsSessionService } from '../../core/notifications/notifications-session.service';
+import { MediaPermissionKind, MediaPermissionService } from '../../shared/services/media-permission.service';
 
 const API_FIELD_TO_CONTROL: Record<string, string> = {
   current_password: 'currentPassword',
@@ -31,8 +32,10 @@ export class ProfileSettingsComponent implements OnInit {
   toast = inject(ToastService);
   chatSession = inject(ChatSessionService);
   notificationsSession = inject(NotificationsSessionService);
+  mediaPermissions = inject(MediaPermissionService);
   userEmail = signal('');
   passwordSaving = signal(false);
+  mediaPermissionLoading = signal<MediaPermissionKind | null>(null);
   showCurrentPassword = signal(false);
   showNewPassword = signal(false);
   showConfirmPassword = signal(false);
@@ -47,6 +50,41 @@ export class ProfileSettingsComponent implements OnInit {
       next: (user) => this.userEmail.set(user.email),
       error: () => this.userEmail.set(''),
     });
+    void this.mediaPermissions.refreshStates();
+  }
+
+  mediaPermissionLabel(kind: MediaPermissionKind): string {
+    const state = this.mediaPermissions.getState(kind);
+    if (state === 'granted') {
+      return kind === 'camera' ? this.t('cameraAccess') : this.t('microphoneAccess');
+    }
+    if (state === 'denied') {
+      return kind === 'camera' ? this.t('cameraPermissionDenied') : this.t('microphonePermissionDenied');
+    }
+    return kind === 'camera' ? this.t('enableCamera') : this.t('enableMicrophone');
+  }
+
+  async requestMediaPermission(kind: MediaPermissionKind): Promise<void> {
+    if (!this.mediaPermissions.isSupported() || this.mediaPermissionLoading()) return;
+    if (this.mediaPermissions.isGranted(kind)) {
+      this.toast.info(this.t('mediaPermissionManageInSettings'));
+      return;
+    }
+    if (this.mediaPermissions.getState(kind) === 'denied') {
+      this.toast.error(this.t(kind === 'camera' ? 'cameraPermissionDeniedHint' : 'microphonePermissionDeniedHint'));
+      return;
+    }
+    this.mediaPermissionLoading.set(kind);
+    try {
+      const state = await this.mediaPermissions.requestPermission(kind);
+      if (state === 'granted') {
+        this.toast.success(this.t(kind === 'camera' ? 'cameraPermissionGranted' : 'microphonePermissionGranted'));
+        return;
+      }
+      this.toast.error(this.t(kind === 'camera' ? 'cameraPermissionDenied' : 'microphonePermissionDenied'));
+    } finally {
+      this.mediaPermissionLoading.set(null);
+    }
   }
 
   t(key: AppStringKey): string {

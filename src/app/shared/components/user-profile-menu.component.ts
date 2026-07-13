@@ -7,6 +7,7 @@ import { AuthService } from '../../core/auth/auth.service';
 import { PushNotificationService } from '../../features/chat/services/push-notification.service';
 import { ChatSessionService } from '../../features/chat/services/chat-session.service';
 import { NotificationsSessionService } from '../../core/notifications/notifications-session.service';
+import { MediaPermissionKind, MediaPermissionService } from '../services/media-permission.service';
 import { ToastService } from '../services/toast.service';
 
 @Component({
@@ -23,15 +24,21 @@ export class UserProfileMenuComponent implements OnInit {
   push = inject(PushNotificationService);
   chatSession = inject(ChatSessionService);
   notificationsSession = inject(NotificationsSessionService);
+  mediaPermissions = inject(MediaPermissionService);
   toast = inject(ToastService);
   router = inject(Router);
   menuOpen = signal(false);
   pushSubscribed = signal(false);
   pushLoading = signal(false);
+  mediaPermissionLoading = signal<MediaPermissionKind | null>(null);
   pushSupported = computed(() => this.push.isSupported());
+  mediaSupported = computed(() => this.mediaPermissions.isSupported());
+  cameraGranted = computed(() => this.mediaPermissions.cameraState() === 'granted');
+  microphoneGranted = computed(() => this.mediaPermissions.microphoneState() === 'granted');
 
   ngOnInit(): void {
     void this.refreshPushSubscriptionState();
+    void this.mediaPermissions.refreshStates();
   }
 
   t(key: AppStringKey): string {
@@ -86,6 +93,32 @@ export class UserProfileMenuComponent implements OnInit {
       await this.refreshPushSubscriptionState();
     } finally {
       this.pushLoading.set(false);
+    }
+  }
+
+  async toggleMediaPermission(event: MouseEvent, kind: MediaPermissionKind): Promise<void> {
+    event.stopPropagation();
+    if (!this.mediaSupported() || this.mediaPermissionLoading()) return;
+    const granted = kind === 'camera' ? this.cameraGranted() : this.microphoneGranted();
+    if (granted) {
+      this.toast.info(this.t('mediaPermissionManageInSettings'));
+      return;
+    }
+    const denied = this.mediaPermissions.getState(kind) === 'denied';
+    if (denied) {
+      this.toast.error(this.t(kind === 'camera' ? 'cameraPermissionDeniedHint' : 'microphonePermissionDeniedHint'));
+      return;
+    }
+    this.mediaPermissionLoading.set(kind);
+    try {
+      const state = await this.mediaPermissions.requestPermission(kind);
+      if (state === 'granted') {
+        this.toast.success(this.t(kind === 'camera' ? 'cameraPermissionGranted' : 'microphonePermissionGranted'));
+        return;
+      }
+      this.toast.error(this.t(kind === 'camera' ? 'cameraPermissionDenied' : 'microphonePermissionDenied'));
+    } finally {
+      this.mediaPermissionLoading.set(null);
     }
   }
 

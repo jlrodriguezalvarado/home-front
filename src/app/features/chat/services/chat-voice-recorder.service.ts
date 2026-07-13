@@ -1,6 +1,7 @@
-import { Injectable, OnDestroy, computed, signal } from '@angular/core';
+import { Injectable, OnDestroy, computed, inject, signal } from '@angular/core';
 import { Subject } from 'rxjs';
 import { AppStringKey } from '../../../core/i18n/i18n.service';
+import { MediaPermissionService } from '../../../shared/services/media-permission.service';
 import {
   createVoiceNoteFile,
   formatAudioDuration,
@@ -15,6 +16,7 @@ const MAX_WAVEFORM_SAMPLES = 120;
 
 @Injectable({ providedIn: 'root' })
 export class ChatVoiceRecorderService implements OnDestroy {
+  private readonly mediaPermissions = inject(MediaPermissionService);
   phase = signal<VoiceRecordingPhase>('idle');
   durationSeconds = signal(0);
   recordedBytes = signal(0);
@@ -64,6 +66,12 @@ export class ChatVoiceRecorderService implements OnDestroy {
     this.stopPreviewPlayback();
     this.revokePreviewUrl();
     try {
+      const hasAccess = await this.mediaPermissions.ensureAccess('microphone');
+      if (!hasAccess) {
+        this.errorKey.set('chatVoicePermissionDenied');
+        this.cleanup();
+        return false;
+      }
       this.mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
       this.setupAnalyser(this.mediaStream);
       this.mimeType = getPreferredAudioMimeType();

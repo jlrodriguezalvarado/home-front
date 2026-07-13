@@ -7,6 +7,48 @@
       <p class="text-body-lg text-on-surface mt-xs">{{ userEmail() || '—' }}</p>
     </div>
   </section>
+  <section class="card-surface p-lg space-y-md" *ngIf="mediaPermissions.isSupported()">
+    <h2 class="text-title-md text-on-surface">{{ t('devicePermissions') }}</h2>
+    <p class="text-body-md text-on-surface-variant">{{ t('mediaPermissionManageInSettings') }}</p>
+    <div class="space-y-sm">
+      <div class="flex items-center justify-between gap-md rounded-xl border border-outline-variant px-md py-3">
+        <div class="flex items-center gap-3 min-w-0">
+          <span class="material-symbols-outlined text-on-surface-variant text-[20px]">
+            {{ mediaPermissions.cameraState() === 'granted' ? 'videocam' : 'videocam_off' }}
+          </span>
+          <div class="min-w-0">
+            <p class="text-label-lg text-on-surface">{{ t('cameraAccess') }}</p>
+            <p class="text-body-md text-on-surface-variant truncate">{{ mediaPermissionLabel('camera') }}</p>
+          </div>
+        </div>
+        <button
+          type="button"
+          class="btn-secondary px-md py-2 shrink-0 disabled:opacity-50"
+          [disabled]="mediaPermissionLoading() === 'camera' || mediaPermissions.cameraState() === 'granted'"
+          (click)="requestMediaPermission('camera')">
+          {{ mediaPermissions.cameraState() === 'granted' ? t('cameraAccess') : t('enableCamera') }}
+        </button>
+      </div>
+      <div class="flex items-center justify-between gap-md rounded-xl border border-outline-variant px-md py-3">
+        <div class="flex items-center gap-3 min-w-0">
+          <span class="material-symbols-outlined text-on-surface-variant text-[20px]">
+            {{ mediaPermissions.microphoneState() === 'granted' ? 'mic' : 'mic_off' }}
+          </span>
+          <div class="min-w-0">
+            <p class="text-label-lg text-on-surface">{{ t('microphoneAccess') }}</p>
+            <p class="text-body-md text-on-surface-variant truncate">{{ mediaPermissionLabel('microphone') }}</p>
+          </div>
+        </div>
+        <button
+          type="button"
+          class="btn-secondary px-md py-2 shrink-0 disabled:opacity-50"
+          [disabled]="mediaPermissionLoading() === 'microphone' || mediaPermissions.microphoneState() === 'granted'"
+          (click)="requestMediaPermission('microphone')">
+          {{ mediaPermissions.microphoneState() === 'granted' ? t('microphoneAccess') : t('enableMicrophone') }}
+        </button>
+      </div>
+    </div>
+  </section>
   <section class="card-surface p-lg space-y-md">
     <h2 class="text-title-md text-on-surface">{{ t('changePassword') }}</h2>
     <form class="space-y-md" [formGroup]="passwordForm" appDialogForm (dialogSubmit)="savePassword()">

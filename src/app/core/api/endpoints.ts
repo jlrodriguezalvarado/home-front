@@ -13,6 +13,9 @@ export const API_ENDPOINTS = {
   productCategories: '/product-categories',
   commerces: {
     list: '/commerces/',
+    detail: (id: string) => `/commerces/${id}/`,
+    runSourceUrlScraping: (id: string) => `/commerces/${id}/run-source-url-scraping/`,
+    runScrapingBatch: (id: string) => `/commerces/${id}/run-scraping-batch/`,
     updateProductsPriceBatch: (id: string) => `/commerces/${id}/update-products-price-batch/`,
     reprocessProductUrls: (id: string) => `/commerces/${id}/reprocess-product-urls/`,
   },
