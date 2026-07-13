@@ -1,6 +1,7 @@
 {
   "name": "Home Manager",
   "short_name": "HomeMgr",
+  "id": "/",
   "description": "Home and finance management app",
   "theme_color": "#006a45",
   "background_color": "#f8f9ff",
