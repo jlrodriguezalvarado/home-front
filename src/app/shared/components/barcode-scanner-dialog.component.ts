@@ -10,9 +10,15 @@ import {
   signal,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Html5Qrcode, Html5QrcodeSupportedFormats } from 'html5-qrcode';
+import { Html5Qrcode, Html5QrcodeCameraScanConfig, Html5QrcodeSupportedFormats } from 'html5-qrcode';
 import { I18nService } from '../../core/i18n/i18n.service';
 import { ToastService } from '../services/toast.service';
+
+function isIOSDevice(): boolean {
+  if (typeof navigator === 'undefined') return false;
+  return /iPad|iPhone|iPod/i.test(navigator.userAgent)
+    || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+}
 
 @Component({
   selector: 'app-barcode-scanner-dialog',
@@ -20,6 +26,9 @@ import { ToastService } from '../services/toast.service';
   imports: [CommonModule],
   templateUrl: './barcode-scanner-dialog.component.html',
   styleUrl: './barcode-scanner-dialog.component.scss',
+  host: {
+    '[class.ios-scanner]': 'isIOS',
+  },
 })
 export class BarcodeScannerDialogComponent implements OnInit, OnDestroy {
   @Output() scanned = new EventEmitter<string>();
@@ -28,6 +37,7 @@ export class BarcodeScannerDialogComponent implements OnInit, OnDestroy {
   i18n = inject(I18nService);
   private toast = inject(ToastService);
   starting = signal(true);
+  readonly isIOS = isIOSDevice();
   private scanner?: Html5Qrcode;
   private scanLocked = false;
   private readonly scannerId = `barcode-scanner-${Math.random().toString(36).slice(2, 9)}`;
@@ -58,27 +68,76 @@ export class BarcodeScannerDialogComponent implements OnInit, OnDestroy {
         Html5QrcodeSupportedFormats.CODE_128,
         Html5QrcodeSupportedFormats.CODE_39,
       ],
+      experimentalFeatures: {
+        useBarCodeDetectorIfSupported: true,
+      },
       verbose: false,
     });
-    try {
-      await this.scanner.start(
-        { facingMode: 'environment' },
-        {
+    const cameraConfig: MediaTrackConstraints = this.isIOS
+      ? {
+          facingMode: { ideal: 'environment' },
+          width: { ideal: 1280 },
+          height: { ideal: 720 },
+        }
+      : { facingMode: 'environment' };
+    const scanConfig: Html5QrcodeCameraScanConfig = this.isIOS
+      ? {
+          fps: 15,
+          disableFlip: false,
+        }
+      : {
           fps: 10,
           aspectRatio: 1.7777778,
           qrbox: (viewfinderWidth, viewfinderHeight) => {
             const width = Math.floor(Math.min(viewfinderWidth, viewfinderHeight) * 0.85);
             return { width, height: Math.floor(width * 0.45) };
           },
-        },
+        };
+    try {
+      await this.scanner.start(
+        cameraConfig,
+        scanConfig,
         (decodedText) => this.onScanSuccess(decodedText),
         () => undefined,
       );
+      if (this.isIOS) {
+        await this.applyIOSCameraTuning();
+      }
       this.starting.set(false);
     } catch {
       this.starting.set(false);
       this.toast.error(this.i18n.t('barcodeScannerCameraError'));
       this.close();
+    }
+  }
+
+  private async applyIOSCameraTuning(): Promise<void> {
+    if (!this.scanner?.isScanning) return;
+    try {
+      const caps = this.scanner.getRunningTrackCapabilities() as MediaTrackCapabilities & {
+        focusDistance?: { min: number; max: number };
+        zoom?: { min: number; max: number };
+      };
+      const advanced: MediaTrackConstraintSet[] = [];
+      if (caps.focusDistance) {
+        const focusDistance = Math.min(
+          caps.focusDistance.max,
+          Math.max(caps.focusDistance.min, (caps.focusDistance.min + caps.focusDistance.max) * 0.35),
+        );
+        advanced.push({ focusDistance } as MediaTrackConstraintSet);
+      }
+      if (caps.zoom) {
+        const zoom = Math.min(caps.zoom.max, Math.max(caps.zoom.min, 1));
+        advanced.push({ zoom } as MediaTrackConstraintSet);
+      }
+      await this.scanner.applyVideoConstraints({
+        width: { ideal: Math.min(caps.width?.max ?? 1280, 1280) },
+        height: { ideal: Math.min(caps.height?.max ?? 720, 720) },
+        frameRate: { ideal: Math.min(caps.frameRate?.max ?? 30, 30) },
+        ...(advanced.length > 0 ? { advanced } : {}),
+      });
+    } catch {
+      // Best-effort tuning for iOS autofocus and resolution.
     }
   }
 

@@ -11,3 +11,6 @@
   border-radius: 1rem;
   object-fit: cover;
 }
+:host(.ios-scanner) ::ng-deep video {
+  object-fit: contain;
+}
