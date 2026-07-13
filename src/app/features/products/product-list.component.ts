@@ -26,7 +26,6 @@ import { Subject, debounceTime, distinctUntilChanged, takeUntil } from 'rxjs';
 
 import { QuantityEditorComponent } from '../../shared/components/quantity-editor.component';
 import { BarcodeScannerDialogComponent } from '../../shared/components/barcode-scanner-dialog.component';
-import { SearchSelectComponent, SearchSelectOption } from '../../shared/components/search-select.component';
 
 import { formatUnitPrice } from '../shopping/utils/price.utils';
 
@@ -53,7 +52,6 @@ import { formatUnitPrice } from '../shopping/utils/price.utils';
     QuantityEditorComponent,
 
     BarcodeScannerDialogComponent,
-    SearchSelectComponent,
 
   ],
 
@@ -130,16 +128,9 @@ export class ProductListComponent implements OnInit, OnDestroy {
   }
 
   cartQuantities = computed(() => this.cartService.cartQuantitiesByProductId());
-  categoryOptions = computed<SearchSelectOption[]>(() =>
-    this.categories().map((cat) => ({ value: cat.id, label: cat.name })),
-  );
 
   get allCategoriesLabel(): string {
     return this.i18n.lang() === 'en' ? 'All' : 'Todas';
-  }
-
-  get categoryPlaceholder(): string {
-    return `${this.i18n.t('category')} — ${this.allCategoriesLabel}`;
   }
 
 
@@ -265,6 +256,11 @@ export class ProductListComponent implements OnInit, OnDestroy {
     this.selectedCategoryId = categoryId || null;
     this.persistFilters();
     this.reloadProducts();
+  }
+  clearCategory(event: Event): void {
+    event.preventDefault();
+    event.stopPropagation();
+    this.onCategoryChange(null);
   }
 
 
