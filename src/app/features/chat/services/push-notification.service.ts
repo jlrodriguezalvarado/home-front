@@ -16,22 +16,29 @@ export class PushNotificationService {
 
   async registerAfterLogin(): Promise<void> {
     if (!this.isSupported()) return;
-    let permission = Notification.permission;
-    if (permission === 'default') {
-      permission = await Notification.requestPermission();
-    }
-    if (permission !== 'granted') return;
+    if (Notification.permission !== 'granted') return;
     await this.subscribe();
   }
 
   async subscribe(): Promise<boolean> {
     if (!this.isSupported()) return false;
     try {
+      let permission = Notification.permission;
+      if (permission === 'default') {
+        permission = await Notification.requestPermission();
+      }
+      if (permission !== 'granted') return false;
       const registration = await this.getRegistration();
       const publicKey = await firstValueFrom(this.repo.getVapidPublicKey());
-      if (!publicKey) return false;
+      if (!publicKey) {
+        throw new Error('The VAPID public key is not configured');
+      }
       const applicationServerKey = urlBase64ToUint8Array(publicKey);
       let subscription = await registration.pushManager.getSubscription();
+      if (subscription && !this.hasApplicationServerKey(subscription, applicationServerKey)) {
+        await subscription.unsubscribe();
+        subscription = null;
+      }
       if (!subscription) {
         subscription = await registration.pushManager.subscribe({
           userVisibleOnly: true,
@@ -47,10 +54,11 @@ export class PushNotificationService {
           auth: keys['auth'] ?? '',
         },
         userAgent: navigator.userAgent,
-        platform: 'web',
+        platform: this.getPlatform(),
       }));
       return true;
-    } catch {
+    } catch (error) {
+      console.error('Failed to subscribe to push notifications', error);
       return false;
     }
   }
@@ -64,7 +72,8 @@ export class PushNotificationService {
       await firstValueFrom(this.repo.unsubscribePushSubscription(subscription.endpoint));
       await subscription.unsubscribe();
       return true;
-    } catch {
+    } catch (error) {
+      console.error('Failed to unsubscribe from push notifications', error);
       return false;
     }
   }
@@ -79,9 +88,25 @@ export class PushNotificationService {
       const registration = await this.getRegistration();
       const subscription = await registration.pushManager.getSubscription();
       return !!subscription;
-    } catch {
+    } catch (error) {
+      console.error('Failed to read the push subscription', error);
       return false;
     }
+  }
+
+  private hasApplicationServerKey(subscription: PushSubscription, expectedKey: Uint8Array): boolean {
+    const currentKey = subscription.options.applicationServerKey;
+    if (!currentKey) return false;
+    const currentBytes = new Uint8Array(currentKey);
+    return currentBytes.length === expectedKey.length && currentBytes.every((value, index) => value === expectedKey[index]);
+  }
+
+  private getPlatform(): string {
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches
+      || ('standalone' in navigator && (navigator as Navigator & { standalone?: boolean }).standalone === true);
+    if (/iPad|iPhone|iPod/.test(navigator.userAgent)) return isStandalone ? 'ios-pwa' : 'ios-web';
+    if (/Android/.test(navigator.userAgent)) return isStandalone ? 'android-pwa' : 'android-web';
+    return isStandalone ? 'web-pwa' : 'web';
   }
 
   private async getRegistration(): Promise<ServiceWorkerRegistration> {
