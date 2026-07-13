@@ -1,30 +1,46 @@
 self.addEventListener('push', (event) => {
-  const data = event.data?.json() ?? {};
-  const n = data.notification ?? {};
+  let payload = {};
+  try {
+    payload = event.data ? event.data.json() : {};
+  } catch {
+    const text = event.data?.text();
+    payload = text ? { notification: { body: text } } : {};
+  }
+  const notification = payload.notification ?? payload;
+  const data = notification.data ?? {};
+  const tag = data.conversationId ?? data.notificationId ?? data.jobId ?? 'home-manager';
+  const options = {
+    body: notification.body ?? '',
+    icon: notification.icon ?? '/icons/icon-192x192.png',
+    badge: notification.badge ?? '/icons/icon-72x72.png',
+    data,
+    tag: String(tag),
+    renotify: true,
+  };
+  if (Array.isArray(notification.actions) && notification.actions.length) {
+    options.actions = notification.actions;
+  }
   event.waitUntil(
-    self.registration.showNotification(n.title ?? 'New message', {
-      body: n.body,
-      icon: n.icon ?? '/icons/icon-192x192.png',
-      badge: n.badge ?? '/icons/icon-72x72.png',
-      data: n.data ?? {},
-      actions: n.actions ?? [],
-    })
+    self.registration.showNotification(notification.title ?? 'Home Manager', options)
   );
 });
 
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
-  const url = event.notification.data?.url ?? '/';
+  const urlPath = event.notification.data?.url ?? '/';
+  const targetUrl = new URL(urlPath, self.location.origin).href;
   const payload = event.notification.data ?? {};
   event.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true }).then((list) => {
-      for (const c of list) {
-        if ('focus' in c) {
-          c.postMessage({ type: 'NOTIFICATION_CLICK', data: payload });
-          if (c.url.includes(url)) return c.focus();
+      for (const client of list) {
+        if ('focus' in client) {
+          client.postMessage({ type: 'NOTIFICATION_CLICK', data: payload });
+          if (client.url.startsWith(targetUrl) || client.url.includes(urlPath)) {
+            return client.focus();
+          }
         }
       }
-      if (clients.openWindow) return clients.openWindow(url);
+      if (clients.openWindow) return clients.openWindow(targetUrl);
     })
   );
 });

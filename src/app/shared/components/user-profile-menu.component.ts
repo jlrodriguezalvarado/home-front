@@ -83,11 +83,15 @@ export class UserProfileMenuComponent implements OnInit {
           this.toast.success(this.t('pushSubscriptionRemoved'));
         }
       } else {
-        const enabled = await this.push.subscribe();
+        const enabled = await this.push.subscribe({ requestPermission: true });
         if (enabled) {
           this.toast.success(this.t('pushSubscriptionSaved'));
         } else if (Notification.permission === 'denied') {
           this.toast.error(this.t('notificationPermissionDenied'));
+        } else if (!this.push.isStandalonePwa() && /iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+          this.toast.error(this.t('pushRequiresIosPwa'));
+        } else {
+          this.toast.error(this.t('pushSubscriptionFailed'));
         }
       }
       await this.refreshPushSubscriptionState();
