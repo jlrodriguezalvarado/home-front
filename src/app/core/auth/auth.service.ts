@@ -14,6 +14,16 @@ export interface AuthUser {
   [key: string]: unknown;
 }
 
+export interface ChangePasswordRequest {
+  current_password: string;
+  new_password: string;
+  confirm_password: string;
+}
+
+export interface ChangePasswordResponse {
+  detail: string;
+}
+
 @Injectable({
   providedIn: 'root',
 })
@@ -60,11 +70,17 @@ export class AuthService {
     return this.api.get<AuthUser>(API_ENDPOINTS.auth.me);
   }
 
+  changePassword(payload: ChangePasswordRequest): Observable<ChangePasswordResponse> {
+    return this.api.post<ChangePasswordResponse>(API_ENDPOINTS.auth.changePassword, payload);
+  }
+
   logout() {
     this._accessToken.set(null);
     this._refreshToken.set(null);
     localStorage.removeItem(this.ACCESS_TOKEN_KEY);
     localStorage.removeItem(this.REFRESH_TOKEN_KEY);
+    sessionStorage.removeItem(this.ACCESS_TOKEN_KEY);
+    sessionStorage.removeItem(this.REFRESH_TOKEN_KEY);
   }
 
   private saveTokens(tokens: AuthTokens) {

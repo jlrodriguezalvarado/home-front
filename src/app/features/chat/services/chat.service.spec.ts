@@ -12,6 +12,7 @@ import { ChatSocketIncomingEvent } from '../models/chat.models';
 import { Router } from '@angular/router';
 import { ToastService } from '../../../shared/services/toast.service';
 import { I18nService } from '../../../core/i18n/i18n.service';
+import { ChatMediaService } from './chat-media.service';
 
 describe('ChatService', () => {
   let service: ChatService;
@@ -24,7 +25,13 @@ describe('ChatService', () => {
     events$ = new Subject<ChatSocketIncomingEvent>();
     store = new ChatConversationStore();
     repo = jasmine.createSpyObj('ChatRepository', ['listMessagesPage', 'sendMessage', 'markAsRead']);
-    socket = jasmine.createSpyObj('ChatConversationWebSocketService', ['connect', 'disconnect', 'sendMessage', 'markAsRead'], {
+    socket = jasmine.createSpyObj('ChatConversationWebSocketService', [
+      'connect',
+      'disconnect',
+      'sendMessage',
+      'markAsRead',
+      'markUserOnline',
+    ], {
       events$: events$.asObservable(),
       connected: () => true,
     });
@@ -58,6 +65,7 @@ describe('ChatService', () => {
         { provide: Router, useValue: jasmine.createSpyObj('Router', ['navigate', 'navigateByUrl']) },
         { provide: ToastService, useValue: jasmine.createSpyObj('ToastService', ['show']) },
         { provide: I18nService, useValue: { t: (key: string) => key } },
+        { provide: ChatMediaService, useValue: jasmine.createSpyObj('ChatMediaService', ['uploadMedia']) },
       ],
     });
     service = TestBed.inject(ChatService);

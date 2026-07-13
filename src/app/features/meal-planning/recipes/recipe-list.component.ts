@@ -11,7 +11,6 @@ import { LoadingStateComponent } from '../../../shared/components/loading-state.
 import { EmptyStateComponent } from '../../../shared/components/empty-state.component';
 import { ErrorStateComponent } from '../../../shared/components/error-state.component';
 import { MealPlanningNavComponent } from '../meal-planning-nav.component';
-import { StripHtmlPipe } from '../../../shared/pipes/strip-html.pipe';
 
 @Component({
   selector: 'app-recipe-list',
@@ -24,7 +23,6 @@ import { StripHtmlPipe } from '../../../shared/pipes/strip-html.pipe';
     EmptyStateComponent,
     ErrorStateComponent,
     MealPlanningNavComponent,
-    StripHtmlPipe,
   ],
   templateUrl: './recipe-list.component.html',
   styleUrl: './recipe-list.component.scss',

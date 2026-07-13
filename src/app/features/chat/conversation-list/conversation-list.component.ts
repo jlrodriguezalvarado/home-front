@@ -1,9 +1,7 @@
-import { Component, DestroyRef, inject, OnInit, signal, computed } from '@angular/core';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { Component, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { ChatRepository } from '../repositories/chat.repository';
-import { PushNotificationService } from '../services/push-notification.service';
 import { ChatInboxStore } from '../services/chat-inbox.store';
 import { Conversation } from '../models/chat.models';
 import { I18nService } from '../../../core/i18n/i18n.service';
@@ -26,9 +24,7 @@ import { ConversationFormComponent } from '../conversation-form/conversation-for
   styleUrl: './conversation-list.component.scss',
 })
 export class ConversationListComponent implements OnInit {
-  private readonly destroyRef = inject(DestroyRef);
   repo = inject(ChatRepository);
-  push = inject(PushNotificationService);
   inboxStore = inject(ChatInboxStore);
   i18n = inject(I18nService);
   router = inject(Router);
@@ -36,12 +32,9 @@ export class ConversationListComponent implements OnInit {
   error = signal(false);
   showDialog = signal(false);
   conversations = this.inboxStore.conversations;
-  pushSupported = computed(() => this.push.isSupported());
-  pushSubscribed = signal(false);
 
   ngOnInit(): void {
     this.load();
-    void this.refreshPushSubscriptionState();
   }
 
   load(): void {
@@ -78,15 +71,6 @@ export class ConversationListComponent implements OnInit {
 
   openConversation(conversation: Conversation): void {
     void this.router.navigate(['/chat/conversations', conversation.id]);
-  }
-
-  async enableNotifications(): Promise<void> {
-    await this.push.subscribe();
-    await this.refreshPushSubscriptionState();
-  }
-
-  private async refreshPushSubscriptionState(): Promise<void> {
-    this.pushSubscribed.set(await this.push.hasActiveSubscription());
   }
 
   formatDate(value: string | null): string {

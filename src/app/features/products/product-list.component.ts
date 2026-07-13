@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, signal, computed } from '@angular/core';
+import { Component, inject, OnInit, OnDestroy, HostListener, signal, computed, ViewChild, ElementRef } from '@angular/core';
 
 import { CommonModule } from '@angular/common';
 
@@ -21,10 +21,12 @@ import { CommerceRepository } from '../commerce/commerce.repository';
 import { Product, Category, Commerce } from '../../core/api/models';
 
 import { I18nService } from '../../core/i18n/i18n.service';
-
-import { Subject, debounceTime, distinctUntilChanged } from 'rxjs';
+import { CommerceReprocessService } from '../../core/notifications/commerce-reprocess.service';
+import { Subject, debounceTime, distinctUntilChanged, takeUntil } from 'rxjs';
 
 import { QuantityEditorComponent } from '../../shared/components/quantity-editor.component';
+import { BarcodeScannerDialogComponent } from '../../shared/components/barcode-scanner-dialog.component';
+import { SearchSelectComponent, SearchSelectOption } from '../../shared/components/search-select.component';
 
 import { formatUnitPrice } from '../shopping/utils/price.utils';
 
@@ -50,13 +52,16 @@ import { formatUnitPrice } from '../shopping/utils/price.utils';
 
     QuantityEditorComponent,
 
+    BarcodeScannerDialogComponent,
+    SearchSelectComponent,
+
   ],
 
   templateUrl: './product-list.component.html',
   styleUrl: './product-list.component.scss',
 })
 
-export class ProductListComponent implements OnInit {
+export class ProductListComponent implements OnInit, OnDestroy {
 
   repo = inject(ProductRepository);
 
@@ -67,6 +72,7 @@ export class ProductListComponent implements OnInit {
   cartService = inject(CartService);
 
   i18n = inject(I18nService);
+  reprocess = inject(CommerceReprocessService);
 
 
 
@@ -94,6 +100,9 @@ export class ProductListComponent implements OnInit {
 
   hasMore = signal(false);
 
+  previewImage = signal<{ url: string; alt: string } | null>(null);
+  barcodeScannerOpen = signal(false);
+
 
 
   private nextUrl: string | null = null;
@@ -101,20 +110,55 @@ export class ProductListComponent implements OnInit {
   private generation = 0;
 
   private searchSubject = new Subject<string>();
+  private destroy$ = new Subject<void>();
 
+  private loadMoreObserver?: IntersectionObserver;
 
+  @ViewChild('loadMoreSentinel') set loadMoreSentinelRef(ref: ElementRef<HTMLElement> | undefined) {
+    this.loadMoreObserver?.disconnect();
+    this.loadMoreObserver = undefined;
+    if (!ref?.nativeElement) return;
+    this.loadMoreObserver = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((entry) => entry.isIntersecting)) {
+          this.loadMore();
+        }
+      },
+      { rootMargin: '200px' },
+    );
+    this.loadMoreObserver.observe(ref.nativeElement);
+  }
 
   cartQuantities = computed(() => this.cartService.cartQuantitiesByProductId());
-
-
+  categoryOptions = computed<SearchSelectOption[]>(() =>
+    this.categories().map((cat) => ({ value: cat.id, label: cat.name })),
+  );
 
   get allCategoriesLabel(): string {
-
     return this.i18n.lang() === 'en' ? 'All' : 'Todas';
+  }
 
+  get categoryPlaceholder(): string {
+    return `${this.i18n.t('category')} — ${this.allCategoriesLabel}`;
   }
 
 
+
+  ngOnDestroy() {
+    this.destroy$.next();
+    this.destroy$.complete();
+    this.loadMoreObserver?.disconnect();
+    document.body.style.overflow = '';
+  }
+
+  @HostListener('document:keydown.escape')
+  onEscapeKey(): void {
+    if (this.barcodeScannerOpen()) {
+      this.closeBarcodeScanner();
+      return;
+    }
+    this.closeImagePreview();
+  }
 
   ngOnInit() {
 
@@ -135,13 +179,14 @@ export class ProductListComponent implements OnInit {
 
 
     this.searchSubject.pipe(debounceTime(400), distinctUntilChanged()).subscribe((query) => {
-
       this.debouncedSearch = query;
-
       this.persistFilters();
-
       this.reloadProducts();
-
+    });
+    this.reprocess.finished$.pipe(takeUntil(this.destroy$)).subscribe((event) => {
+      if (event.commerce_id === this.selectedCommerceId) {
+        this.reloadProducts();
+      }
     });
 
 
@@ -186,6 +231,21 @@ export class ProductListComponent implements OnInit {
 
   }
 
+  openBarcodeScanner(): void {
+    this.barcodeScannerOpen.set(true);
+  }
+
+  closeBarcodeScanner(): void {
+    this.barcodeScannerOpen.set(false);
+  }
+
+  onBarcodeScanned(code: string): void {
+    this.searchDraft = code;
+    this.debouncedSearch = code;
+    this.persistFilters();
+    this.reloadProducts();
+  }
+
 
 
   onCommerceChange(commerceId: string) {
@@ -201,13 +261,9 @@ export class ProductListComponent implements OnInit {
 
 
   onCategoryChange(categoryId: string | null) {
-
     this.selectedCategoryId = categoryId || null;
-
     this.persistFilters();
-
     this.reloadProducts();
-
   }
 
 
@@ -249,7 +305,18 @@ export class ProductListComponent implements OnInit {
 
   }
 
+  openImagePreview(product: Product): void {
+    const url = product.imageUrl?.trim();
+    if (!url) return;
+    this.previewImage.set({ url, alt: product.name });
+    document.body.style.overflow = 'hidden';
+  }
 
+  closeImagePreview(): void {
+    if (!this.previewImage()) return;
+    this.previewImage.set(null);
+    document.body.style.overflow = '';
+  }
 
   reloadProducts() {
 

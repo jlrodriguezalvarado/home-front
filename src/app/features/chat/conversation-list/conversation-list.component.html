@@ -2,20 +2,6 @@
   <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-md">
     <h1 class="page-title">{{ i18n.t('conversations') }}</h1>
     <div class="flex flex-col sm:flex-row w-full sm:w-auto gap-sm">
-      <button
-        *ngIf="pushSupported() && !pushSubscribed()"
-        type="button"
-        (click)="enableNotifications()"
-        class="flex w-full sm:w-auto items-center justify-center gap-2 px-md py-2 border border-outline-variant rounded-xl text-label-lg text-on-surface hover:bg-surface-container transition-colors">
-        <span class="material-symbols-outlined text-[20px]">notifications</span>
-        {{ i18n.t('enableNotifications') }}
-      </button>
-      <span
-        *ngIf="pushSupported() && pushSubscribed()"
-        class="flex w-full sm:w-auto items-center justify-center gap-2 px-md py-2 text-label-lg text-on-surface-variant">
-        <span class="material-symbols-outlined text-[20px] text-primary">notifications_active</span>
-        {{ i18n.t('notificationsEnabled') }}
-      </span>
       <button type="button" (click)="openDialog()" class="btn-primary flex w-full sm:w-auto items-center justify-center gap-2">
         <span class="material-symbols-outlined text-[20px]">person_add</span>
         {{ i18n.t('newConversation') }}

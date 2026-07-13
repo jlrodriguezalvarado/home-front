@@ -1,7 +1,10 @@
 import {
   ChatMessage,
   ChatMessageItem,
+  ChatMessageMetadata,
+  ChatMessageType,
   ChatMessagesPage,
+  ChatMediaUploadResponse,
   ChatSocketIncomingEvent,
   ChatSocketOutgoingEvent,
   ChatUserSummary,
@@ -9,6 +12,7 @@ import {
   ConversationParticipant,
   ConversationPayload,
   InboxMessageEvent,
+  InboxPresenceEvent,
   PeerDisplayNameListResponse,
   PeerDisplayNameResponse,
   PushSubscriptionPayload,
@@ -17,6 +21,102 @@ import {
 
 function asRecord(value: unknown): Record<string, unknown> {
   return value && typeof value === 'object' ? (value as Record<string, unknown>) : {};
+}
+
+function normalizeSocketEventType(type: string): string {
+  const aliases: Record<string, string> = {
+    user_joined: 'user.joined',
+    user_left: 'user.left',
+    presence_snapshot: 'presence.snapshot',
+    presence_initial: 'presence.initial',
+    presence_changed: 'presence.changed',
+  };
+  return aliases[type] ?? type;
+}
+
+export function extractSocketUserId(data: Record<string, unknown>): string {
+  const direct = data['user_id'] ?? data['userId'] ?? data['sender_id'] ?? data['senderId'];
+  if (direct != null && direct !== '') return String(direct);
+  const user = data['user'];
+  if (typeof user === 'string' && user !== '') return user;
+  if (user && typeof user === 'object') {
+    const userId = (user as Record<string, unknown>)['id'] ?? (user as Record<string, unknown>)['user_id'];
+    if (userId != null && userId !== '') return String(userId);
+  }
+  return '';
+}
+
+export function extractOnlineUserIds(data: Record<string, unknown>): string[] {
+  const ids = data['online_user_ids'] ?? data['onlineUserIds'] ?? data['user_ids'] ?? data['userIds'];
+  if (Array.isArray(ids)) {
+    return ids.map((id) => String(id)).filter((id) => id !== '');
+  }
+  const users = data['online_users'] ?? data['onlineUsers'] ?? data['users'];
+  if (!Array.isArray(users)) return [];
+  return users
+    .map((user) => {
+      if (typeof user === 'string') return user;
+      if (user && typeof user === 'object') {
+        return String((user as Record<string, unknown>)['id'] ?? (user as Record<string, unknown>)['user_id'] ?? '');
+      }
+      return '';
+    })
+    .filter((id) => id !== '');
+}
+
+function isMediaMetadata(data: Record<string, unknown>): boolean {
+  return data['storage_key'] != null
+    || data['storageKey'] != null
+    || data['filename'] != null
+    || data['mime_type'] != null
+    || data['mimeType'] != null;
+}
+
+export function mapChatMessageMetadataFromApi(item: unknown): ChatMessageMetadata {
+  const data = asRecord(item);
+  const durationRaw = data['duration'];
+  return {
+    storageKey: String(data['storage_key'] ?? data['storageKey'] ?? ''),
+    filename: String(data['filename'] ?? ''),
+    mimeType: String(data['mime_type'] ?? data['mimeType'] ?? ''),
+    size: Number(data['size'] ?? 0),
+    url: data['url'] != null ? String(data['url']) : undefined,
+    duration: durationRaw != null ? Number(durationRaw) : undefined,
+  };
+}
+
+export function mapChatMessageMetadataToApi(metadata: ChatMessageMetadata | Record<string, unknown>): Record<string, unknown> {
+  if ('storageKey' in metadata || 'mimeType' in metadata) {
+    const typed = metadata as ChatMessageMetadata;
+    const body: Record<string, unknown> = {
+      storage_key: typed.storageKey,
+      filename: typed.filename,
+      mime_type: typed.mimeType,
+      size: typed.size,
+    };
+    if (typed.url) body['url'] = typed.url;
+    if (typed.duration != null) body['duration'] = typed.duration;
+    return body;
+  }
+  return metadata as Record<string, unknown>;
+}
+
+export function mapChatMediaUploadFromApi(item: unknown): ChatMediaUploadResponse {
+  const data = asRecord(item);
+  const metadataRaw = data['metadata'];
+  const metadata = mapChatMessageMetadataFromApi(metadataRaw);
+  const url = data['url'] != null ? String(data['url']) : metadata.url ?? '';
+  return {
+    messageType: (data['message_type'] ?? data['messageType'] ?? 'file') as ChatMediaUploadResponse['messageType'],
+    metadata: { ...metadata, url: url || metadata.url },
+    url,
+  };
+}
+
+export function normalizeChatMessageType(value: unknown): ChatMessageType {
+  const raw = String(value ?? 'text');
+  if (raw === 'image' || raw === 'audio' || raw === 'file' || raw === 'system') return raw;
+  return 'text';
 }
 
 export function mapChatUserSummaryFromApi(item: unknown): ChatUserSummary {
@@ -59,7 +159,12 @@ export function mapChatMessageFromApi(item: unknown): ChatMessage {
     ? mapChatUserSummaryFromApi(senderRaw)
     : mapChatUserSummaryFromApi({ id: senderId, name: String(data['sender_name'] ?? senderId) });
   const senderNameRaw = data['sender_name'] ?? data['senderName'];
-  const metadata = data['metadata'];
+  const metadataRaw = data['metadata'];
+  let metadata: ChatMessage['metadata'] = {};
+  if (metadataRaw && typeof metadataRaw === 'object') {
+    const record = metadataRaw as Record<string, unknown>;
+    metadata = isMediaMetadata(record) ? mapChatMessageMetadataFromApi(record) : record;
+  }
   return {
     id: String(data['id'] ?? ''),
     conversationId: String(data['conversation_id'] ?? data['conversationId'] ?? ''),
@@ -67,8 +172,8 @@ export function mapChatMessageFromApi(item: unknown): ChatMessage {
     senderId,
     senderName: senderNameRaw != null ? String(senderNameRaw) : sender.name,
     body: String(data['body'] ?? ''),
-    messageType: (data['message_type'] ?? data['messageType'] ?? 'text') as ChatMessage['messageType'],
-    metadata: metadata && typeof metadata === 'object' ? (metadata as Record<string, unknown>) : {},
+    messageType: normalizeChatMessageType(data['message_type'] ?? data['messageType']),
+    metadata,
     clientMessageId: String(data['client_message_id'] ?? data['clientMessageId'] ?? ''),
     isDeleted: Boolean(data['is_deleted'] ?? data['isDeleted'] ?? false),
     createdAt: String(data['created_at'] ?? data['createdAt'] ?? ''),
@@ -160,7 +265,7 @@ export function mapSendMessageRequestToApi(payload: SendMessageRequest): Record<
   return {
     body: payload.body,
     message_type: payload.messageType,
-    metadata: payload.metadata ?? {},
+    metadata: mapChatMessageMetadataToApi(payload.metadata ?? {}),
     client_message_id: payload.clientMessageId,
   };
 }
@@ -170,10 +275,15 @@ export function chatMessageToItem(
   currentUserId: string,
   status: ChatMessageItem['status'] = 'sent',
 ): ChatMessageItem {
+  const metadata = message.metadata && typeof message.metadata === 'object' && 'filename' in message.metadata
+    ? message.metadata as ChatMessageMetadata
+    : undefined;
   return {
     id: message.id,
     clientMessageId: message.clientMessageId || message.id,
     body: message.body,
+    messageType: message.messageType,
+    metadata,
     sender: message.senderId,
     senderName: message.senderName ?? message.sender.name,
     createdAt: new Date(message.createdAt),
@@ -206,7 +316,7 @@ export function findChatMessageIndex(
 
 export function mapChatSocketEventFromApi(item: unknown): ChatSocketIncomingEvent {
   const data = asRecord(item);
-  const type = String(data['type'] ?? 'error');
+  const type = normalizeSocketEventType(String(data['type'] ?? 'error'));
   switch (type) {
     case 'message.created': {
       const messageRaw = data['message'] ?? data;
@@ -224,25 +334,39 @@ export function mapChatSocketEventFromApi(item: unknown): ChatSocketIncomingEven
     case 'typing.changed':
       return {
         type: 'typing.changed',
-        userId: String(data['user_id'] ?? data['userId'] ?? ''),
+        userId: extractSocketUserId(data),
         isTyping: Boolean(data['is_typing'] ?? data['isTyping'] ?? false),
       };
     case 'messages.read':
       return {
         type: 'messages.read',
-        userId: String(data['user_id'] ?? data['userId'] ?? ''),
+        userId: extractSocketUserId(data),
         readAt: String(data['read_at'] ?? data['readAt'] ?? ''),
       };
     case 'user.joined':
       return {
         type: 'user.joined',
-        userId: String(data['user_id'] ?? data['userId'] ?? ''),
+        userId: extractSocketUserId(data),
       };
     case 'user.left':
       return {
         type: 'user.left',
-        userId: String(data['user_id'] ?? data['userId'] ?? ''),
+        userId: extractSocketUserId(data),
       };
+    case 'presence.snapshot':
+    case 'presence.initial':
+      return {
+        type: 'presence.snapshot',
+        onlineUserIds: extractOnlineUserIds(data),
+      };
+    case 'presence.changed': {
+      const isOnlineRaw = data['is_online'] ?? data['isOnline'] ?? data['online'];
+      return {
+        type: 'presence.changed',
+        userId: extractSocketUserId(data),
+        isOnline: isOnlineRaw == null ? true : Boolean(isOnlineRaw),
+      };
+    }
     default:
       return {
         type: 'error',
@@ -277,7 +401,7 @@ export function mapChatSocketOutgoingToApi(event: ChatSocketOutgoingEvent): Reco
       type: event.type,
       body: event.body,
       message_type: event.messageType,
-      metadata: event.metadata,
+      metadata: mapChatMessageMetadataToApi(event.metadata ?? {}),
       client_message_id: event.clientMessageId,
     };
   }
@@ -286,7 +410,7 @@ export function mapChatSocketOutgoingToApi(event: ChatSocketOutgoingEvent): Reco
 
 export function mapInboxEventFromApi(item: unknown): InboxMessageEvent | null {
   const data = asRecord(item);
-  const type = String(data['type'] ?? '');
+  const type = normalizeSocketEventType(String(data['type'] ?? ''));
   if (type !== 'conversation.message_created') return null;
   const messageRaw = data['message'];
   const message = mapChatMessageFromApi(messageRaw);
@@ -306,4 +430,32 @@ export function mapInboxEventFromApi(item: unknown): InboxMessageEvent | null {
       conversationId,
     },
   };
+}
+
+export function mapInboxPresenceEventFromApi(item: unknown): InboxPresenceEvent | null {
+  const data = asRecord(item);
+  const type = normalizeSocketEventType(String(data['type'] ?? ''));
+  const conversationId = String(data['conversation_id'] ?? data['conversationId'] ?? '');
+  if (!conversationId) return null;
+  if (type === 'user.joined') {
+    const userId = extractSocketUserId(data);
+    if (!userId) return null;
+    return { conversationId, userId, isOnline: true };
+  }
+  if (type === 'user.left') {
+    const userId = extractSocketUserId(data);
+    if (!userId) return null;
+    return { conversationId, userId, isOnline: false };
+  }
+  if (type === 'presence.changed') {
+    const userId = extractSocketUserId(data);
+    if (!userId) return null;
+    const isOnlineRaw = data['is_online'] ?? data['isOnline'] ?? data['online'];
+    return {
+      conversationId,
+      userId,
+      isOnline: isOnlineRaw == null ? true : Boolean(isOnlineRaw),
+    };
+  }
+  return null;
 }

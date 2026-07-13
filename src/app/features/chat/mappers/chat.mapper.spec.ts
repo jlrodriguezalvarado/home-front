@@ -2,6 +2,7 @@ import {
   mapChatMessageFromApi,
   mapChatSocketEventFromApi,
   mapInboxEventFromApi,
+  mapInboxPresenceEventFromApi,
   mapChatSocketOutgoingToApi,
   mapChatMessagesPageFromApi,
   mapConversationFromApi,
@@ -147,6 +148,40 @@ describe('chat.mapper', () => {
       type: 'typing.changed',
       userId: 'user-1',
       isTyping: true,
+    });
+  });
+
+  it('should map socket user.joined with nested user object', () => {
+    expect(mapChatSocketEventFromApi({
+      type: 'user_joined',
+      user: { id: 'user-2' },
+    })).toEqual({
+      type: 'user.joined',
+      userId: 'user-2',
+    });
+  });
+
+  it('should map socket presence.changed event', () => {
+    expect(mapChatSocketEventFromApi({
+      type: 'presence.changed',
+      user_id: 'user-2',
+      is_online: false,
+    })).toEqual({
+      type: 'presence.changed',
+      userId: 'user-2',
+      isOnline: false,
+    });
+  });
+
+  it('should map inbox presence events', () => {
+    expect(mapInboxPresenceEventFromApi({
+      type: 'user.joined',
+      conversation_id: 'conv-1',
+      user_id: 'user-2',
+    })).toEqual({
+      conversationId: 'conv-1',
+      userId: 'user-2',
+      isOnline: true,
     });
   });
 

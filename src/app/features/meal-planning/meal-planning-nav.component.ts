@@ -13,13 +13,13 @@ interface MealPlanningNavItem {
   standalone: true,
   imports: [CommonModule, RouterLink, RouterLinkActive],
   template: `
-    <nav class="flex flex-wrap gap-sm mb-lg">
+    <nav class="flex flex-wrap gap-xs mb-lg">
       <a
         *ngFor="let item of items"
         [routerLink]="item.route"
         routerLinkActive="nav-item-active"
         [routerLinkActiveOptions]="{ exact: false }"
-        class="nav-item-inactive px-md py-sm rounded-xl text-label-lg">
+        class="nav-item-inactive mx-0 px-sm py-sm rounded-xl text-label-lg">
         {{ i18n.t(item.labelKey) }}
       </a>
     </nav>

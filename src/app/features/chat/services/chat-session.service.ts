@@ -2,6 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AuthService } from '../../../core/auth/auth.service';
 import { ChatInboxWebSocketService } from './chat-inbox-websocket.service';
+import { ChatConversationWebSocketService } from './chat-conversation-websocket.service';
 import { PushNotificationService } from './push-notification.service';
 import { ChatNotificationService } from './chat-notification.service';
 import { ChatService } from './chat.service';
@@ -10,6 +11,7 @@ import { ChatService } from './chat.service';
 export class ChatSessionService {
   private readonly auth = inject(AuthService);
   private readonly inboxWs = inject(ChatInboxWebSocketService);
+  private readonly conversationWs = inject(ChatConversationWebSocketService);
   private readonly push = inject(PushNotificationService);
   private readonly notifications = inject(ChatNotificationService);
   private readonly chat = inject(ChatService);
@@ -22,6 +24,19 @@ export class ChatSessionService {
         this.notifications.handleInboxEvent(event);
         if (event.conversationId === this.notifications.activeConversationId()) {
           this.chat.applyInboxMessage(event.message);
+          if (event.message.senderId) {
+            this.conversationWs.markUserOnline(event.message.senderId);
+          }
+        }
+      });
+    this.inboxWs.presence$
+      .pipe(takeUntilDestroyed())
+      .subscribe((event) => {
+        if (event.conversationId !== this.notifications.activeConversationId()) return;
+        if (event.isOnline) {
+          this.conversationWs.markUserOnline(event.userId);
+        } else {
+          this.conversationWs.markUserOffline(event.userId);
         }
       });
   }

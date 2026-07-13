@@ -3,6 +3,7 @@ export const API_ENDPOINTS = {
     login: '/auth/login',
     refresh: '/auth/refresh',
     me: '/authme/',
+    changePassword: '/auth/change-password/',
   },
   products: {
     list: '/products/',
@@ -13,10 +14,15 @@ export const API_ENDPOINTS = {
   commerces: {
     list: '/commerces/',
     updateProductsPriceBatch: (id: string) => `/commerces/${id}/update-products-price-batch/`,
+    reprocessProductUrls: (id: string) => `/commerces/${id}/reprocess-product-urls/`,
   },
   purchases: {
     list: '/purchases/',
     detail: (id: string) => `/purchases/${id}/`,
+  },
+  carts: {
+    current: '/carts/current/',
+    refreshPrices: '/carts/current/refresh-prices/',
   },
   currencies: {
     list: '/currencies',
@@ -66,11 +72,19 @@ export const API_ENDPOINTS = {
       copyFavorite: '/meal-planning/menu-meals/copy-favorite/',
     },
   },
+  notifications: {
+    list: '/notifications/',
+    detail: (id: string) => `/notifications/${id}/`,
+    unreadCount: '/notifications/unread-count/',
+    markRead: (id: string) => `/notifications/${id}/mark-read/`,
+    markAllRead: '/notifications/mark-all-read/',
+  },
   chat: {
     conversations: {
       list: '/chat/conversations/',
       detail: (id: string) => `/chat/conversations/${id}/`,
       messages: (id: string) => `/chat/conversations/${id}/messages/`,
+      media: (id: string) => `/chat/conversations/${id}/media/`,
       markRead: (id: string) => `/chat/conversations/${id}/mark-read/`,
       peerDisplayNames: (conversationId: string) =>
         `/chat/conversations/${conversationId}/peer-display-names/`,

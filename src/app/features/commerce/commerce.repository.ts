@@ -1,6 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable, map } from 'rxjs';
 import { Commerce, PaginatedResponse } from '../../core/api/models';
+import { CommerceReprocessResponse } from '../../core/notifications/notifications.models';
 import { ApiService } from '../../core/api/api.service';
 import { API_ENDPOINTS } from '../../core/api/endpoints';
 import { resolveMediaUrl } from '../../core/api/api-url';
@@ -23,6 +24,13 @@ export class CommerceRepository {
           currencySymbol: c.default_currency?.symbol ?? '',
         }));
       }),
+    );
+  }
+
+  reprocessProductUrls(commerceId: string): Observable<CommerceReprocessResponse> {
+    return this.api.post<CommerceReprocessResponse>(
+      API_ENDPOINTS.commerces.reprocessProductUrls(commerceId),
+      {},
     );
   }
 }

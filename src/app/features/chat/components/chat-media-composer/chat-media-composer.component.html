@@ -1,0 +1,113 @@
+<input
+  #fileInput
+  type="file"
+  class="hidden"
+  [accept]="fileAccept"
+  (change)="onFileSelected($event)" />
+<div *ngIf="preview() as item" class="mb-sm rounded-xl border border-outline-variant bg-surface-container-low p-sm">
+  <div class="flex items-start gap-sm">
+    <img
+      *ngIf="item.messageType === 'image' && item.previewUrl"
+      [src]="item.previewUrl"
+      [alt]="item.file.name"
+      class="w-16 h-16 rounded-lg object-cover shrink-0" />
+    <div
+      *ngIf="item.messageType === 'audio'"
+      class="w-16 h-16 rounded-lg bg-surface-container-high flex items-center justify-center shrink-0">
+      <span class="material-symbols-outlined text-[28px] text-primary">mic</span>
+    </div>
+    <div
+      *ngIf="item.messageType === 'file'"
+      class="w-16 h-16 rounded-lg bg-surface-container-high flex items-center justify-center shrink-0">
+      <span class="material-symbols-outlined text-[28px] text-primary">attach_file</span>
+    </div>
+    <div class="flex-1 min-w-0">
+      <div class="text-body-md truncate">{{ item.file.name }}</div>
+      <div class="text-label-md text-on-surface-variant">{{ previewSizeLabel(item.file) }}</div>
+      <div *ngIf="item.messageType === 'audio'" class="text-label-md text-on-surface-variant">
+        {{ i18n.t('chatVoiceMessage') }}
+      </div>
+    </div>
+    <button type="button" (click)="dismissPreview()" class="text-on-surface-variant shrink-0">
+      <span class="material-symbols-outlined text-[20px]">close</span>
+    </button>
+  </div>
+  <div class="flex gap-sm mt-sm">
+    <button type="button" (click)="confirmPreview()" class="btn-primary flex-1 py-sm">
+      {{ i18n.t('send') }}
+    </button>
+    <button type="button" (click)="dismissPreview()" class="btn-outlined flex-1 py-sm">
+      {{ i18n.t('cancel') }}
+    </button>
+  </div>
+</div>
+<div [hidden]="!emojiPickerOpen() || voiceRecorder.isVoiceActive()" class="composer-emoji-picker">
+  <div *ngIf="recentEmojiService.recentEmojis().length" class="composer-recent-panel">
+    <div class="composer-recent-label">{{ i18n.t('chatRecentEmojis') }}</div>
+    <div class="composer-recent-grid">
+      <button
+        *ngFor="let emoji of recentEmojiService.recentEmojis()"
+        type="button"
+        class="composer-recent-emoji"
+        (click)="insertRecentEmoji(emoji)">
+        {{ emoji }}
+      </button>
+    </div>
+  </div>
+  <emoji-picker
+    #emojiPicker
+    [class.dark]="theme.isDark()"
+    [attr.locale]="i18n.lang()"
+    (emoji-click)="onEmojiSelected($event)">
+  </emoji-picker>
+</div>
+<app-chat-voice-recorder-bar
+  *ngIf="voiceRecorder.isVoiceActive()"
+  (discardVoice)="onDiscardVoice()"
+  (sendVoice)="onSendVoice()">
+</app-chat-voice-recorder-bar>
+<div *ngIf="!voiceRecorder.isVoiceActive()" class="composer-row">
+  <div class="composer-pill">
+    <button
+      type="button"
+      (click)="openFilePicker()"
+      [attr.aria-label]="i18n.t('chatAttachFile')"
+      class="composer-icon-btn">
+      <span class="material-symbols-outlined text-[22px]">attach_file</span>
+    </button>
+    <button
+      type="button"
+      (click)="toggleEmojiPicker($event)"
+      [attr.aria-label]="i18n.t('chatOpenEmoji')"
+      class="composer-icon-btn"
+      [class.composer-icon-btn-active]="emojiPickerOpen()">
+      <span class="material-symbols-outlined text-[22px]">mood</span>
+    </button>
+    <textarea
+      #messageTextarea
+      [ngModel]="message"
+      (ngModelChange)="onMessageChange($event)"
+      (keydown)="onKeyDown($event)"
+      [placeholder]="i18n.t('writeMessage')"
+      rows="1"
+      class="composer-textarea">
+    </textarea>
+  </div>
+  <button
+    *ngIf="!hasText() && !preview()"
+    type="button"
+    (click)="onMicClick()"
+    [attr.aria-label]="i18n.t('chatRecordVoice')"
+    class="composer-action-btn">
+    <span class="material-symbols-outlined text-[22px]">mic</span>
+  </button>
+  <button
+    *ngIf="hasText()"
+    type="button"
+    (click)="onSendClick()"
+    [attr.aria-label]="i18n.t('send')"
+    class="composer-action-btn">
+    <span class="material-symbols-outlined text-[22px]">send</span>
+  </button>
+</div>
+

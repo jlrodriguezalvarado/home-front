@@ -1,47 +1,34 @@
 
 
-<div class="space-y-lg pb-44 md:pb-0">
+<div class="space-y-lg pb-44 md:pb-32">
 
   <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-md">
-
-    <div>
-      <h1 class="page-title">{{ i18n.t('shoppingCart') }}</h1>
-      <p *ngIf="visibleItems().length > 0" class="text-body-md text-on-surface-variant mt-xs">
-        {{ visibleCount() }} {{ i18n.lang() === 'en' ? 'items' : 'artículos' }}
-        <span *ngIf="filterCommerceId()">· {{ commerceName(filterCommerceId()!) }}</span>
-      </p>
+    <div class="flex items-center gap-sm flex-wrap min-w-0 flex-1 w-full md:w-auto">
+      <h1 class="page-title shrink-0">{{ i18n.t('shoppingCart') }}</h1>
+      <select
+        *ngIf="sortedCommerceIds().length > 0"
+        [ngModel]="filterCommerceId()"
+        (ngModelChange)="onFilterCommerceChange($event)"
+        class="input-outlined py-2 px-md text-body-md min-w-0 flex-1 sm:flex-none sm:max-w-[220px]">
+        <option *ngFor="let id of sortedCommerceIds()" [ngValue]="id">{{ commerceName(id) }}</option>
+      </select>
     </div>
-
-    <div class="flex flex-wrap gap-sm w-full md:w-auto" *ngIf="sortedCommerceIds().length > 0">
-
-      <button (click)="clearCart()"
-              class="py-2 px-md text-label-md flex-1 md:flex-none rounded-xl border border-error text-error hover:bg-error-container transition-colors flex items-center justify-center gap-1">
+    <div class="flex items-center gap-sm shrink-0 w-full md:w-auto justify-between md:justify-end">
+      <button
+        *ngIf="cart.items().length > 0"
+        type="button"
+        (click)="clearCart()"
+        class="py-2 px-md text-label-md rounded-xl border border-error text-error hover:bg-error-container transition-colors flex items-center justify-center gap-1">
         <span class="material-symbols-outlined text-[18px]">delete_sweep</span>
         {{ i18n.t('clearCart') }}
       </button>
-
-      <button (click)="cart.updatePrices()" class="btn-secondary py-2 px-md text-label-md flex-1 md:flex-none">
-
-        {{ i18n.lang() === 'en' ? 'Update Prices' : 'Actualizar precios' }}
-
+      <button type="button"
+              class="w-11 h-11 shrink-0 flex items-center justify-center rounded-xl border border-outline-variant bg-surface-container-low text-on-surface hover:bg-surface-container-high transition-colors"
+              (click)="openBarcodeScanner()"
+              [attr.aria-label]="i18n.t('scanBarcode')">
+        <span class="material-symbols-outlined text-[22px]">barcode_scanner</span>
       </button>
-
-      <select
-
-        [ngModel]="filterCommerceId()"
-
-        (ngModelChange)="onFilterCommerceChange($event)"
-
-        class="input-outlined py-2 px-md flex-1 md:flex-none md:w-auto text-body-md min-w-0"
-
-      >
-
-        <option *ngFor="let id of sortedCommerceIds()" [ngValue]="id">{{ commerceName(id) }}</option>
-
-      </select>
-
     </div>
-
   </div>
 
 
@@ -52,183 +39,109 @@
 
     <p class="text-body-lg">{{ i18n.lang() === 'en' ? 'Your cart is empty' : 'Tu carrito está vacío' }}</p>
 
+    <button type="button"
+            class="mt-lg btn-primary py-2 px-lg text-label-lg flex items-center gap-2"
+            (click)="openBarcodeScanner()">
+      <span class="material-symbols-outlined text-[20px]">barcode_scanner</span>
+      {{ i18n.t('scanBarcode') }}
+    </button>
+
   </div>
 
 
 
-  <div *ngIf="filterCommerceId() as commerceId"
-       class="card-surface overflow-hidden transition-shadow ring-2 ring-primary">
-
-    <div class="bg-surface-container px-lg py-md border-b border-outline-variant flex justify-between items-center">
-
-      <span class="text-label-lg text-on-surface flex items-center gap-2">
-
-        <span class="material-symbols-outlined text-primary">storefront</span>
-
-        {{ commerceName(commerceId) }}
-
-        <span *ngIf="commerceCurrency(commerceId)"
-              class="text-label-md bg-surface px-2 py-0.5 rounded-full text-on-surface-variant">
-          {{ commerceCurrency(commerceId) }}
-        </span>
-
-      </span>
-
-      <span class="text-primary text-numeral-md tabular-nums font-semibold">
-
-        {{ formatSubtotal(itemsForCommerce(commerceId), commerceId) }}
-
-      </span>
-
-    </div>
-
-
-
-    <div class="divide-y divide-outline-variant">
-
-      <div *ngFor="let item of itemsForCommerce(commerceId)"
-           class="p-md md:p-lg flex flex-col sm:flex-row sm:items-center gap-md
-                  md:flex-row md:items-center">
-
-        <div class="flex gap-md flex-1 min-w-0">
-
-        <div class="w-20 h-20 md:w-16 md:h-16 bg-surface-container rounded-xl overflow-hidden shrink-0">
-
-          <img *ngIf="item.product.imageUrl" [src]="item.product.imageUrl" class="w-full h-full object-cover">
-
-          <div *ngIf="!item.product.imageUrl" class="w-full h-full flex items-center justify-center">
-
-            <span class="material-symbols-outlined text-on-surface-variant">image</span>
-
+  <div *ngIf="filterCommerceId() as commerceId" class="space-y-xs md:space-y-sm">
+    <div *ngFor="let item of itemsForCommerce(commerceId)"
+         class="card-surface p-sm md:p-md flex items-center gap-sm">
+      <div class="flex gap-sm flex-1 min-w-0 items-center">
+        @if (item.product.imageUrl; as imageUrl) {
+          <button type="button"
+                  class="w-14 h-14 md:w-12 md:h-12 bg-surface-container rounded-lg overflow-hidden shrink-0 cursor-zoom-in focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary"
+                  (click)="openImagePreview(item.product)"
+                  [attr.aria-label]="item.product.name">
+            <img [src]="imageUrl"
+                 [alt]="item.product.name"
+                 class="w-full h-full object-cover pointer-events-none">
+          </button>
+        } @else {
+          <div class="w-14 h-14 md:w-12 md:h-12 bg-surface-container rounded-lg overflow-hidden shrink-0 flex items-center justify-center">
+            <span class="material-symbols-outlined text-on-surface-variant text-[20px]">image</span>
           </div>
-
-        </div>
-
+        }
         <div class="flex-1 min-w-0">
-
-          <div class="text-label-lg text-on-surface truncate">{{ item.product.name }}</div>
-
-          <div class="text-body-md text-on-surface-variant">
-
-            {{ formatUnitPrice(item.product) }}
-
-            <span class="ml-2 text-label-md bg-surface-container px-2 py-0.5 rounded-full">
-
-              {{ isPresentationUnitKg(item.product.presentationUnit) ? 'KG' : 'UNIT' }}
-
-            </span>
-
+          <div class="text-label-md text-on-surface leading-tight break-words">{{ item.product.name }}</div>
+          <div class="text-label-sm text-on-surface-variant flex items-center gap-1 flex-wrap mt-0.5">
+            <span class="text-primary tabular-nums font-semibold">{{ formatLineTotal(item) }}</span>
           </div>
-
-          <div class="text-primary text-numeral-md tabular-nums mt-1">
-
-            {{ formatLineTotal(item) }}
-
-          </div>
-
         </div>
-
-        </div>
-
-        <div class="flex items-center justify-between sm:justify-end gap-sm pl-[92px] sm:pl-0 md:pl-0">
-
-        <app-quantity-editor
-
-          [product]="item.product"
-
-          [quantity]="item.quantity"
-
-          (setQuantity)="cart.setQuantity(item.product.id, $event)"
-
-        />
-
-        <button (click)="cart.removeProduct(item.product.id)" class="text-error hover:opacity-80 p-2">
-
-          <span class="material-symbols-outlined">delete</span>
-
-        </button>
-
-        </div>
-
       </div>
-
+      <div class="flex items-center gap-xs shrink-0">
+        <app-quantity-editor
+          [product]="item.product"
+          [quantity]="item.quantity"
+          [compact]="true"
+          (setQuantity)="cart.setQuantity(item.product.id, $event)"
+        />
+        <button type="button"
+                (click)="cart.removeProduct(item.product.id)"
+                class="text-error hover:opacity-80 p-1">
+          <span class="material-symbols-outlined text-[20px]">delete</span>
+        </button>
+      </div>
     </div>
-
   </div>
 
-  <!-- Desktop actions for filtered commerce -->
+  <!-- Checkout footer -->
   <div *ngIf="visibleItems().length > 0"
-       class="hidden md:flex card-surface p-md flex-wrap gap-sm items-center justify-between">
-
+       class="flex card-surface p-md flex-wrap gap-sm items-center justify-between fixed bottom-20 md:bottom-0 left-0 md:left-64 right-0 z-30 bg-surface/90 glass border-t border-outline-variant safe-bottom">
     <div class="text-body-md text-on-surface-variant">
-
-      <span class="text-on-surface font-medium">{{ commerceName(filterCommerceId()!) }}</span>
-
+      <span class="text-on-surface font-semibold">{{ i18n.t('subtotal') }}</span>
       ·
-
-      {{ visibleCount() }}
-
-      {{ i18n.lang() === 'en' ? 'items' : 'artículos' }}
-
+      {{ visibleCount() }} {{ i18n.lang() === 'en' ? 'items' : 'artículos' }}
       ·
-
       <span class="text-primary font-semibold tabular-nums">{{ formatFooterTotal() }}</span>
-
     </div>
-
-    <div class="flex flex-wrap gap-sm">
-
-      <button (click)="copyMessage()" class="px-md py-2 bg-surface-container rounded-xl text-label-lg hover:bg-surface-container-high transition-colors">
-
+    <div class="flex flex-wrap gap-sm w-full md:w-auto">
+      <button (click)="copyMessage()" class="flex-1 md:flex-none px-md py-2 bg-surface-container rounded-xl text-label-lg hover:bg-surface-container-high transition-colors">
         {{ i18n.lang() === 'en' ? 'Copy' : 'Copiar' }}
-
       </button>
-
-      <button (click)="sendWhatsApp()" class="px-md py-2 bg-secondary text-on-secondary rounded-xl text-label-lg">
-
+      <button (click)="sendWhatsApp()" class="flex-1 md:flex-none px-md py-2 bg-secondary text-on-secondary rounded-xl text-label-lg">
         WhatsApp
-
       </button>
-
       <button (click)="confirmPurchase()" class="flex-1 btn-primary py-2 min-w-[140px]">
-
         {{ i18n.t('confirmPurchase') }}
-
       </button>
-
-    </div>
-
-  </div>
-
-  <!-- Mobile summary for filtered commerce -->
-  <div *ngIf="visibleItems().length > 0" class="md:hidden card-surface p-lg border-l-4 border-l-secondary">
-    <div class="text-label-md text-on-surface-variant mb-xs">{{ commerceName(filterCommerceId()!) }}</div>
-    <div class="flex justify-between items-center">
-      <span class="text-title-lg text-on-surface font-bold">{{ i18n.t('subtotal') }}</span>
-      <span class="text-headline-md text-primary tabular-nums font-bold">{{ formatFooterTotal() }}</span>
     </div>
   </div>
 
 </div>
 
-<!-- Mobile sticky checkout -->
-<div *ngIf="visibleItems().length > 0"
-     class="md:hidden fixed bottom-20 left-0 right-0 z-30 p-md bg-surface/90 glass border-t border-outline-variant safe-bottom space-y-sm">
-  <div class="flex gap-sm">
-    <button (click)="copyMessage()"
-            class="flex-1 px-md py-3 bg-surface-container rounded-xl text-label-lg flex items-center justify-center gap-2 active:scale-[0.98] transition-transform">
-      <span class="material-symbols-outlined text-[20px]">content_copy</span>
-      {{ i18n.lang() === 'en' ? 'Copy' : 'Copiar' }}
-    </button>
-    <button (click)="sendWhatsApp()"
-            class="flex-1 px-md py-3 bg-secondary text-on-secondary rounded-xl text-label-lg flex items-center justify-center gap-2 active:scale-[0.98] transition-transform">
-      <span class="material-symbols-outlined text-[20px]">share</span>
-      WhatsApp
-    </button>
+@if (barcodeScannerOpen()) {
+  <app-barcode-scanner-dialog
+    (scanned)="onBarcodeScanned($event)"
+    (closed)="closeBarcodeScanner()">
+  </app-barcode-scanner-dialog>
+}
+
+@if (previewImage(); as preview) {
+  <div class="fixed inset-0 z-[70] flex flex-col bg-black/95"
+       role="dialog"
+       aria-modal="true"
+       [attr.aria-label]="preview.alt"
+       (click)="closeImagePreview()">
+    <div class="flex justify-end p-sm safe-top">
+      <button type="button"
+              class="w-10 h-10 flex items-center justify-center rounded-full text-white/90 hover:bg-white/10 transition-colors"
+              (click)="closeImagePreview()"
+              [attr.aria-label]="i18n.t('cancel')">
+        <span class="material-symbols-outlined text-[24px]">close</span>
+      </button>
+    </div>
+    <div class="flex-1 flex items-center justify-center min-h-0 px-sm pb-sm md:px-xl md:pb-xl">
+      <img [src]="preview.url"
+           [alt]="preview.alt"
+           class="max-h-full max-w-full w-full md:w-auto object-contain"
+           (click)="$event.stopPropagation()">
+    </div>
   </div>
-  <button (click)="confirmPurchase()"
-          class="w-full btn-primary py-4 flex items-center justify-center gap-2 active:scale-[0.98] transition-transform">
-    {{ i18n.t('confirmPurchase') }}
-    <span class="material-symbols-outlined text-[20px]">chevron_right</span>
-  </button>
-</div>
+}

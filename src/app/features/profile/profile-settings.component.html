@@ -1,0 +1,75 @@
+<div class="space-y-lg max-w-2xl">
+  <h1 class="page-title">{{ t('profile') }}</h1>
+  <section class="card-surface p-lg space-y-md">
+    <h2 class="text-title-md text-on-surface">{{ t('profile') }}</h2>
+    <div>
+      <p class="text-label-md text-on-surface-variant">{{ t('email') }}</p>
+      <p class="text-body-lg text-on-surface mt-xs">{{ userEmail() || '—' }}</p>
+    </div>
+  </section>
+  <section class="card-surface p-lg space-y-md">
+    <h2 class="text-title-md text-on-surface">{{ t('changePassword') }}</h2>
+    <form class="space-y-md" [formGroup]="passwordForm" appDialogForm (dialogSubmit)="savePassword()">
+      <div>
+        <label class="text-label-lg text-on-surface-variant block mb-xs">{{ t('currentPassword') }}</label>
+        <div class="relative">
+          <input
+            [type]="showCurrentPassword() ? 'text' : 'password'"
+            formControlName="currentPassword"
+            autocomplete="current-password"
+            class="input-outlined w-full pr-12">
+          <button
+            type="button"
+            (click)="toggleCurrentPasswordVisibility()"
+            class="absolute inset-y-0 right-0 pr-3 flex items-center text-outline-variant">
+            <span class="material-symbols-outlined text-[20px]">{{ showCurrentPassword() ? 'visibility_off' : 'visibility' }}</span>
+          </button>
+        </div>
+        <p *ngIf="fieldError('currentPassword') as error" class="text-error text-body-md mt-xs">{{ error }}</p>
+      </div>
+      <div>
+        <label class="text-label-lg text-on-surface-variant block mb-xs">{{ t('newPassword') }}</label>
+        <div class="relative">
+          <input
+            [type]="showNewPassword() ? 'text' : 'password'"
+            formControlName="newPassword"
+            autocomplete="new-password"
+            class="input-outlined w-full pr-12">
+          <button
+            type="button"
+            (click)="toggleNewPasswordVisibility()"
+            class="absolute inset-y-0 right-0 pr-3 flex items-center text-outline-variant">
+            <span class="material-symbols-outlined text-[20px]">{{ showNewPassword() ? 'visibility_off' : 'visibility' }}</span>
+          </button>
+        </div>
+        <p *ngIf="fieldError('newPassword') as error" class="text-error text-body-md mt-xs">{{ error }}</p>
+      </div>
+      <div>
+        <label class="text-label-lg text-on-surface-variant block mb-xs">{{ t('confirmPassword') }}</label>
+        <div class="relative">
+          <input
+            [type]="showConfirmPassword() ? 'text' : 'password'"
+            formControlName="confirmPassword"
+            autocomplete="new-password"
+            class="input-outlined w-full pr-12">
+          <button
+            type="button"
+            (click)="toggleConfirmPasswordVisibility()"
+            class="absolute inset-y-0 right-0 pr-3 flex items-center text-outline-variant">
+            <span class="material-symbols-outlined text-[20px]">{{ showConfirmPassword() ? 'visibility_off' : 'visibility' }}</span>
+          </button>
+        </div>
+        <p *ngIf="fieldError('confirmPassword') as error" class="text-error text-body-md mt-xs">{{ error }}</p>
+      </div>
+      <div class="flex gap-md pt-sm">
+        <button
+          type="button"
+          (click)="savePassword()"
+          [disabled]="passwordSaving() || passwordForm.invalid"
+          class="btn-primary px-md py-3 disabled:opacity-50">
+          {{ passwordSaving() ? t('loading') : t('save') }}
+        </button>
+      </div>
+    </form>
+  </section>
+</div>

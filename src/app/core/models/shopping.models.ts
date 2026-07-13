@@ -18,4 +18,6 @@ export interface Product {
 export interface CartItem {
   product: Product;
   quantity: number;
+  /** Last time this line's price was refreshed (ISO). */
+  priceUpdatedAt?: string | null;
 }

@@ -2,8 +2,8 @@ import { Injectable, inject, signal } from '@angular/core';
 import { Observable, Subject } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { AuthService } from '../../../core/auth/auth.service';
-import { InboxMessageEvent } from '../models/chat.models';
-import { mapInboxEventFromApi } from '../mappers/chat.mapper';
+import { InboxMessageEvent, InboxPresenceEvent } from '../models/chat.models';
+import { mapInboxEventFromApi, mapInboxPresenceEventFromApi } from '../mappers/chat.mapper';
 
 const RECONNECT_BASE_DELAY_MS = 1000;
 const RECONNECT_MAX_DELAY_MS = 30000;
@@ -13,7 +13,9 @@ const TOKEN_EXPIRED_CLOSE_CODE = 4001;
 export class ChatInboxWebSocketService {
   private readonly auth = inject(AuthService);
   private readonly eventSubject = new Subject<InboxMessageEvent>();
+  private readonly presenceSubject = new Subject<InboxPresenceEvent>();
   readonly messages$: Observable<InboxMessageEvent> = this.eventSubject.asObservable();
+  readonly presence$: Observable<InboxPresenceEvent> = this.presenceSubject.asObservable();
   private socket: WebSocket | null = null;
   private reconnectAttempts = 0;
   private reconnectTimer: ReturnType<typeof setTimeout> | null = null;
@@ -115,6 +117,11 @@ export class ChatInboxWebSocketService {
       const event = mapInboxEventFromApi(parsed);
       if (event) {
         this.eventSubject.next(event);
+        return;
+      }
+      const presenceEvent = mapInboxPresenceEventFromApi(parsed);
+      if (presenceEvent) {
+        this.presenceSubject.next(presenceEvent);
         return;
       }
       const data = parsed as Record<string, unknown>;

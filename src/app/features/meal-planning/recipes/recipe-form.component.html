@@ -1,14 +1,50 @@
-<div class="space-y-lg w-full md:max-w-3xl md:mx-auto">
-  <div class="flex items-center gap-md">
-    <a routerLink="/meal-planning/recipes" class="text-primary text-label-lg flex items-center gap-1">
-      <span class="material-symbols-outlined text-[20px]">arrow_back</span>
-      {{ i18n.t('recipes') }}
-    </a>
+<input
+  #imageInput
+  type="file"
+  accept="image/*"
+  class="hidden"
+  (change)="onImageSelected($event)">
+<app-loading-state *ngIf="loading()"></app-loading-state>
+<app-error-state *ngIf="error()" (retry)="ngOnInit()"></app-error-state>
+<form *ngIf="!loading() && !error()" [formGroup]="form" (ngSubmit)="save()" class="recipe-form">
+  <div class="recipe-cover">
+    <img
+      *ngIf="displayImageUrl() as imageUrl"
+      [src]="imageUrl"
+      alt=""
+      class="recipe-cover__image">
+    <div *ngIf="!displayImageUrl()" class="recipe-cover__placeholder">
+      <span class="material-symbols-outlined text-[48px] text-on-surface-variant">restaurant</span>
+      <p class="text-body-md text-on-surface-variant mt-sm">
+        {{ i18n.lang() === 'en' ? 'Add a cover photo' : 'Añade una foto de portada' }}
+      </p>
+    </div>
+    <div class="recipe-cover__gradient"></div>
+    <div class="recipe-cover__top safe-top">
+      <a routerLink="/meal-planning/recipes" class="recipe-cover__back" [attr.aria-label]="i18n.t('recipes')">
+        <span class="material-symbols-outlined text-[22px]">arrow_back</span>
+      </a>
+    </div>
+    <div class="recipe-cover__bottom">
+      <p class="recipe-cover__title">{{ form.get('name')?.value || (i18n.lang() === 'en' ? 'Untitled recipe' : 'Receta sin título') }}</p>
+      <div class="recipe-cover__actions">
+        <button type="button" (click)="openImagePicker()" class="recipe-cover__action-btn">
+          <span class="material-symbols-outlined text-[18px]">photo_camera</span>
+          {{ displayImageUrl() ? (i18n.lang() === 'en' ? 'Change' : 'Cambiar') : (i18n.lang() === 'en' ? 'Add photo' : 'Añadir foto') }}
+        </button>
+        <button
+          *ngIf="displayImageUrl()"
+          type="button"
+          (click)="removeImage()"
+          class="recipe-cover__action-btn recipe-cover__action-btn--danger">
+          <span class="material-symbols-outlined text-[18px]">delete</span>
+          {{ i18n.lang() === 'en' ? 'Remove' : 'Quitar' }}
+        </button>
+      </div>
+    </div>
   </div>
-  <h1 class="page-title">{{ editingId() ? i18n.t('editRecipe') : i18n.t('newRecipe') }}</h1>
-  <app-loading-state *ngIf="loading()"></app-loading-state>
-  <app-error-state *ngIf="error()" (retry)="ngOnInit()"></app-error-state>
-  <form *ngIf="!loading() && !error()" [formGroup]="form" (ngSubmit)="save()" class="space-y-lg">
+  <div class="recipe-form-body space-y-lg w-full md:max-w-3xl md:mx-auto md:pt-lg">
+    <h1 class="page-title">{{ editingId() ? i18n.t('editRecipe') : i18n.t('newRecipe') }}</h1>
     <div class="card-surface p-lg space-y-md">
       <div>
         <label class="text-label-lg text-on-surface-variant block mb-xs">{{ i18n.t('name') }} *</label>
@@ -37,30 +73,14 @@
       </label>
     </div>
     <div class="card-surface p-lg space-y-md">
-      <h2 class="text-title-lg text-on-surface">{{ i18n.lang() === 'en' ? 'Media' : 'Multimedia' }}</h2>
-      <div class="space-y-md">
-        <div>
-          <label class="text-label-lg text-on-surface-variant block mb-xs">{{ i18n.lang() === 'en' ? 'Image' : 'Imagen' }}</label>
-          <input type="file" accept="image/*" (change)="onImageSelected($event)" class="input-outlined w-full">
-          <div *ngIf="displayImageUrl() as imageUrl" class="mt-md space-y-sm">
-            <img [src]="imageUrl" alt="" class="max-h-48 rounded-xl object-cover w-full">
-            <button type="button" (click)="removeImage()" class="text-error text-label-md flex items-center gap-1">
-              <span class="material-symbols-outlined text-[18px]">delete</span>
-              {{ i18n.lang() === 'en' ? 'Remove image' : 'Quitar imagen' }}
-            </button>
-          </div>
-        </div>
-        <div>
-          <label class="text-label-lg text-on-surface-variant block mb-xs">{{ i18n.lang() === 'en' ? 'Video' : 'Video' }}</label>
-          <input type="file" accept="video/*" (change)="onVideoSelected($event)" class="input-outlined w-full">
-          <div *ngIf="displayVideoUrl() as videoUrl" class="mt-md space-y-sm">
-            <video [src]="videoUrl" controls class="max-h-64 rounded-xl w-full"></video>
-            <button type="button" (click)="removeVideo()" class="text-error text-label-md flex items-center gap-1">
-              <span class="material-symbols-outlined text-[18px]">delete</span>
-              {{ i18n.lang() === 'en' ? 'Remove video' : 'Quitar video' }}
-            </button>
-          </div>
-        </div>
+      <h2 class="text-title-lg text-on-surface">{{ i18n.lang() === 'en' ? 'Video' : 'Video' }}</h2>
+      <input type="file" accept="video/*" (change)="onVideoSelected($event)" class="input-outlined w-full">
+      <div *ngIf="displayVideoUrl() as videoUrl" class="space-y-sm">
+        <video [src]="videoUrl" controls class="max-h-64 rounded-xl w-full"></video>
+        <button type="button" (click)="removeVideo()" class="text-error text-label-md flex items-center gap-1">
+          <span class="material-symbols-outlined text-[18px]">delete</span>
+          {{ i18n.lang() === 'en' ? 'Remove video' : 'Quitar video' }}
+        </button>
       </div>
     </div>
     <div class="card-surface p-lg space-y-md">
@@ -119,12 +139,12 @@
         </div>
       </div>
     </div>
-    <div class="flex gap-md">
+    <div class="flex gap-md pb-lg">
       <a routerLink="/meal-planning/recipes" class="flex-1 py-3 border border-outline-variant rounded-xl text-label-lg text-center">{{ i18n.t('cancel') }}</a>
       <button type="submit" [disabled]="saving()" class="flex-1 btn-primary py-3 flex items-center justify-center gap-2">
         <span *ngIf="saving() && hasMediaUpload()" class="material-symbols-outlined text-[20px] animate-spin">progress_activity</span>
         {{ savingLabel() }}
       </button>
     </div>
-  </form>
-</div>
+  </div>
+</form>

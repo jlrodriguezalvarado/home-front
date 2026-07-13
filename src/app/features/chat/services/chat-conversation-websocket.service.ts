@@ -2,7 +2,7 @@ import { Injectable, inject, signal } from '@angular/core';
 import { Observable, Subject } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { AuthService } from '../../../core/auth/auth.service';
-import { ChatSocketIncomingEvent } from '../models/chat.models';
+import { ChatMessageMetadata, ChatMessageType, ChatSocketIncomingEvent } from '../models/chat.models';
 import { mapChatSocketEventFromApi, mapChatSocketOutgoingToApi } from '../mappers/chat.mapper';
 
 const MAX_RECONNECT_ATTEMPTS = 5;
@@ -22,6 +22,7 @@ export class ChatConversationWebSocketService {
   connected = signal(false);
   connecting = signal(false);
   typingUsers = signal<Record<string, boolean>>({});
+  onlineUsers = signal<Record<string, boolean>>({});
   lastError = signal<string | null>(null);
 
   connect(conversationId: string): void {
@@ -43,19 +44,20 @@ export class ChatConversationWebSocketService {
     this.connected.set(false);
     this.connecting.set(false);
     this.typingUsers.set({});
+    this.onlineUsers.set({});
   }
 
   sendMessage(
     body: string,
     clientMessageId: string,
-    messageType: 'text' | 'image' | 'file' = 'text',
-    metadata: Record<string, unknown> = {},
+    messageType: ChatMessageType = 'text',
+    metadata: ChatMessageMetadata | Record<string, unknown> = {},
   ): boolean {
-    const trimmed = body.trim();
-    if (!trimmed || !this.socket || this.socket.readyState !== WebSocket.OPEN) return false;
+    if (!this.socket || this.socket.readyState !== WebSocket.OPEN) return false;
+    if (messageType === 'text' && !body.trim()) return false;
     const payload = mapChatSocketOutgoingToApi({
       type: 'message.send',
-      body: trimmed,
+      body: body.trim(),
       messageType,
       metadata,
       clientMessageId,
@@ -78,6 +80,36 @@ export class ChatConversationWebSocketService {
     this.sendRaw({ type: 'message.read' });
   }
 
+  markUserOnline(userId: string): void {
+    const normalized = userId.trim();
+    if (!normalized) return;
+    this.onlineUsers.update((users) => {
+      if (users[normalized]) return users;
+      return { ...users, [normalized]: true };
+    });
+  }
+
+  markUserOffline(userId: string): void {
+    const normalized = userId.trim();
+    if (!normalized) return;
+    this.onlineUsers.update((users) => {
+      if (!users[normalized]) return users;
+      const next = { ...users };
+      delete next[normalized];
+      return next;
+    });
+  }
+
+  applyPresenceSnapshot(onlineUserIds: string[]): void {
+    this.onlineUsers.set(
+      onlineUserIds.reduce<Record<string, boolean>>((users, userId) => {
+        const normalized = userId.trim();
+        if (normalized) users[normalized] = true;
+        return users;
+      }, {}),
+    );
+  }
+
   private openSocket(conversationId: string): void {
     const token = this.auth.getAccessToken();
     if (!token) {
@@ -86,6 +118,7 @@ export class ChatConversationWebSocketService {
     }
     this.connecting.set(true);
     this.lastError.set(null);
+    this.onlineUsers.set({});
     const wsBase = environment.wsUrl.replace(/\/$/, '');
     const url = `${wsBase}/chat/conversations/${conversationId}/?token=${encodeURIComponent(token)}`;
     const socket = new WebSocket(url);
@@ -144,6 +177,41 @@ export class ChatConversationWebSocketService {
             ...users,
             [event.userId]: event.isTyping,
           }));
+          if (event.userId) {
+            this.markUserOnline(event.userId);
+          }
+          break;
+        case 'user.joined':
+          if (event.userId) {
+            this.markUserOnline(event.userId);
+          }
+          break;
+        case 'user.left':
+          if (event.userId) {
+            this.markUserOffline(event.userId);
+          }
+          break;
+        case 'presence.changed':
+          if (event.userId) {
+            if (event.isOnline) {
+              this.markUserOnline(event.userId);
+            } else {
+              this.markUserOffline(event.userId);
+            }
+          }
+          break;
+        case 'presence.snapshot':
+          this.applyPresenceSnapshot(event.onlineUserIds);
+          break;
+        case 'messages.read':
+          if (event.userId) {
+            this.markUserOnline(event.userId);
+          }
+          break;
+        case 'message.created':
+          if (event.message.senderId) {
+            this.markUserOnline(event.message.senderId);
+          }
           break;
         case 'error':
           this.lastError.set(event.message);

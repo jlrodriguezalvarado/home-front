@@ -11,7 +11,6 @@ import {
   effect,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { Subject, debounceTime, takeUntil } from 'rxjs';
 import { ChatRepository } from '../repositories/chat.repository';
@@ -26,6 +25,8 @@ import { ToastService } from '../../../shared/services/toast.service';
 import { LoadingStateComponent } from '../../../shared/components/loading-state.component';
 import { ErrorStateComponent } from '../../../shared/components/error-state.component';
 import { RenameChatContactDialogComponent } from '../rename-chat-contact-dialog/rename-chat-contact-dialog.component';
+import { ChatMessageContentComponent } from '../components/chat-message-content/chat-message-content.component';
+import { ChatMediaComposerComponent, ChatMediaPreview } from '../components/chat-media-composer/chat-media-composer.component';
 
 const SCROLL_EDGE_THRESHOLD_PX = 80;
 
@@ -34,11 +35,12 @@ const SCROLL_EDGE_THRESHOLD_PX = 80;
   standalone: true,
   imports: [
     CommonModule,
-    FormsModule,
     RouterLink,
     LoadingStateComponent,
     ErrorStateComponent,
     RenameChatContactDialogComponent,
+    ChatMessageContentComponent,
+    ChatMediaComposerComponent,
   ],
   templateUrl: './conversation-room.component.html',
   styleUrl: './conversation-room.component.scss',
@@ -64,8 +66,16 @@ export class ConversationRoomComponent implements OnInit, OnDestroy, AfterViewCh
   loadingOlder = computed(() => this.chat.store.loadingOlder());
   hasMore = computed(() => this.chat.store.hasMore());
   newMessagesBelow = computed(() => this.chat.store.newMessagesBelow());
-  connected = computed(() => this.socket.connected());
-  connecting = computed(() => this.socket.connecting());
+  onlineUsers = computed(() => this.socket.onlineUsers());
+  peerIsOnline = computed(() => {
+    const conversation = this.conversation();
+    const currentUserId = this.chat.currentUserId();
+    const onlineUsers = this.onlineUsers();
+    if (!conversation || !currentUserId) return false;
+    return conversation.participants.some(
+      (participant) => participant.user.id !== currentUserId && onlineUsers[participant.user.id],
+    );
+  });
   typingUsers = computed(() => this.socket.typingUsers());
   typingLabel = computed(() => {
     const users = this.typingUsers();
@@ -240,13 +250,6 @@ export class ConversationRoomComponent implements OnInit, OnDestroy, AfterViewCh
     }
   }
 
-  onKeyDown(event: KeyboardEvent): void {
-    if (event.key === 'Enter' && !event.shiftKey) {
-      event.preventDefault();
-      this.sendMessage();
-    }
-  }
-
   sendMessage(): void {
     const body = this.messageDraft().trim();
     if (!body) return;
@@ -255,6 +258,18 @@ export class ConversationRoomComponent implements OnInit, OnDestroy, AfterViewCh
     this.pendingClientMessageId.set(clientMessageId);
     this.shouldScrollToBottom.set(true);
     this.socket.sendTypingStop();
+  }
+
+  onSendMedia(preview: ChatMediaPreview): void {
+    const clientMessageId = this.chat.sendMediaMessage(preview.file, preview.previewUrl);
+    if (!clientMessageId) return;
+    this.pendingClientMessageId.set(clientMessageId);
+    this.shouldScrollToBottom.set(true);
+    this.socket.sendTypingStop();
+  }
+
+  onMediaLoadError(): void {
+    this.chat.refreshMediaUrls();
   }
 
   retryMessage(message: ChatMessageItem): void {

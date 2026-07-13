@@ -10,17 +10,25 @@
     [message]="i18n.lang() === 'en' ? 'Stores will appear here once created.' : 'Las tiendas aparecerán aquí cuando se creen.'">
   </app-empty-state>
   <div *ngIf="!loading() && !error() && commerces().length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-md">
-    <div *ngFor="let c of commerces()" class="card-surface p-lg hover:shadow-card-hover transition-shadow">
+    <div *ngFor="let c of commerces()" class="card-surface p-lg hover:shadow-card-hover transition-shadow flex flex-col gap-md">
       <div class="flex items-center gap-md">
         <div class="w-12 h-12 rounded-xl bg-surface-container flex items-center justify-center shrink-0 overflow-hidden">
           <img *ngIf="c.logo" [src]="c.logo" [alt]="c.name" class="w-full h-full object-cover">
           <span *ngIf="!c.logo" class="material-symbols-outlined text-[28px] text-on-surface-variant">storefront</span>
         </div>
-        <div class="min-w-0">
+        <div class="min-w-0 flex-1">
           <div class="text-headline-md text-on-surface truncate">{{ c.name }}</div>
           <div *ngIf="c.currencySymbol" class="text-body-md text-on-surface-variant tabular-nums">{{ c.currencySymbol }}</div>
         </div>
       </div>
+      <button type="button"
+              class="btn-secondary py-2 px-md w-full flex items-center justify-center gap-xs disabled:opacity-50"
+              [disabled]="isReprocessing(c.id)"
+              (click)="onReprocessProductUrls(c.id)">
+        <span class="material-symbols-outlined text-[20px]"
+              [class.animate-spin]="isReprocessing(c.id)">sync</span>
+        {{ i18n.t('reprocessProductUrls') }}
+      </button>
     </div>
   </div>
 </div>

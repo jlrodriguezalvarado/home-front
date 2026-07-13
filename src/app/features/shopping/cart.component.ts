@@ -1,4 +1,4 @@
-import { Component, effect, inject, OnInit, computed, signal } from '@angular/core';
+import { Component, effect, inject, OnInit, OnDestroy, HostListener, computed, signal } from '@angular/core';
 
 import { CommonModule } from '@angular/common';
 
@@ -20,6 +20,8 @@ import { Commerce } from '../../core/api/models';
 import { CartItem } from '../../core/models/shopping.models';
 
 import { QuantityEditorComponent } from '../../shared/components/quantity-editor.component';
+import { BarcodeScannerDialogComponent } from '../../shared/components/barcode-scanner-dialog.component';
+import { ProductRepository } from '../products/product.repository';
 
 import {
 
@@ -48,13 +50,13 @@ import { ConfirmService } from '../../shared/services/confirm.service';
 
   standalone: true,
 
-  imports: [CommonModule, FormsModule, QuantityEditorComponent],
+  imports: [CommonModule, FormsModule, QuantityEditorComponent, BarcodeScannerDialogComponent],
 
   templateUrl: './cart.component.html',
   styleUrl: './cart.component.scss',
 })
 
-export class CartComponent implements OnInit {
+export class CartComponent implements OnInit, OnDestroy {
 
   cart = inject(CartService);
 
@@ -65,6 +67,7 @@ export class CartComponent implements OnInit {
   commerceRepo = inject(CommerceRepository);
 
   productFilter = inject(ProductFilterStorageService);
+  productRepo = inject(ProductRepository);
 
   router = inject(Router);
   toast = inject(ToastService);
@@ -75,6 +78,8 @@ export class CartComponent implements OnInit {
   commerces = signal<Commerce[]>([]);
 
   filterCommerceId = signal<string | null>(null);
+  barcodeScannerOpen = signal(false);
+  previewImage = signal<{ url: string; alt: string } | null>(null);
 
 
 
@@ -126,12 +131,91 @@ export class CartComponent implements OnInit {
     });
   }
 
+  ngOnDestroy(): void {
+    document.body.style.overflow = '';
+  }
+
+  @HostListener('document:keydown.escape')
+  onEscapeKey(): void {
+    if (this.barcodeScannerOpen()) {
+      this.closeBarcodeScanner();
+      return;
+    }
+    this.closeImagePreview();
+  }
+
+  openBarcodeScanner(): void {
+    this.barcodeScannerOpen.set(true);
+  }
+
+  closeBarcodeScanner(): void {
+    this.barcodeScannerOpen.set(false);
+  }
+
+  openImagePreview(product: CartItem['product']): void {
+    const url = product.imageUrl?.trim();
+    if (!url) return;
+    this.previewImage.set({ url, alt: product.name });
+    document.body.style.overflow = 'hidden';
+  }
+
+  closeImagePreview(): void {
+    if (!this.previewImage()) return;
+    this.previewImage.set(null);
+    document.body.style.overflow = '';
+  }
+
+  onBarcodeScanned(code: string): void {
+    const commerceId = this.resolveBarcodeCommerceId();
+    if (!commerceId) {
+      this.toast.error(this.i18n.t('barcodeCommerceRequired'));
+      return;
+    }
+    this.productRepo.list({
+      search: code,
+      commerce_id: commerceId,
+      page: 1,
+      perPage: 5,
+    }).subscribe({
+      next: (res) => {
+        const product = res.results[0];
+        if (!product) {
+          this.toast.error(this.i18n.t('barcodeProductNotFound'));
+          return;
+        }
+        const snapshot =
+          product.commerceId && product.commerceId !== commerceId
+            ? product
+            : { ...product, commerceId };
+        this.cart.addProduct(snapshot);
+        this.filterCommerceId.set(snapshot.commerceId);
+        this.cart.setFilterCommerceId(snapshot.commerceId);
+        this.toast.success(this.i18n.t('barcodeProductAdded'));
+      },
+      error: () => this.toast.error(this.i18n.t('barcodeProductNotFound')),
+    });
+  }
+
+  private resolveBarcodeCommerceId(): string {
+    return (
+      this.filterCommerceId()?.trim()
+      || this.productFilter.load()?.commerceId?.trim()
+      || this.commerces()[0]?.id?.trim()
+      || ''
+    );
+  }
+
   ngOnInit() {
     this.commerceRepo.list().subscribe((res) => {
       this.commerces.set(res);
       this.repairAndApplyCommerceFilter();
     });
     this.repairAndApplyCommerceFilter();
+    this.cart.refreshPricesIfNeeded().subscribe((updatedCount) => {
+      if (updatedCount > 0) {
+        this.toast.success(this.i18n.t('cartPricesUpdated'));
+      }
+    });
   }
 
   private repairAndApplyCommerceFilter(): void {

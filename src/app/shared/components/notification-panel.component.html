@@ -1,0 +1,71 @@
+<div class="relative" data-notification-panel-root>
+  <button
+    type="button"
+    (click)="notifications.togglePanel(); $event.stopPropagation()"
+    class="text-on-surface-variant hover:text-primary transition-colors relative p-2"
+    [attr.aria-expanded]="notifications.panelOpen()"
+    aria-haspopup="true">
+    <span class="material-symbols-outlined">notifications</span>
+    <span
+      *ngIf="notifications.unreadCount() > 0"
+      class="absolute top-1 right-1 min-w-[16px] h-4 px-1 bg-error text-on-error text-[10px] font-medium rounded-full flex items-center justify-center">
+      {{ notifications.unreadCount() > 99 ? '99+' : notifications.unreadCount() }}
+    </span>
+  </button>
+  <div
+    *ngIf="notifications.panelOpen()"
+    (click)="$event.stopPropagation()"
+    class="notification-panel absolute right-0 top-full mt-2 w-[min(24rem,calc(100vw-2rem))] bg-surface border border-outline-variant rounded-2xl shadow-card-hover overflow-hidden z-50">
+    <div class="flex items-center justify-between gap-3 px-4 py-3 border-b border-outline-variant">
+      <h2 class="text-title-sm text-on-surface">{{ t('notifications') }}</h2>
+      <button
+        *ngIf="notifications.unreadCount() > 0"
+        type="button"
+        (click)="onMarkAllRead($event)"
+        class="text-label-md text-primary hover:opacity-80 transition-opacity">
+        {{ t('markAllAsRead') }}
+      </button>
+    </div>
+    <div class="max-h-[min(28rem,60dvh)] overflow-y-auto">
+      <div *ngIf="notifications.loading()" class="px-4 py-8 text-center text-on-surface-variant text-body-md">
+        <span class="material-symbols-outlined animate-spin">progress_activity</span>
+      </div>
+      <div *ngIf="notifications.error()" class="px-4 py-8 text-center text-on-surface-variant text-body-md">
+        {{ t('notificationsLoadFailed') }}
+      </div>
+      <div *ngIf="!notifications.loading() && !notifications.error() && notifications.items().length === 0"
+           class="px-4 py-8 text-center text-on-surface-variant text-body-md">
+        {{ t('noNotifications') }}
+      </div>
+      <button
+        *ngFor="let notification of notifications.items()"
+        type="button"
+        (click)="onNotificationClick(notification, $event)"
+        class="notification-item w-full text-left px-4 py-3 border-b border-outline-variant/60 hover:bg-surface-container transition-colors"
+        [class.notification-item--unread]="!notification.isRead">
+        <div class="flex items-start gap-3">
+          <span class="material-symbols-outlined text-primary text-[20px] mt-0.5 shrink-0">
+            {{ iconFor(notification) }}
+          </span>
+          <div class="min-w-0 flex-1">
+            <div class="flex items-start justify-between gap-2">
+              <p class="text-label-lg text-on-surface line-clamp-2">{{ notification.title }}</p>
+              <span *ngIf="!notification.isRead" class="mt-1 h-2 w-2 rounded-full bg-primary shrink-0"></span>
+            </div>
+            <p class="text-body-md text-on-surface-variant line-clamp-2 mt-1">{{ notification.body }}</p>
+            <p class="text-label-md text-on-surface-variant/70 mt-1">{{ formatDate(notification.createdAt) }}</p>
+          </div>
+        </div>
+      </button>
+      <div *ngIf="notifications.hasMore() && !notifications.loading()" class="px-4 py-3">
+        <button
+          type="button"
+          (click)="onLoadMore($event)"
+          [disabled]="notifications.loadingMore()"
+          class="w-full py-2 text-label-lg text-primary hover:bg-surface-container rounded-xl transition-colors disabled:opacity-60">
+          {{ notifications.loadingMore() ? t('loading') : t('loadMore') }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

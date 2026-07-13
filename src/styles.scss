@@ -150,6 +150,21 @@ app-root {
     @apply w-full min-h-[48px] px-md py-3 bg-surface-container-low border border-outline-variant rounded-xl
            focus:ring-2 focus:ring-primary focus:border-primary transition-all
            outline-none text-body-md text-on-surface placeholder:text-outline-variant;
+    color-scheme: light;
+    &:-webkit-autofill,
+    &:-webkit-autofill:hover,
+    &:-webkit-autofill:focus,
+    &:-webkit-autofill:active {
+      -webkit-box-shadow: 0 0 0 1000px var(--md-surface-container-low) inset !important;
+      box-shadow: 0 0 0 1000px var(--md-surface-container-low) inset !important;
+      -webkit-text-fill-color: var(--md-on-surface) !important;
+      caret-color: var(--md-on-surface);
+      transition: background-color 5000s ease-in-out 0s;
+    }
+  }
+
+  .dark .input-outlined {
+    color-scheme: dark;
   }
 
   .nav-item-inactive {

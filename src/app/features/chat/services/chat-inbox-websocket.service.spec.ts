@@ -1,11 +1,12 @@
 import { TestBed } from '@angular/core/testing';
 import { ChatInboxWebSocketService } from './chat-inbox-websocket.service';
 import { AuthService } from '../../../core/auth/auth.service';
-import { InboxMessageEvent } from '../models/chat.models';
+import { InboxMessageEvent, InboxPresenceEvent } from '../models/chat.models';
 
 describe('ChatInboxWebSocketService', () => {
   let service: ChatInboxWebSocketService;
   let events: InboxMessageEvent[];
+  let presenceEvents: InboxPresenceEvent[];
 
   beforeEach(() => {
     TestBed.configureTestingModule({
@@ -16,7 +17,9 @@ describe('ChatInboxWebSocketService', () => {
     });
     service = TestBed.inject(ChatInboxWebSocketService);
     events = [];
+    presenceEvents = [];
     service.messages$.subscribe((event) => events.push(event));
+    service.presence$.subscribe((event) => presenceEvents.push(event));
   });
 
   it('should emit conversation.message_created events', () => {
@@ -43,5 +46,19 @@ describe('ChatInboxWebSocketService', () => {
     expect(events.length).toBe(1);
     expect(events[0].conversationId).toBe('conv-1');
     expect(events[0].message.body).toBe('Hi');
+  });
+
+  it('should emit inbox presence events', () => {
+    (service as unknown as { handleMessage: (raw: string) => void }).handleMessage(JSON.stringify({
+      type: 'user.joined',
+      conversation_id: 'conv-1',
+      user_id: 'user-2',
+    }));
+    expect(presenceEvents.length).toBe(1);
+    expect(presenceEvents[0]).toEqual({
+      conversationId: 'conv-1',
+      userId: 'user-2',
+      isOnline: true,
+    });
   });
 });

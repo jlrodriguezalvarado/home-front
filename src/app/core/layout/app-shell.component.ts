@@ -5,8 +5,11 @@ import { I18nService, AppStringKey } from '../i18n/i18n.service';
 import { ThemeService } from '../theme/theme.service';
 import { AuthService } from '../auth/auth.service';
 import { ChatSessionService } from '../../features/chat/services/chat-session.service';
+import { NotificationsSessionService } from '../notifications/notifications-session.service';
 import { ChatNotificationService } from '../../features/chat/services/chat-notification.service';
 import { PullToRefreshDirective } from '../../shared/directives/pull-to-refresh.directive';
+import { NotificationPanelComponent } from '../../shared/components/notification-panel.component';
+import { UserProfileMenuComponent } from '../../shared/components/user-profile-menu.component';
 
 interface NavItem {
   path: string;
@@ -17,7 +20,7 @@ interface NavItem {
 @Component({
   selector: 'app-app-shell',
   standalone: true,
-  imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive, PullToRefreshDirective],
+  imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive, PullToRefreshDirective, NotificationPanelComponent, UserProfileMenuComponent],
   templateUrl: './app-shell.component.html',
   styleUrl: './app-shell.component.scss',
 })
@@ -27,6 +30,7 @@ export class AppShellComponent {
   auth = inject(AuthService);
   router = inject(Router);
   chatSession = inject(ChatSessionService);
+  notificationsSession = inject(NotificationsSessionService);
   chatNotifications = inject(ChatNotificationService);
   unreadCount = this.chatNotifications.globalUnreadCount;
 
@@ -50,6 +54,7 @@ export class AppShellComponent {
     { path: '/products', label: 'products', icon: 'inventory_2' },
     { path: '/cart', label: 'cart', icon: 'shopping_cart' },
     { path: '/purchases', label: 'orders', icon: 'receipt_long' },
+    { path: '/chat', label: 'chat', icon: 'chat' },
   ];
 
   t(key: AppStringKey) {
@@ -85,6 +90,7 @@ export class AppShellComponent {
   logout() {
     this.closeDrawer();
     void this.chatSession.stop().then(() => {
+      this.notificationsSession.stop();
       this.auth.logout();
       void this.router.navigate(['/login']);
     });

@@ -26,6 +26,23 @@ export interface PeerDisplayNameListResponse {
   results: PeerDisplayNameResponse[];
 }
 
+export interface ChatMessageMetadata {
+  storageKey: string;
+  filename: string;
+  mimeType: string;
+  size: number;
+  url?: string;
+  duration?: number;
+}
+
+export interface ChatMediaUploadResponse {
+  messageType: 'image' | 'audio' | 'file';
+  metadata: ChatMessageMetadata;
+  url: string;
+}
+
+export type ChatMessageType = 'text' | 'image' | 'audio' | 'file' | 'system';
+
 export interface ChatMessage {
   id: string;
   conversationId: string;
@@ -33,24 +50,29 @@ export interface ChatMessage {
   senderId: string;
   senderName?: string;
   body: string;
-  messageType: 'text' | 'image' | 'file' | 'system';
-  metadata: Record<string, unknown>;
+  messageType: ChatMessageType;
+  metadata: ChatMessageMetadata | Record<string, unknown>;
   clientMessageId: string;
   isDeleted: boolean;
   createdAt: string;
 }
 
-export type ChatMessageStatus = 'pending' | 'sent' | 'failed';
+export type ChatMessageStatus = 'uploading' | 'pending' | 'sent' | 'failed';
 
 export interface ChatMessageItem {
   id?: string;
   clientMessageId: string;
   body: string;
+  messageType: ChatMessageType;
+  metadata?: ChatMessageMetadata;
   sender: string;
   senderName?: string;
   createdAt: Date;
   status: ChatMessageStatus;
   isOwn: boolean;
+  uploadProgress?: number;
+  localPreviewUrl?: string;
+  pendingFile?: File;
 }
 
 export interface ChatMessagesPage {
@@ -61,8 +83,8 @@ export interface ChatMessagesPage {
 
 export interface SendMessageRequest {
   body: string;
-  messageType: 'text' | 'image' | 'file';
-  metadata?: Record<string, unknown>;
+  messageType: ChatMessageType;
+  metadata?: ChatMessageMetadata | Record<string, unknown>;
   clientMessageId: string;
 }
 
@@ -87,8 +109,8 @@ export interface ConversationPayload {
 export interface SendMessagePayload {
   type: 'message.send';
   body: string;
-  messageType: 'text' | 'image' | 'file';
-  metadata: Record<string, unknown>;
+  messageType: ChatMessageType;
+  metadata: ChatMessageMetadata | Record<string, unknown>;
   clientMessageId: string;
 }
 
@@ -134,9 +156,24 @@ export type ChatSocketIncomingEvent =
       userId: string;
     }
   | {
+      type: 'presence.snapshot';
+      onlineUserIds: string[];
+    }
+  | {
+      type: 'presence.changed';
+      userId: string;
+      isOnline: boolean;
+    }
+  | {
       type: 'error';
       message: string;
     };
+
+export interface InboxPresenceEvent {
+  conversationId: string;
+  userId: string;
+  isOnline: boolean;
+}
 
 export interface PushSubscriptionPayload {
   endpoint: string;

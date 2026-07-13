@@ -34,8 +34,7 @@ describe('ConversationRoomComponent', () => {
       'sendTypingStart',
       'sendTypingStop',
     ], {
-      connected: () => true,
-      connecting: () => false,
+      onlineUsers: () => ({}),
       typingUsers: () => ({}),
     });
     repo = jasmine.createSpyObj('ChatRepository', ['getConversation']);

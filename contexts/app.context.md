@@ -84,6 +84,12 @@ export class XRepository {
 
 ### 3. Componentes standalone
 
+Regla obligatoria de estructura:
+
+- Los componentes van separados (un componente por unidad de archivos)
+- Cada componente debe tener sus 3 archivos: `*.component.ts`, `*.component.html` y `*.component.scss`
+- No crear componentes inline (`template` o `styles`) salvo que exista una justificación técnica excepcional
+
 ```typescript
 @Component({
   selector: 'app-x-list',

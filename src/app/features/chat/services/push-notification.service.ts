@@ -55,17 +55,22 @@ export class PushNotificationService {
     }
   }
 
-  async unsubscribeOnLogout(): Promise<void> {
-    if (!this.isSupported()) return;
+  async unsubscribe(): Promise<boolean> {
+    if (!this.isSupported()) return false;
     try {
       const registration = await this.getRegistration();
       const subscription = await registration.pushManager.getSubscription();
-      if (!subscription) return;
+      if (!subscription) return false;
       await firstValueFrom(this.repo.unsubscribePushSubscription(subscription.endpoint));
       await subscription.unsubscribe();
+      return true;
     } catch {
-      // Best-effort cleanup on logout
+      return false;
     }
+  }
+
+  async unsubscribeOnLogout(): Promise<void> {
+    await this.unsubscribe();
   }
 
   async hasActiveSubscription(): Promise<boolean> {

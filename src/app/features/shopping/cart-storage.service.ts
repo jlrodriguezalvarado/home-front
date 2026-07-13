@@ -33,7 +33,12 @@ export class CartStorageService {
         if (!product || !Number.isFinite(product.id)) continue;
 
         product.presentationUnit = normalizePresentationUnit(product.presentationUnit);
-        items.push({ product, quantity });
+        const priceUpdatedAt = entry['priceUpdatedAt'] ?? entry['price_updated_at'];
+        items.push({
+          product,
+          quantity,
+          priceUpdatedAt: priceUpdatedAt != null ? String(priceUpdatedAt) : null,
+        });
       }
 
       if (items.length > 0 && !localStorage.getItem(CART_KEY)) {

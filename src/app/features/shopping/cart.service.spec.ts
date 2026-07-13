@@ -1,6 +1,9 @@
 import { TestBed } from '@angular/core/testing';
+import { of } from 'rxjs';
 import { CartService } from './cart.service';
 import { CartStorageService } from './cart-storage.service';
+import { CartRepository } from './cart.repository';
+import { AuthService } from '../../core/auth/auth.service';
 import { Product } from '../../core/models/shopping.models';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
 
@@ -38,6 +41,24 @@ describe('CartService', () => {
     localStorage.clear();
     TestBed.configureTestingModule({
       imports: [HttpClientTestingModule],
+      providers: [
+        {
+          provide: AuthService,
+          useValue: { isAuthenticated: () => false },
+        },
+        {
+          provide: CartRepository,
+          useValue: {
+            getCurrent: () => of({ id: '', status: 'draft', filterCommerceId: null, items: [], updatedAt: '' }),
+            syncCurrent: () => of({ id: '', status: 'draft', filterCommerceId: null, items: [], updatedAt: '' }),
+            refreshPrices: () => of({
+              cart: { id: '', status: 'draft', filterCommerceId: null, items: [], updatedAt: '' },
+              updatedCount: 0,
+              skippedCount: 0,
+            }),
+          },
+        },
+      ],
     });
     storage = TestBed.inject(CartStorageService);
     service = TestBed.inject(CartService);

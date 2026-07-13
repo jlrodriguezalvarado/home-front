@@ -7,6 +7,7 @@ import { authInterceptor } from './core/api/auth.interceptor';
 import { provideServiceWorker } from '@angular/service-worker';
 import { CartService, initCart } from './features/shopping/cart.service';
 import { CartStorageService } from './features/shopping/cart-storage.service';
+import { AuthService } from './core/auth/auth.service';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -16,7 +17,7 @@ export const appConfig: ApplicationConfig = {
     {
       provide: APP_INITIALIZER,
       useFactory: initCart,
-      deps: [CartService, CartStorageService],
+      deps: [CartService, CartStorageService, AuthService],
       multi: true,
     },
     provideServiceWorker('sw.js', {

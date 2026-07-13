@@ -23,7 +23,6 @@ export class RenameChatContactDialogComponent {
   toast = inject(ToastService);
   displayNameDraft = signal('');
   saving = signal(false);
-  restoring = signal(false);
   hasCustomName = signal(false);
 
   constructor() {
@@ -36,7 +35,7 @@ export class RenameChatContactDialogComponent {
 
   save(): void {
     const trimmed = this.displayNameDraft().trim();
-    if (!trimmed || trimmed.length > 255 || this.saving() || this.restoring()) return;
+    if (!trimmed || trimmed.length > 255 || this.saving()) return;
     this.saving.set(true);
     this.peerDisplayNames.setDisplayName(
       this.conversationId(),
@@ -45,28 +44,11 @@ export class RenameChatContactDialogComponent {
     ).subscribe({
       next: (response) => {
         this.saving.set(false);
+        this.toast.success(this.i18n.t('renameContactSuccess'));
         this.aliasChanged.emit(response);
       },
       error: () => {
         this.saving.set(false);
-        this.toast.error(this.i18n.t('renameContactFailed'));
-      },
-    });
-  }
-
-  restoreDefault(): void {
-    if (this.saving() || this.restoring()) return;
-    this.restoring.set(true);
-    this.peerDisplayNames.clearDisplayName(
-      this.conversationId(),
-      this.participant().user.id,
-    ).subscribe({
-      next: (response) => {
-        this.restoring.set(false);
-        this.aliasChanged.emit(response);
-      },
-      error: () => {
-        this.restoring.set(false);
         this.toast.error(this.i18n.t('renameContactFailed'));
       },
     });

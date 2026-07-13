@@ -2,48 +2,38 @@
 
 <div class="space-y-lg">
 
-  <div class="flex flex-col gap-md">
-
-    <h1 class="page-title">{{ i18n.t('products') }}</h1>
-
-    <div class="relative w-full md:max-w-md md:ml-auto">
-
-      <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
-
-      <input type="text" [placeholder]="i18n.t('search')"
-
-             [(ngModel)]="searchDraft" (ngModelChange)="onSearchChange($event)"
-
-             class="input-outlined pl-10 py-2 w-full">
-
+  <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-md">
+    <div class="flex items-center gap-sm flex-wrap min-w-0 flex-1 w-full md:w-auto -mx-margin-mobile px-margin-mobile md:mx-0 md:px-0">
+      <h1 class="page-title shrink-0">{{ i18n.t('products') }}</h1>
+      <select [(ngModel)]="selectedCommerceId" (ngModelChange)="onCommerceChange($event)"
+              class="input-outlined py-2 px-md text-body-md min-w-0 flex-1 sm:flex-none sm:max-w-[180px]">
+        <option *ngFor="let c of commerces()" [value]="c.id">{{ c.name }}</option>
+      </select>
+      <div class="min-w-0 flex-1 sm:flex-none sm:w-[240px]">
+        <app-search-select
+          [options]="categoryOptions()"
+          [value]="selectedCategoryId"
+          [placeholder]="categoryPlaceholder"
+          [searchPlaceholder]="i18n.t('search')"
+          [emptyLabel]="i18n.lang() === 'en' ? 'No categories' : 'Sin categorías'"
+          (valueChange)="onCategoryChange($event)">
+        </app-search-select>
+      </div>
     </div>
-
-  </div>
-
-
-
-  <div class="flex flex-col md:flex-row gap-sm md:gap-md -mx-margin-mobile px-margin-mobile md:mx-0 md:px-0">
-
-    <select [(ngModel)]="selectedCommerceId" (ngModelChange)="onCommerceChange($event)"
-
-            class="input-outlined py-2 px-md w-full md:w-auto md:min-w-[140px]">
-
-      <option *ngFor="let c of commerces()" [value]="c.id">{{ c.name }}</option>
-
-    </select>
-
-
-
-    <select [(ngModel)]="selectedCategoryId" (ngModelChange)="onCategoryChange($event)"
-
-            class="input-outlined py-2 px-md w-full md:w-auto md:min-w-[140px]">
-
-      <option [ngValue]="null">{{ i18n.t('category') }} — {{ allCategoriesLabel }}</option>
-
-      <option *ngFor="let cat of categories()" [ngValue]="cat.id">{{ cat.name }}</option>
-
-    </select>
-
+    <div class="flex gap-sm shrink-0 w-full md:w-auto md:max-w-md">
+      <div class="relative flex-1 min-w-0">
+        <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
+        <input type="text" [placeholder]="i18n.t('search')"
+               [(ngModel)]="searchDraft" (ngModelChange)="onSearchChange($event)"
+               class="input-outlined pl-10 py-2 w-full">
+      </div>
+      <button type="button"
+              class="w-11 h-11 shrink-0 flex items-center justify-center rounded-xl border border-outline-variant bg-surface-container-low text-on-surface hover:bg-surface-container-high transition-colors"
+              (click)="openBarcodeScanner()"
+              [attr.aria-label]="i18n.t('scanBarcode')">
+        <span class="material-symbols-outlined text-[22px]">barcode_scanner</span>
+      </button>
+    </div>
   </div>
 
 
@@ -64,21 +54,35 @@
 
       <div class="aspect-square bg-white dark:bg-surface-container-lowest relative overflow-hidden">
 
-        <img *ngIf="product.imageUrl"
+        @if (product.imageUrl; as imageUrl) {
 
-             [src]="product.imageUrl"
+          <button type="button"
 
-             [alt]="product.name"
+                  class="w-full h-full p-2 md:p-3 cursor-zoom-in focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary"
 
-             class="w-full h-full object-contain p-2 md:p-3"
+                  (click)="openImagePreview(product)"
 
-             loading="lazy">
+                  [attr.aria-label]="product.name">
 
-        <div *ngIf="!product.imageUrl" class="w-full h-full flex items-center justify-center bg-surface-container text-on-surface-variant">
+            <img [src]="imageUrl"
 
-          <span class="material-symbols-outlined text-[32px]">image</span>
+                 [alt]="product.name"
 
-        </div>
+                 class="w-full h-full object-contain pointer-events-none"
+
+                 loading="lazy">
+
+          </button>
+
+        } @else {
+
+          <div class="w-full h-full flex items-center justify-center bg-surface-container text-on-surface-variant">
+
+            <span class="material-symbols-outlined text-[32px]">image</span>
+
+          </div>
+
+        }
 
       </div>
 
@@ -142,16 +146,76 @@
 
 
 
-  <div *ngIf="hasMore()" class="flex justify-center py-lg">
+  <div *ngIf="hasMore()" #loadMoreSentinel class="flex justify-center py-lg">
 
-    <button (click)="loadMore()" [disabled]="loading()"
+    <div *ngIf="loading() && products().length > 0"
 
-            class="px-lg py-2 bg-surface-container text-on-surface rounded-xl hover:bg-surface-container-high transition-colors text-label-lg">
+         class="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin"
 
-      {{ loading() ? '...' : i18n.t('loadMore') }}
+         role="status"
 
-    </button>
+         aria-hidden="true"></div>
 
   </div>
 
 </div>
+
+
+
+@if (barcodeScannerOpen()) {
+
+  <app-barcode-scanner-dialog
+
+    (scanned)="onBarcodeScanned($event)"
+
+    (closed)="closeBarcodeScanner()">
+
+  </app-barcode-scanner-dialog>
+
+}
+
+
+
+@if (previewImage(); as preview) {
+
+  <div class="fixed inset-0 z-[70] flex flex-col bg-black/95"
+
+       role="dialog"
+
+       aria-modal="true"
+
+       [attr.aria-label]="preview.alt"
+
+       (click)="closeImagePreview()">
+
+    <div class="flex justify-end p-sm safe-top">
+
+      <button type="button"
+
+              class="w-10 h-10 flex items-center justify-center rounded-full text-white/90 hover:bg-white/10 transition-colors"
+
+              (click)="closeImagePreview()"
+
+              [attr.aria-label]="i18n.t('cancel')">
+
+        <span class="material-symbols-outlined text-[24px]">close</span>
+
+      </button>
+
+    </div>
+
+    <div class="flex-1 flex items-center justify-center min-h-0 px-sm pb-sm md:px-xl md:pb-xl">
+
+      <img [src]="preview.url"
+
+           [alt]="preview.alt"
+
+           class="max-h-full max-w-full w-full md:w-auto object-contain"
+
+           (click)="$event.stopPropagation()">
+
+    </div>
+
+  </div>
+
+}

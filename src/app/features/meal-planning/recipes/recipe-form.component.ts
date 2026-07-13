@@ -1,4 +1,4 @@
-import { Component, inject, OnDestroy, OnInit, signal } from '@angular/core';
+import { Component, ElementRef, inject, OnDestroy, OnInit, signal, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormArray, FormBuilder, ReactiveFormsModule, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
@@ -46,6 +46,7 @@ function quantityValidator(control: AbstractControl): ValidationErrors | null {
   styleUrl: './recipe-form.component.scss',
 })
 export class RecipeFormComponent implements OnInit, OnDestroy {
+  @ViewChild('imageInput') imageInput?: ElementRef<HTMLInputElement>;
   private readonly fb = inject(FormBuilder);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
@@ -118,6 +119,10 @@ export class RecipeFormComponent implements OnInit, OnDestroy {
     return Boolean(this.selectedImage() || this.selectedVideo());
   }
 
+  openImagePicker() {
+    this.imageInput?.nativeElement.click();
+  }
+
   onImageSelected(event: Event) {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0];
@@ -126,6 +131,7 @@ export class RecipeFormComponent implements OnInit, OnDestroy {
     this.selectedImage.set(file);
     this.clearImage.set(false);
     this.imagePreviewUrl.set(URL.createObjectURL(file));
+    input.value = '';
   }
 
   onVideoSelected(event: Event) {

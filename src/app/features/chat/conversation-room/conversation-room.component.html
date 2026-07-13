@@ -16,14 +16,14 @@
             <span class="material-symbols-outlined text-[20px]">edit</span>
           </button>
         </div>
-        <div class="flex items-center gap-1 text-label-md text-on-surface-variant">
+        <div *ngIf="!conversation()?.isGroup" class="flex items-center gap-1 text-label-md text-on-surface-variant">
           <span
             class="material-symbols-outlined text-[14px]"
-            [class.text-primary]="connected()"
-            [class.text-on-surface-variant]="!connected()">
+            [class.text-primary]="peerIsOnline()"
+            [class.text-on-surface-variant]="!peerIsOnline()">
             circle
           </span>
-          {{ connected() ? i18n.t('online') : (connecting() ? i18n.t('typing') : i18n.t('offline')) }}
+          {{ peerIsOnline() ? i18n.t('online') : i18n.t('offline') }}
         </div>
       </div>
     </div>
@@ -58,20 +58,23 @@
           [class.border]="!message.isOwn || message.status === 'failed'"
           [class.border-outline-variant]="!message.isOwn && message.status !== 'failed'"
           [class.border-error]="message.status === 'failed'"
-          [class.opacity-70]="message.status === 'pending'"
+          [class.opacity-70]="message.status === 'pending' || message.status === 'uploading'"
           [class.bg-error-container]="message.isOwn && message.status === 'failed'"
           [class.text-on-error-container]="message.isOwn && message.status === 'failed'">
           <div *ngIf="!message.isOwn && message.senderName" class="text-label-md text-on-surface-variant mb-xs">
             {{ message.senderName }}
           </div>
-          <div class="text-body-md whitespace-pre-wrap break-words">{{ message.body }}</div>
+          <app-chat-message-content
+            [message]="message"
+            (mediaLoadError)="onMediaLoadError()">
+          </app-chat-message-content>
           <div
             class="flex items-center gap-1 mt-xs"
             [class.text-on-primary]="message.isOwn && message.status !== 'failed'"
             [class.text-on-surface-variant]="!message.isOwn"
             [class.text-on-error-container]="message.status === 'failed'">
             <span
-              *ngIf="message.status === 'pending'"
+              *ngIf="message.status === 'pending' || message.status === 'uploading'"
               class="material-symbols-outlined text-[14px] animate-spin">
               progress_activity
             </span>
@@ -114,22 +117,13 @@
   <div *ngIf="typingLabel()" class="text-label-md text-on-surface-variant px-md py-xs shrink-0">
     {{ typingLabel() }}
   </div>
-  <div class="flex gap-sm mt-md shrink-0 pb-[env(safe-area-inset-bottom,0px)]">
-    <textarea
-      [ngModel]="messageDraft()"
-      (ngModelChange)="onMessageInput($event)"
-      (keydown)="onKeyDown($event)"
-      [placeholder]="i18n.t('writeMessage')"
-      rows="2"
-      class="input-outlined flex-1 resize-none min-h-[48px]"></textarea>
-    <button
-      type="button"
-      (click)="sendMessage()"
-      class="btn-primary px-md flex items-center gap-1 self-end">
-      <span class="material-symbols-outlined text-[20px]">send</span>
-      {{ i18n.t('send') }}
-    </button>
-  </div>
+  <app-chat-media-composer
+    class="mt-md shrink-0 pb-[env(safe-area-inset-bottom,0px)]"
+    [message]="messageDraft()"
+    (messageChange)="onMessageInput($event)"
+    (sendText)="sendMessage()"
+    (sendMedia)="onSendMedia($event)">
+  </app-chat-media-composer>
   <div *ngIf="showRenameDialog() && otherParticipant()" class="fixed inset-0 bg-black/50 flex items-center justify-center p-md z-50">
     <div class="bg-surface-container-lowest w-full max-w-md p-xl rounded-[24px] border border-outline-variant shadow-card-hover">
       <h2 class="text-title-lg text-on-surface mb-lg">{{ i18n.t('renameContact') }}</h2>
