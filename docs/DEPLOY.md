@@ -47,7 +47,8 @@ dist/home-manager/browser/
 ├── chunk-*.js          # lazy routes
 ├── polyfills-*.js
 ├── manifest.webmanifest
-├── ngsw-worker.js      # service worker
+├── sw.js               # push handlers + Angular service worker bootstrap
+├── ngsw-worker.js      # Angular cache service worker
 ├── ngsw.json           # manifest del SW (generado en build)
 ├── safety-worker.js
 ├── worker-basic.min.js
@@ -76,7 +77,7 @@ Hay un ejemplo listo en [`deploy/nginx/home-manager.conf`](../deploy/nginx/home-
 ### Puntos críticos para una SPA Angular + PWA
 
 1. **Rutas del cliente:** todas las rutas (`/products`, `/finance/2026/6`, etc.) deben devolver `index.html` para que Angular Router las maneje.
-2. **Service worker sin caché:** `ngsw-worker.js` y `ngsw.json` no deben cachearse en el navegador ni en proxies; si no, las actualizaciones de la app no se detectan.
+2. **Service workers sin caché:** `sw.js`, `ngsw-worker.js` y `ngsw.json` no deben cachearse en el navegador ni en proxies; si no, las actualizaciones de la app no se detectan.
 3. **HTTPS:** obligatorio en producción para registro del service worker e instalación PWA.
 4. **Manifest:** servir `manifest.webmanifest` con `Content-Type: application/manifest+json`.
 
@@ -118,7 +119,8 @@ Certbot añade el bloque `listen 443 ssl` y la redirección HTTP → HTTPS.
 | Archivo | Rol |
 |---|---|
 | `ngsw-config.json` | Config de caché en build (prefetch de JS/CSS, lazy de imágenes) |
-| `ngsw-worker.js` | Service worker generado en build |
+| `sw.js` | Service worker registrado; maneja push e importa `ngsw-worker.js` |
+| `ngsw-worker.js` | Service worker de caché generado por Angular |
 | `manifest.webmanifest` | Metadatos de instalación (nombre, iconos, `display: standalone`) |
 | `app.config.ts` | Registra el SW solo fuera de dev (`enabled: !isDevMode()`) |
 

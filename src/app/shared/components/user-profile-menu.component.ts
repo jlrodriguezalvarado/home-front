@@ -88,6 +88,8 @@ export class UserProfileMenuComponent implements OnInit {
           this.toast.success(this.t('pushSubscriptionSaved'));
         } else if (Notification.permission === 'denied') {
           this.toast.error(this.t('notificationPermissionDenied'));
+        } else {
+          this.toast.error(this.t('pushSubscriptionFailed'));
         }
       }
       await this.refreshPushSubscriptionState();
