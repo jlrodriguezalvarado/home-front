@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, OnInit, inject, output, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { IngredientRepository } from '../repositories/ingredient.repository';
@@ -8,37 +8,32 @@ import { ConfirmService } from '../../../shared/services/confirm.service';
 import { ToastService } from '../../../shared/services/toast.service';
 import { LoadingStateComponent } from '../../../shared/components/loading-state.component';
 import { EmptyStateComponent } from '../../../shared/components/empty-state.component';
-import { ErrorStateComponent } from '../../../shared/components/error-state.component';
-import { MealPlanningNavComponent } from '../meal-planning-nav.component';
 import { IngredientFormDialogComponent } from './ingredient-form-dialog.component';
 
 @Component({
-  selector: 'app-ingredient-list',
+  selector: 'app-ingredient-manage-dialog',
   standalone: true,
   imports: [
     CommonModule,
     FormsModule,
     LoadingStateComponent,
     EmptyStateComponent,
-    ErrorStateComponent,
-    MealPlanningNavComponent,
     IngredientFormDialogComponent,
   ],
-  templateUrl: './ingredient-list.component.html',
-  styleUrl: './ingredient-list.component.scss',
+  templateUrl: './ingredient-manage-dialog.component.html',
 })
-export class IngredientListComponent implements OnInit {
-  repo = inject(IngredientRepository);
+export class IngredientManageDialogComponent implements OnInit {
+  private readonly repo = inject(IngredientRepository);
+  private readonly confirm = inject(ConfirmService);
+  private readonly toast = inject(ToastService);
   i18n = inject(I18nService);
-  confirm = inject(ConfirmService);
-  toast = inject(ToastService);
+  changed = output<Ingredient[]>();
+  closed = output<void>();
   ingredients = signal<Ingredient[]>([]);
   filteredIngredients = signal<Ingredient[]>([]);
   loading = signal(false);
-  error = signal(false);
   searchQuery = signal('');
-  activeFilter = signal<'all' | 'active' | 'inactive'>('all');
-  showDialog = signal(false);
+  showFormDialog = signal(false);
   editingIngredient = signal<Ingredient | null>(null);
 
   ngOnInit() {
@@ -47,7 +42,6 @@ export class IngredientListComponent implements OnInit {
 
   load() {
     this.loading.set(true);
-    this.error.set(false);
     const params: Record<string, string | number | boolean> = {};
     const search = this.searchQuery().trim();
     if (search) params['search'] = search;
@@ -56,10 +50,11 @@ export class IngredientListComponent implements OnInit {
         this.ingredients.set(res);
         this.applyFilter();
         this.loading.set(false);
+        this.changed.emit(res.filter((i) => i.isActive));
       },
       error: () => {
         this.loading.set(false);
-        this.error.set(true);
+        this.toast.error(this.i18n.lang() === 'en' ? 'Failed to load ingredients' : 'Error al cargar ingredientes');
       },
     });
   }
@@ -69,37 +64,38 @@ export class IngredientListComponent implements OnInit {
     this.load();
   }
 
-  onActiveFilterChange(value: 'all' | 'active' | 'inactive') {
-    this.activeFilter.set(value);
-    this.applyFilter();
-  }
-
   applyFilter() {
-    const filter = this.activeFilter();
-    let items = this.ingredients();
-    if (filter === 'active') items = items.filter((i) => i.isActive);
-    if (filter === 'inactive') items = items.filter((i) => !i.isActive);
-    this.filteredIngredients.set(items);
+    this.filteredIngredients.set(this.ingredients());
   }
 
-  openDialog(ingredient?: Ingredient) {
-    this.editingIngredient.set(ingredient ?? null);
-    this.showDialog.set(true);
+  close() {
+    this.closed.emit();
   }
 
-  closeDialog() {
-    this.showDialog.set(false);
+  openCreate() {
+    this.editingIngredient.set(null);
+    this.showFormDialog.set(true);
+  }
+
+  openEdit(ingredient: Ingredient) {
+    this.editingIngredient.set(ingredient);
+    this.showFormDialog.set(true);
+  }
+
+  closeFormDialog() {
+    this.showFormDialog.set(false);
     this.editingIngredient.set(null);
   }
 
   onIngredientSaved(saved: Ingredient) {
-    this.closeDialog();
+    this.closeFormDialog();
     this.ingredients.update((items) => {
       const index = items.findIndex((item) => item.id === saved.id);
       if (index === -1) return [saved, ...items];
       return items.map((item) => (item.id === saved.id ? saved : item));
     });
     this.applyFilter();
+    this.changed.emit(this.ingredients().filter((i) => i.isActive));
   }
 
   async deleteIngredient(ingredient: Ingredient) {
@@ -115,7 +111,9 @@ export class IngredientListComponent implements OnInit {
     this.repo.delete(ingredient.id).subscribe({
       next: () => {
         this.toast.success(this.i18n.t('delete'));
-        this.load();
+        this.ingredients.update((items) => items.filter((item) => item.id !== ingredient.id));
+        this.applyFilter();
+        this.changed.emit(this.ingredients().filter((i) => i.isActive));
       },
       error: () => this.toast.error(this.i18n.lang() === 'en' ? 'Delete failed' : 'Error al eliminar'),
     });

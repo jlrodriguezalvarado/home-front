@@ -1,0 +1,68 @@
+<div class="fixed inset-0 bg-black/50 flex items-center justify-center p-md z-50" (click)="close()">
+  <div
+    class="bg-surface-container-lowest w-full max-w-lg p-xl rounded-[24px] border border-outline-variant shadow-card-hover max-h-[90vh] flex flex-col overflow-hidden"
+    (click)="$event.stopPropagation()">
+    <div class="flex items-center justify-between gap-md mb-lg shrink-0">
+      <h2 class="text-title-lg text-on-surface">{{ i18n.t('manageIngredients') }}</h2>
+      <button type="button" (click)="openCreate()" class="btn-primary flex items-center gap-1 shrink-0">
+        <span class="material-symbols-outlined text-[18px]">add</span>
+        {{ i18n.t('newIngredient') }}
+      </button>
+    </div>
+    <input
+      type="search"
+      [ngModel]="searchQuery()"
+      (ngModelChange)="onSearchChange($event)"
+      [placeholder]="i18n.t('search')"
+      class="input-outlined mb-md shrink-0">
+    <div class="overflow-y-auto min-h-0 flex-1 space-y-sm">
+      <app-loading-state *ngIf="loading() && filteredIngredients().length === 0"></app-loading-state>
+      <app-empty-state
+        *ngIf="!loading() && filteredIngredients().length === 0"
+        icon="restaurant"
+        [title]="i18n.t('ingredients')">
+      </app-empty-state>
+      <div
+        *ngFor="let item of filteredIngredients()"
+        class="flex items-start justify-between gap-md p-md rounded-xl border border-outline-variant">
+        <div class="min-w-0">
+          <div class="text-headline-md text-on-surface truncate">{{ item.name }}</div>
+          <div *ngIf="item.description" class="text-body-md text-on-surface-variant mt-xs line-clamp-2">{{ item.description }}</div>
+          <div class="text-body-md text-on-surface-variant mt-xs">
+            <span class="text-label-lg">{{ i18n.t('defaultProduct') }}:</span>
+            {{ item.defaultProduct?.name ?? '—' }}
+          </div>
+          <span
+            class="inline-block mt-sm text-label-md px-sm py-xs rounded-lg"
+            [class.bg-primary-container]="item.isActive"
+            [class.text-on-primary-container]="item.isActive"
+            [class.bg-surface-container]="!item.isActive"
+            [class.text-on-surface-variant]="!item.isActive">
+            {{ item.isActive ? i18n.t('active') : i18n.t('inactive') }}
+          </span>
+        </div>
+        <div class="flex flex-col gap-sm shrink-0">
+          <button type="button" (click)="openEdit(item)" class="text-primary text-label-md hover:underline flex items-center gap-1">
+            <span class="material-symbols-outlined text-[18px]">edit</span>
+            {{ i18n.t('edit') }}
+          </button>
+          <button type="button" (click)="deleteIngredient(item)" class="text-error text-label-md hover:underline flex items-center gap-1">
+            <span class="material-symbols-outlined text-[18px]">delete</span>
+            {{ i18n.t('delete') }}
+          </button>
+        </div>
+      </div>
+    </div>
+    <div class="pt-md shrink-0">
+      <button type="button" (click)="close()" class="w-full py-3 border border-outline-variant rounded-xl text-label-lg">
+        {{ i18n.t('cancel') }}
+      </button>
+    </div>
+  </div>
+</div>
+<app-ingredient-form-dialog
+  *ngIf="showFormDialog()"
+  [ingredient]="editingIngredient()"
+  (saved)="onIngredientSaved($event)"
+  (closed)="closeFormDialog()">
+</app-ingredient-form-dialog>

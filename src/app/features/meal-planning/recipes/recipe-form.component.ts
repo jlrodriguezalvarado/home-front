@@ -13,6 +13,8 @@ import { ToastService } from '../../../shared/services/toast.service';
 import { LoadingStateComponent } from '../../../shared/components/loading-state.component';
 import { ErrorStateComponent } from '../../../shared/components/error-state.component';
 import { RichTextEditorComponent } from '../../../shared/components/rich-text-editor.component';
+import { IngredientManageDialogComponent } from '../ingredients/ingredient-manage-dialog.component';
+import { IngredientFormDialogComponent } from '../ingredients/ingredient-form-dialog.component';
 import { canonicalPresentationUnit, isPresentationUnitKg } from '../../shopping/utils/presentation-unit.utils';
 
 function urlValidator(control: AbstractControl): ValidationErrors | null {
@@ -41,7 +43,16 @@ function quantityValidator(control: AbstractControl): ValidationErrors | null {
 @Component({
   selector: 'app-recipe-form',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink, LoadingStateComponent, ErrorStateComponent, RichTextEditorComponent],
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    RouterLink,
+    LoadingStateComponent,
+    ErrorStateComponent,
+    RichTextEditorComponent,
+    IngredientManageDialogComponent,
+    IngredientFormDialogComponent,
+  ],
   templateUrl: './recipe-form.component.html',
   styleUrl: './recipe-form.component.scss',
 })
@@ -70,6 +81,10 @@ export class RecipeFormComponent implements OnInit, OnDestroy {
   clearVideo = signal(false);
   imagePreviewUrl = signal<string | null>(null);
   videoPreviewUrl = signal<string | null>(null);
+  showManageIngredients = signal(false);
+  showIngredientForm = signal(false);
+  ingredientFormTarget = signal<Ingredient | null>(null);
+  ingredientFormRowIndex = signal<number | null>(null);
   form = this.fb.group({
     name: ['', Validators.required],
     description: [''],
@@ -236,6 +251,61 @@ export class RecipeFormComponent implements OnInit, OnDestroy {
 
   onIngredientChange(index: number) {
     this.syncIngredientRow(index);
+  }
+
+  openManageIngredients() {
+    this.showManageIngredients.set(true);
+  }
+
+  closeManageIngredients() {
+    this.showManageIngredients.set(false);
+  }
+
+  onIngredientsManaged(activeIngredients: Ingredient[]) {
+    this.ingredients.set(activeIngredients);
+    this.ingredientsArray.controls.forEach((_, index) => this.syncIngredientRow(index));
+  }
+
+  openCreateIngredient(rowIndex?: number) {
+    this.ingredientFormTarget.set(null);
+    this.ingredientFormRowIndex.set(rowIndex ?? null);
+    this.showIngredientForm.set(true);
+  }
+
+  openEditSelectedIngredient(rowIndex: number) {
+    const ingredientId = String(this.ingredientsArray.at(rowIndex).get('ingredient')?.value ?? '');
+    const ingredient = this.ingredients().find((i) => i.id === ingredientId);
+    if (!ingredient) return;
+    this.ingredientFormTarget.set(ingredient);
+    this.ingredientFormRowIndex.set(rowIndex);
+    this.showIngredientForm.set(true);
+  }
+
+  closeIngredientForm() {
+    this.showIngredientForm.set(false);
+    this.ingredientFormTarget.set(null);
+    this.ingredientFormRowIndex.set(null);
+  }
+
+  onIngredientFormSaved(saved: Ingredient) {
+    const wasCreate = !this.ingredientFormTarget();
+    const rowIndex = this.ingredientFormRowIndex();
+    this.closeIngredientForm();
+    if (saved.isActive) {
+      this.ingredients.update((items) => {
+        const index = items.findIndex((item) => item.id === saved.id);
+        if (index === -1) return [...items, saved].sort((a, b) => a.name.localeCompare(b.name));
+        return items.map((item) => (item.id === saved.id ? saved : item));
+      });
+    } else {
+      this.ingredients.update((items) => items.filter((item) => item.id !== saved.id));
+    }
+    if (wasCreate && rowIndex !== null && saved.isActive) {
+      this.ingredientsArray.at(rowIndex).patchValue({ ingredient: saved.id });
+      this.syncIngredientRow(rowIndex);
+      return;
+    }
+    this.ingredientsArray.controls.forEach((_, index) => this.syncIngredientRow(index));
   }
 
   associatedProductName(index: number): string | null {

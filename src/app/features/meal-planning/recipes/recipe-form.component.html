@@ -84,12 +84,18 @@
       </div>
     </div>
     <div class="card-surface p-lg space-y-md">
-      <div class="flex items-center justify-between">
+      <div class="flex flex-wrap items-center justify-between gap-sm">
         <h2 class="text-title-lg text-on-surface">{{ i18n.t('ingredients') }}</h2>
-        <button type="button" (click)="addIngredientRow()" class="btn-secondary flex items-center gap-1">
-          <span class="material-symbols-outlined text-[18px]">add</span>
-          {{ i18n.t('add') }}
-        </button>
+        <div class="flex flex-wrap items-center gap-sm">
+          <button type="button" (click)="openManageIngredients()" class="btn-secondary flex items-center gap-1">
+            <span class="material-symbols-outlined text-[18px]">tune</span>
+            {{ i18n.t('manageIngredients') }}
+          </button>
+          <button type="button" (click)="addIngredientRow()" class="btn-secondary flex items-center gap-1">
+            <span class="material-symbols-outlined text-[18px]">add</span>
+            {{ i18n.t('add') }}
+          </button>
+        </div>
       </div>
       <div formArrayName="ingredients" class="space-y-md">
         <div
@@ -98,7 +104,26 @@
           class="border border-outline-variant rounded-xl p-md space-y-sm">
           <div class="grid grid-cols-1 md:grid-cols-2 gap-md">
             <div>
-              <label class="text-label-lg text-on-surface-variant block mb-xs">{{ i18n.t('ingredient') }} *</label>
+              <div class="flex items-center justify-between gap-sm mb-xs">
+                <label class="text-label-lg text-on-surface-variant">{{ i18n.t('ingredient') }} *</label>
+                <div class="flex items-center gap-1">
+                  <button
+                    type="button"
+                    (click)="openCreateIngredient(i)"
+                    class="text-primary text-label-md hover:underline flex items-center gap-0.5"
+                    [attr.aria-label]="i18n.t('newIngredient')">
+                    <span class="material-symbols-outlined text-[18px]">add</span>
+                  </button>
+                  <button
+                    type="button"
+                    (click)="openEditSelectedIngredient(i)"
+                    [disabled]="!row.get('ingredient')?.value"
+                    class="text-primary text-label-md hover:underline flex items-center gap-0.5 disabled:opacity-40 disabled:pointer-events-none"
+                    [attr.aria-label]="i18n.t('editIngredient')">
+                    <span class="material-symbols-outlined text-[18px]">edit</span>
+                  </button>
+                </div>
+              </div>
               <select formControlName="ingredient" (change)="onIngredientChange(i)" class="input-outlined">
                 <option value="">—</option>
                 <option *ngFor="let ing of ingredients()" [value]="ing.id">{{ ing.name }}</option>
@@ -148,3 +173,14 @@
     </div>
   </div>
 </form>
+<app-ingredient-manage-dialog
+  *ngIf="showManageIngredients()"
+  (changed)="onIngredientsManaged($event)"
+  (closed)="closeManageIngredients()">
+</app-ingredient-manage-dialog>
+<app-ingredient-form-dialog
+  *ngIf="showIngredientForm()"
+  [ingredient]="ingredientFormTarget()"
+  (saved)="onIngredientFormSaved($event)"
+  (closed)="closeIngredientForm()">
+</app-ingredient-form-dialog>
