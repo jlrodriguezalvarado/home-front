@@ -8,3 +8,11 @@ export function urlBase64ToUint8Array(base64String: string): Uint8Array {
   }
   return output;
 }
+
+/** Safari/iOS is picky about TypedArray views; pass a clean ArrayBuffer copy. */
+export function vapidPublicKeyToBufferSource(base64String: string): ArrayBuffer {
+  const bytes = urlBase64ToUint8Array(base64String);
+  const copy = new Uint8Array(bytes.byteLength);
+  copy.set(bytes);
+  return copy.buffer;
+}

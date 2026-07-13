@@ -31,7 +31,8 @@ export class UserProfileMenuComponent implements OnInit {
   pushSubscribed = signal(false);
   pushLoading = signal(false);
   mediaPermissionLoading = signal<MediaPermissionKind | null>(null);
-  pushSupported = computed(() => this.push.isSupported());
+  pushSupported = computed(() => this.push.canUsePush());
+  pushNeedsInstall = computed(() => this.push.isSupported() && this.push.isIos() && !this.push.isStandalone());
   mediaSupported = computed(() => this.mediaPermissions.isSupported());
   cameraGranted = computed(() => this.mediaPermissions.cameraState() === 'granted');
   microphoneGranted = computed(() => this.mediaPermissions.microphoneState() === 'granted');
@@ -74,6 +75,10 @@ export class UserProfileMenuComponent implements OnInit {
 
   async togglePushNotifications(event: MouseEvent): Promise<void> {
     event.stopPropagation();
+    if (this.pushNeedsInstall()) {
+      this.toast.info(this.t('pushInstallPwaRequired'));
+      return;
+    }
     if (!this.pushSupported() || this.pushLoading()) return;
     this.pushLoading.set(true);
     try {
@@ -81,6 +86,8 @@ export class UserProfileMenuComponent implements OnInit {
         const removed = await this.push.unsubscribe();
         if (removed) {
           this.toast.success(this.t('pushSubscriptionRemoved'));
+        } else {
+          this.toast.error(this.t('pushSubscribeFailed'));
         }
       } else {
         const enabled = await this.push.subscribe();
@@ -88,6 +95,8 @@ export class UserProfileMenuComponent implements OnInit {
           this.toast.success(this.t('pushSubscriptionSaved'));
         } else if (Notification.permission === 'denied') {
           this.toast.error(this.t('notificationPermissionDenied'));
+        } else {
+          this.toast.error(this.t('pushSubscribeFailed'));
         }
       }
       await this.refreshPushSubscriptionState();

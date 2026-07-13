@@ -49,8 +49,19 @@
             [class.translate-x-0.5]="!pushSubscribed()"></span>
         </span>
       </button>
-      <p *ngIf="!pushSupported()" class="px-4 py-2 text-body-md text-on-surface-variant">
+      <button
+        *ngIf="pushNeedsInstall()"
+        type="button"
+        (click)="togglePushNotifications($event)"
+        class="profile-menu-item w-full text-left px-4 py-2.5 flex items-center gap-3 hover:bg-surface-container transition-colors">
+        <span class="material-symbols-outlined text-on-surface-variant text-[20px]">install_mobile</span>
+        <span class="text-label-lg text-on-surface flex-1">{{ t('enableNotifications') }}</span>
+      </button>
+      <p *ngIf="!pushSupported() && !pushNeedsInstall()" class="px-4 py-2 text-body-md text-on-surface-variant">
         {{ t('notificationsNotSupported') }}
+      </p>
+      <p *ngIf="pushNeedsInstall()" class="px-4 pb-2 text-body-md text-on-surface-variant">
+        {{ t('pushInstallPwaRequired') }}
       </p>
       <button
         *ngIf="mediaSupported()"

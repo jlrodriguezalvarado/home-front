@@ -15,18 +15,19 @@ La PWA usa `@angular/service-worker`. El service worker **solo funciona con HTTP
 
 ## 1. Configurar la URL del API
 
-Antes del build de producción, edita `src/environments/environment.ts`:
+El build de producción usa `src/environments/environment.prod.ts` (vía `fileReplacements` en `angular.json`):
 
 ```typescript
 export const environment = {
   production: true,
-  apiUrl: 'https://tu-dominio.com/api',
+  apiUrl: '/api',
+  wsUrl: 'wss://tu-dominio.com/ws',
 };
 ```
 
-`apiUrl` debe apuntar al endpoint base del backend **incluyendo** `/api`. La app también resuelve URLs de media quitando `/api` del origen (`resolveMediaUrl` en `src/app/core/api/api-url.ts`).
+Con el Nginx de ejemplo (mismo origen), `apiUrl: '/api'` y `wsUrl` derivado del host actual ya están listos. Si el API está en otro dominio, ajusta ambas URLs.
 
-> **Nota:** `angular.json` no define `fileReplacements` entre `environment.ts` y `environment.development.ts`. El build de producción usa siempre `environment.ts`. Ajusta ese archivo antes de desplegar.
+`apiUrl` debe apuntar al endpoint base del backend **incluyendo** `/api`. La app también resuelve URLs de media quitando `/api` del origen (`resolveMediaUrl` en `src/app/core/api/api-url.ts`).
 
 ## 2. Build de producción
 
@@ -76,9 +77,10 @@ Hay un ejemplo listo en [`deploy/nginx/home-manager.conf`](../deploy/nginx/home-
 ### Puntos críticos para una SPA Angular + PWA
 
 1. **Rutas del cliente:** todas las rutas (`/products`, `/finance/2026/6`, etc.) deben devolver `index.html` para que Angular Router las maneje.
-2. **Service worker sin caché:** `ngsw-worker.js` y `ngsw.json` no deben cachearse en el navegador ni en proxies; si no, las actualizaciones de la app no se detectan.
-3. **HTTPS:** obligatorio en producción para registro del service worker e instalación PWA.
-4. **Manifest:** servir `manifest.webmanifest` con `Content-Type: application/manifest+json`.
+2. **Service worker sin caché:** `sw.js`, `ngsw-worker.js` y `ngsw.json` no deben cachearse; si no, push y actualizaciones fallan tras un deploy.
+3. **WebSocket:** el bloque `location /ws/` con `Upgrade` es obligatorio para chat/notificaciones en tiempo real.
+4. **HTTPS:** obligatorio en producción para registro del service worker, instalación PWA y Web Push.
+5. **Manifest:** servir `manifest.webmanifest` con `Content-Type: application/manifest+json`.
 
 ### Escenario A — Frontend y API en el mismo dominio (recomendado)
 
@@ -172,10 +174,13 @@ No hace falta reiniciar Nginx salvo que hayas cambiado la configuración.
 |---|---|---|
 | 404 al recargar `/products` | Falta `try_files` SPA | Añadir `try_files $uri $uri/ /index.html` |
 | PWA no se instala | Sin HTTPS | Activar TLS |
-| App no actualiza tras deploy | `ngsw.json` cacheado | Headers `Cache-Control: no-cache` en SW y `ngsw.json` |
+| App no actualiza tras deploy | `ngsw.json` / `sw.js` cacheados | Headers `Cache-Control: no-cache` en `sw.js`, SW y `ngsw.json` |
 | API falla con CORS | API en otro origen | Proxy `/api/` en Nginx o CORS en backend |
 | Imágenes rotas | `apiUrl` incorrecto | `apiUrl` debe terminar en `/api`; media sale del origen sin `/api` |
 | SW no se registra | Build en modo dev o HTTP | Usar `build:prod` y HTTPS |
+| Push no llega (Android/iPhone) | VAPID sin configurar o sin permiso | Ver claves en API; en iPhone abrir PWA desde Inicio y pulsar Activar notificaciones |
+| Push iOS no disponible | Safari sin instalar | Añadir a Inicio; Web Push solo funciona en PWA instalada (iOS 16.4+) |
+| Chat WS no conecta | Falta proxy `/ws/` | Añadir bloque WebSocket en Nginx |
 
 ## Referencia rápida de scripts
 
