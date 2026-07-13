@@ -166,6 +166,7 @@ export class CartComponent implements OnInit, OnDestroy {
   }
 
   onBarcodeScanned(code: string): void {
+    this.closeBarcodeScanner();
     const commerceId = this.resolveBarcodeCommerceId();
     if (!commerceId) {
       this.toast.error(this.i18n.t('barcodeCommerceRequired'));

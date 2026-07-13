@@ -240,6 +240,7 @@ export class ProductListComponent implements OnInit, OnDestroy {
   }
 
   onBarcodeScanned(code: string): void {
+    this.closeBarcodeScanner();
     this.searchDraft = code;
     this.debouncedSearch = code;
     this.persistFilters();

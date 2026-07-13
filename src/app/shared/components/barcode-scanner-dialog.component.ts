@@ -43,7 +43,7 @@ export class BarcodeScannerDialogComponent implements OnInit, OnDestroy {
   }
 
   close(): void {
-    this.closed.emit();
+    void this.finish(false);
   }
 
   private async startScanner(): Promise<void> {
@@ -86,21 +86,40 @@ export class BarcodeScannerDialogComponent implements OnInit, OnDestroy {
     const normalized = code.trim();
     if (!normalized || this.scanLocked) return;
     this.scanLocked = true;
-    this.scanned.emit(normalized);
-    this.close();
+    void this.finish(true, normalized);
+  }
+
+  private async finish(fromScan: boolean, code?: string): Promise<void> {
+    await this.stopScanner();
+    if (fromScan && code) {
+      this.scanned.emit(code);
+      return;
+    }
+    this.closed.emit();
   }
 
   private async stopScanner(): Promise<void> {
-    if (!this.scanner) return;
+    if (!this.scanner) {
+      this.clearHost();
+      return;
+    }
     const scanner = this.scanner;
     this.scanner = undefined;
     try {
       if (scanner.isScanning) {
         await scanner.stop();
       }
-      scanner.clear();
+      await scanner.clear();
     } catch {
       // Camera may already be released when the dialog closes.
     }
+    this.clearHost();
+  }
+
+  private clearHost(): void {
+    const host = this.scannerHost?.nativeElement;
+    if (!host) return;
+    host.removeAttribute('id');
+    host.innerHTML = '';
   }
 }
