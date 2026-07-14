@@ -86,9 +86,10 @@ export class NotificationsService {
     } else {
       this.loadingMore.set(true);
     }
-    this.repo.list({ perPage: this.pageSize, page: this.nextPage }).subscribe({
+    this.repo.list({ perPage: this.pageSize, page: this.nextPage, isRead: false }).subscribe({
       next: (res) => {
-        const merged = reset ? res.results : [...this.items(), ...res.results];
+        const unreadResults = res.results.filter((item) => !item.isRead);
+        const merged = reset ? unreadResults : [...this.items(), ...unreadResults];
         this.items.set(merged);
         this.hasMore.set(!!res.next);
         this.nextPage += 1;
@@ -110,7 +111,7 @@ export class NotificationsService {
     }
     this.repo.markRead(notification.id).subscribe({
       next: (updated) => {
-        this.upsertNotification(updated);
+        this.removeNotification(updated.id);
         if (this.unreadCount() > 0) {
           this.unreadCount.update((count) => Math.max(0, count - 1));
         }
@@ -124,32 +125,35 @@ export class NotificationsService {
     this.repo.markAllRead().subscribe({
       next: () => {
         this.unreadCount.set(0);
-        this.items.update((items) => items.map((item) => ({
-          ...item,
-          isRead: true,
-          readAt: item.readAt ?? new Date().toISOString(),
-        })));
+        this.items.set([]);
       },
     });
   }
 
   private onNotificationCreated(notification: AppNotification): void {
+    if (notification.isRead) return;
     this.upsertNotification(notification);
-    if (!notification.isRead) {
-      this.unreadCount.update((count) => count + 1);
-      this.toast.show(notification.title, 'info');
-    }
+    this.unreadCount.update((count) => count + 1);
+    this.toast.show(notification.title, 'info');
   }
 
   private onNotificationUpdated(notification: AppNotification): void {
     const previous = this.items().find((item) => item.id === notification.id);
-    this.upsertNotification(notification);
-    if (previous && !previous.isRead && notification.isRead && this.unreadCount() > 0) {
-      this.unreadCount.update((count) => Math.max(0, count - 1));
+    if (notification.isRead) {
+      this.removeNotification(notification.id);
+      if (previous && !previous.isRead && this.unreadCount() > 0) {
+        this.unreadCount.update((count) => Math.max(0, count - 1));
+      }
+      return;
     }
+    this.upsertNotification(notification);
   }
 
   private upsertNotification(notification: AppNotification): void {
+    if (notification.isRead) {
+      this.removeNotification(notification.id);
+      return;
+    }
     this.items.update((items) => {
       const index = items.findIndex((item) => item.id === notification.id);
       if (index === -1) return [notification, ...items];
@@ -157,6 +161,10 @@ export class NotificationsService {
       next[index] = notification;
       return next;
     });
+  }
+
+  private removeNotification(id: string): void {
+    this.items.update((items) => items.filter((item) => item.id !== id));
   }
 
   private navigateForNotification(notification: AppNotification): void {
