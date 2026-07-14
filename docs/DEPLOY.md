@@ -105,6 +105,36 @@ sudo nginx -t
 sudo systemctl reload nginx
 ```
 
+
+```bash
+  # Soporte para rutas Angular (SPA fallback)
+  location / {
+    try_files $uri $uri/ /index.html;
+  }
+
+  # Cache de assets estáticos versionados
+  location ~* \.(?:css|js|jpg|jpeg|gif|png|svg|ico|webp|woff2?)$ {
+    expires 30d;
+    add_header Cache-Control "public, immutable";
+    try_files $uri =404;
+  }
+
+  location ~* (manifest\.webmanifest)$ {
+    add_header Cache-Control "no-cache, no-store, must-revalidate";
+  }
+
+  location /icons/ {
+    add_header Cache-Control "public, max-age=86400, must-revalidate";
+  }
+
+  location ~* ^/(sw\.js|ngsw-worker\.js|ngsw\.json|safety-worker\.js)$ {
+    add_header Cache-Control "no-cache, no-store, must-revalidate";
+    add_header Pragma "no-cache";
+    add_header Expires "0";
+    try_files $uri =404;
+  }
+```
+
 ## 6. HTTPS con Let's Encrypt (opcional)
 
 ```bash
