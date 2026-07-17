@@ -226,6 +226,7 @@ export const APP_STRINGS = {
   chatMediaUploadFailed: 'chatMediaUploadFailed',
   chatVoicePermissionDenied: 'chatVoicePermissionDenied',
   chatVoiceMaxSizeReached: 'chatVoiceMaxSizeReached',
+  priceComparisons: 'priceComparisons',
 } as const;
 
 export type AppStringKey = keyof typeof APP_STRINGS;
@@ -454,6 +455,7 @@ const EN: Record<AppStringKey, string> = {
   chatMediaUploadFailed: 'Could not upload file',
   chatVoicePermissionDenied: 'Microphone permission denied',
   chatVoiceMaxSizeReached: 'Voice message reached the maximum size and was cut',
+  priceComparisons: 'Price Comparisons',
 };
 
 const ES: Record<AppStringKey, string> = {
@@ -680,6 +682,7 @@ const ES: Record<AppStringKey, string> = {
   chatMediaUploadFailed: 'No se pudo subir el archivo',
   chatVoicePermissionDenied: 'Permiso de micrófono denegado',
   chatVoiceMaxSizeReached: 'La nota de voz alcanzó el tamaño máximo y se cortó',
+  priceComparisons: 'Comparativas de Precios',
 };
 
 @Injectable({

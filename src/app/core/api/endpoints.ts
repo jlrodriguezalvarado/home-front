@@ -35,6 +35,29 @@ export const API_ENDPOINTS = {
     list: '/exchange-rates/',
     detail: (id: string) => `/exchange-rates/${id}/`,
   },
+  priceComparisons: {
+    comparisons: {
+      list: '/price-comparisons/comparisons/',
+      detail: (id: string) => `/price-comparisons/comparisons/${id}/`,
+      report: (id: string) => `/price-comparisons/comparisons/${id}/report/`,
+    },
+    stores: {
+      list: '/price-comparisons/stores/',
+      detail: (id: string) => `/price-comparisons/stores/${id}/`,
+    },
+    categories: {
+      list: '/price-comparisons/categories/',
+      detail: (id: string) => `/price-comparisons/categories/${id}/`,
+    },
+    products: {
+      list: '/price-comparisons/products/',
+      detail: (id: string) => `/price-comparisons/products/${id}/`,
+    },
+    prices: {
+      list: '/price-comparisons/prices/',
+      detail: (id: string) => `/price-comparisons/prices/${id}/`,
+    },
+  },
   mealPlanning: {
     ingredients: {
       list: '/meal-planning/ingredients/',
