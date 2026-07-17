@@ -46,6 +46,7 @@ export class AppShellComponent {
     { path: '/meal-planning', label: 'mealPlanning', icon: 'restaurant_menu' },
     { path: '/finance', label: 'finances', icon: 'account_balance_wallet' },
     { path: '/mosaic', label: 'instagramTool', icon: 'grid_view' },
+    { path: '/notes', label: 'notesAndReminders', icon: 'note_stack' },
     { path: '/chat', label: 'chat', icon: 'chat' },
   ];
 

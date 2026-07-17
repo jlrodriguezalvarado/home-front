@@ -69,6 +69,10 @@ export const routes: Routes = [
         loadChildren: () => import('./features/chat/chat.routes').then(m => m.CHAT_ROUTES),
       },
       {
+        path: 'notes',
+        loadChildren: () => import('./features/notes/notes.routes').then(m => m.NOTES_ROUTES),
+      },
+      {
         path: 'profile',
         loadComponent: () => import('./features/profile/profile-settings.component').then(m => m.ProfileSettingsComponent),
       }

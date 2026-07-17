@@ -82,6 +82,15 @@ export const API_ENDPOINTS = {
     markRead: (id: string) => `/notifications/${id}/mark-read/`,
     markAllRead: '/notifications/mark-all-read/',
   },
+  notes: {
+    list: '/notes/notes/',
+    detail: (id: string) => `/notes/notes/${id}/`,
+    pin: (id: string) => `/notes/notes/${id}/pin/`,
+  },
+  reminders: {
+    list: '/notes/reminders/',
+    detail: (id: string) => `/notes/reminders/${id}/`,
+  },
   chat: {
     conversations: {
       list: '/chat/conversations/',
