@@ -53,6 +53,10 @@ export const routes: Routes = [
         loadComponent: () => import('./features/exchange/exchange-dashboard.component').then(m => m.ExchangeDashboardComponent)
       },
       {
+        path: 'price-comparisons',
+        loadChildren: () => import('./features/price-comparisons/price-comparisons.routes').then(m => m.PRICE_COMPARISONS_ROUTES)
+      },
+      {
         path: 'meal-planning',
         loadChildren: () => import('./features/meal-planning/meal-planning.routes').then(m => m.MEAL_PLANNING_ROUTES),
       },

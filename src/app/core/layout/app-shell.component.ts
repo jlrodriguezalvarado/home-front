@@ -43,6 +43,7 @@ export class AppShellComponent {
     { path: '/purchases', label: 'orders', icon: 'receipt_long' },
     { path: '/commerces', label: 'stores', icon: 'storefront' },
     { path: '/currencies', label: 'currencies', icon: 'payments' },
+    { path: '/price-comparisons', label: 'priceComparisons', icon: 'compare_arrows' },
     { path: '/meal-planning', label: 'mealPlanning', icon: 'restaurant_menu' },
     { path: '/finance', label: 'finances', icon: 'account_balance_wallet' },
     { path: '/mosaic', label: 'instagramTool', icon: 'grid_view' },
