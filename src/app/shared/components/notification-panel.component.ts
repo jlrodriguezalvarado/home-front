@@ -45,6 +45,7 @@ export class NotificationPanelComponent {
   iconFor(notification: AppNotification): string {
     if (notification.notificationType === 'chat.message') return 'chat';
     if (notification.notificationType === 'product.listing.updated') return 'inventory_2';
+    if (notification.notificationType === 'reminder.due') return 'alarm';
     return 'notifications';
   }
 

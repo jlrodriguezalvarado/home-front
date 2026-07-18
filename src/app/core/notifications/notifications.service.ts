@@ -182,6 +182,11 @@ export class NotificationsService {
       }
       return;
     }
+    if (notification.notificationType === 'reminder.due') {
+      const reminderId = data['reminder_id'] ?? data['reminderId'];
+      void this.router.navigate(reminderId ? ['/notes/reminders', String(reminderId), 'edit'] : ['/notes/reminders']);
+      return;
+    }
     if (notification.notificationType === 'product.listing.updated') {
       const commerceId = data['commerce_id'] ?? data['commerceId'];
       const productId = data['product_id'] ?? data['productId'];

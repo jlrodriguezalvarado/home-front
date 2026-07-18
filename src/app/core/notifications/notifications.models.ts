@@ -1,4 +1,4 @@
-export type NotificationType = 'chat.message' | 'product.listing.updated';
+export type NotificationType = 'chat.message' | 'product.listing.updated' | 'reminder.due';
 
 export interface NotificationApi {
   id: string;
