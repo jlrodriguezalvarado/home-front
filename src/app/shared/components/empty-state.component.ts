@@ -5,16 +5,11 @@ import { CommonModule } from '@angular/common';
   selector: 'app-empty-state',
   standalone: true,
   imports: [CommonModule],
-  template: `
-    <div class="flex flex-col items-center justify-center py-20 text-center space-y-4">
-      <div class="text-6xl">{{ icon }}</div>
-      <h3 class="text-xl font-bold">{{ title }}</h3>
-      <p class="text-gray-500 max-w-xs">{{ message }}</p>
-    </div>
-  `
+  templateUrl: './empty-state.component.html',
+  styleUrl: './empty-state.component.scss',
 })
 export class EmptyStateComponent {
-  @Input() icon = '📂';
+  @Input() icon = 'inbox';
   @Input() title = 'No results found';
   @Input() message = 'Try adjusting your search or filters.';
 }

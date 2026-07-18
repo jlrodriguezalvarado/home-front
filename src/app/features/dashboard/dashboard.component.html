@@ -1,0 +1,227 @@
+
+
+<div class="space-y-xl">
+
+  <section class="flex flex-col md:flex-row md:items-end justify-between gap-md">
+
+    <div>
+
+      <h2 class="text-headline-lg md:text-headline-lg text-headline-lg-mobile text-on-surface">{{ t('welcomeMessage') }}</h2>
+
+      <p class="text-body-lg text-on-surface-variant">{{ t('welcomeSubtitle') }}</p>
+
+    </div>
+
+    <a routerLink="/products" class="btn-primary flex items-center gap-2 w-fit">
+
+      <span class="material-symbols-outlined text-[20px]">add</span>
+
+      {{ t('newEntry') }}
+
+    </a>
+
+  </section>
+
+
+
+  <section class="grid grid-cols-1 md:grid-cols-12 gap-lg">
+
+    <div class="md:col-span-4 card-surface p-lg flex flex-col justify-between overflow-hidden relative group">
+
+      <div class="z-10">
+
+        <span class="text-on-surface-variant text-label-lg uppercase tracking-wider">{{ t('totalCartValue') }}</span>
+
+        <div class="mt-sm flex items-baseline gap-2">
+
+          <span class="text-display-lg text-primary tabular-nums">{{ cartTotalLabel() }}</span>
+
+          <span class="text-secondary text-label-md flex items-center" *ngIf="cartStoreCount() > 0">
+
+            <span class="material-symbols-outlined text-[14px]">store</span>
+
+            {{ cartStoreCount() }}
+
+          </span>
+
+        </div>
+
+      </div>
+
+      <div class="mt-lg z-10">
+
+        <p class="text-on-surface-variant text-body-md">
+
+          {{ cart.visibleQuantityCountFor(cart.items()) }} {{ t('products').toLowerCase() }}
+
+          <span *ngIf="cartStoreCount() > 0"> · {{ cartStoreCount() }} {{ t('stores').toLowerCase() }}</span>
+
+        </p>
+
+      </div>
+
+      <div class="absolute -right-4 -bottom-4 opacity-5 group-hover:opacity-10 transition-opacity">
+
+        <span class="material-symbols-outlined text-[120px]">shopping_basket</span>
+
+      </div>
+
+    </div>
+
+
+
+    <div class="md:col-span-8 card-surface p-lg">
+
+      <div class="flex justify-between items-center mb-lg">
+
+        <h3 class="text-title-lg text-on-surface">{{ t('monthlySpending') }}</h3>
+
+        <a routerLink="/finance" class="text-primary text-label-lg hover:underline">{{ t('viewAll') }}</a>
+
+      </div>
+
+      <div class="space-y-xl">
+
+        <div>
+
+          <div class="flex justify-between mb-sm">
+
+            <span class="text-label-lg text-on-surface-variant">{{ t('shoppingCart') }}</span>
+
+            <span class="text-numeral-md tabular-nums text-on-surface">{{ cartTotalLabel() }}</span>
+
+          </div>
+
+          <div class="w-full bg-surface-container h-3 rounded-full overflow-hidden">
+
+            <div class="bg-primary h-full rounded-full transition-all duration-1000" [style.width.%]="cartProgress()"></div>
+
+          </div>
+
+        </div>
+
+        <div>
+
+          <div class="flex justify-between mb-sm">
+
+            <span class="text-label-lg text-on-surface-variant">{{ t('purchaseHistory') }}</span>
+
+            <span class="text-numeral-md tabular-nums text-on-surface">{{ purchases().length }} {{ t('orders').toLowerCase() }}</span>
+
+          </div>
+
+          <div class="w-full bg-surface-container h-3 rounded-full overflow-hidden">
+
+            <div class="bg-secondary h-full rounded-full transition-all duration-1000" [style.width.%]="purchaseProgress()"></div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+
+
+    <div class="md:col-span-7 card-surface flex flex-col overflow-hidden">
+
+      <div class="p-lg border-b border-outline-variant flex justify-between items-center">
+
+        <h3 class="text-title-lg text-on-surface">{{ t('recentPurchases') }}</h3>
+
+        <a routerLink="/purchases" class="text-primary text-label-lg hover:underline">{{ t('viewAll') }}</a>
+
+      </div>
+
+      <div *ngIf="purchases().length === 0" class="p-lg text-on-surface-variant text-body-md text-center">
+
+        {{ i18n.lang() === 'en' ? 'No purchases yet' : 'Sin compras aún' }}
+
+      </div>
+
+      <div class="divide-y divide-outline-variant">
+
+        <div *ngFor="let p of purchases().slice(0, 3)"
+
+             class="p-md flex items-center gap-md hover:bg-surface-container transition-colors cursor-pointer"
+
+             [routerLink]="['/purchases/detail']"
+
+             [queryParams]="{id: p.id}">
+
+          <div class="w-12 h-12 rounded-lg bg-surface-container-highest flex items-center justify-center text-primary">
+
+            <span class="material-symbols-outlined">shopping_bag</span>
+
+          </div>
+
+          <div class="flex-grow min-w-0">
+
+            <p class="text-label-lg text-on-surface truncate">{{ p.commerceName }}</p>
+
+            <p class="text-body-md text-on-surface-variant">{{ p.date | date:'mediumDate' }}</p>
+
+          </div>
+
+          <div class="text-right">
+
+            <p class="text-numeral-md tabular-nums text-on-surface">{{ formatMoney(p.total) }}</p>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+
+
+    <div class="md:col-span-5 card-surface p-lg">
+
+      <h3 class="text-title-lg text-on-surface mb-lg">{{ t('quickActions') }}</h3>
+
+      <div class="grid grid-cols-2 gap-md">
+
+        <a *ngFor="let action of quickActions"
+
+           [routerLink]="action.path"
+
+           class="flex flex-col items-center justify-center p-lg rounded-xl bg-surface-container border border-outline-variant hover:border-primary hover:bg-primary-container/10 transition-all group">
+
+          <span class="material-symbols-outlined text-[32px] text-primary group-hover:scale-110 transition-transform mb-sm">{{ action.icon }}</span>
+
+          <span class="text-label-lg text-on-surface-variant group-hover:text-primary">{{ t(action.label) }}</span>
+
+        </a>
+
+      </div>
+
+    </div>
+
+  </section>
+
+
+
+  <section class="relative rounded-xxl overflow-hidden bg-primary text-on-primary p-xl min-h-[240px] flex items-center">
+
+    <div class="relative z-10 max-w-lg">
+
+      <h2 class="text-headline-lg mb-md">{{ i18n.lang() === 'en' ? 'Manage your home finances with ease.' : 'Gestiona las finanzas de tu hogar con facilidad.' }}</h2>
+
+      <p class="text-body-lg mb-lg opacity-90">
+
+        {{ i18n.lang() === 'en' ? 'Track expenses, currencies, and purchases all in one place.' : 'Controla gastos, divisas y compras en un solo lugar.' }}
+
+      </p>
+
+      <a routerLink="/finance" class="btn-secondary inline-flex">{{ t('finances') }}</a>
+
+    </div>
+
+    <div class="absolute inset-0 z-0 bg-gradient-to-r from-primary via-primary/80 to-transparent"></div>
+
+  </section>
+
+</div>

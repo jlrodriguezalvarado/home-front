@@ -1,0 +1,28 @@
+<div class="flex items-center gap-sm min-w-[180px]">
+  <button
+    type="button"
+    (click)="togglePlayback()"
+    class="flex items-center justify-center w-9 h-9 rounded-full shrink-0"
+    [class.bg-on-primary]="isOwn"
+    [class.text-primary]="isOwn"
+    [class.bg-primary]="!isOwn"
+    [class.text-on-primary]="!isOwn">
+    <span class="material-symbols-outlined text-[20px]">
+      {{ isPlaying() ? 'pause' : 'play_arrow' }}
+    </span>
+  </button>
+  <div class="flex-1 min-w-0">
+    <div class="h-1 rounded-full overflow-hidden"
+      [class.bg-on-primary]="isOwn"
+      [class.opacity-30]="isOwn"
+      [class.bg-outline-variant]="!isOwn">
+      <div
+        class="h-full rounded-full transition-all"
+        [class.bg-on-primary]="isOwn"
+        [class.bg-primary]="!isOwn"
+        [style.width.%]="progress()">
+      </div>
+    </div>
+    <div class="text-label-md opacity-70 mt-xs">{{ formattedCurrent() }} / {{ formattedDuration() }}</div>
+  </div>
+</div>

@@ -1,0 +1,213 @@
+
+<div class="space-y-lg">
+  <div class="flex items-center justify-between gap-md">
+    <div>
+      <h2 class="text-title-lg text-on-surface capitalize">{{ feature }}</h2>
+      <p class="text-body-md text-on-surface-variant tabular-nums">
+        {{ i18n.lang() === 'en' ? 'List total' : 'Total de lista' }}: {{ formatMoney(listTotal()) }}
+      </p>
+    </div>
+    <div class="flex items-center gap-sm shrink-0">
+      <a *ngIf="feature === 'initial-expenses'"
+         [routerLink]="['/finance', year, month, 'initial-expenses', 'initial-expense-categories']"
+         class="p-2 border border-outline-variant rounded-xl hover:bg-surface-container transition-colors"
+         [title]="i18n.lang() === 'en' ? 'Initial expense categories' : 'Categorías de gasto inicial'">
+        <span class="material-symbols-outlined">label</span>
+      </a>
+      <a *ngIf="feature === 'income'"
+         routerLink="/finance/income-accounts"
+         class="p-2 border border-outline-variant rounded-xl hover:bg-surface-container transition-colors"
+         [title]="i18n.lang() === 'en' ? 'Income accounts' : 'Cuentas de ingreso'">
+        <span class="material-symbols-outlined">account_balance_wallet</span>
+      </a>
+      <a *ngIf="feature === 'savings'"
+         routerLink="/finance/savings-account-types"
+         class="p-2 border border-outline-variant rounded-xl hover:bg-surface-container transition-colors"
+         [title]="i18n.lang() === 'en' ? 'Savings account types' : 'Tipos de cuenta de ahorro'">
+        <span class="material-symbols-outlined">savings</span>
+      </a>
+      <button (click)="openDialog()" class="btn-primary flex items-center gap-2">
+        <span class="material-symbols-outlined text-[20px]">add</span>
+        {{ i18n.t('newEntry') }}
+      </button>
+    </div>
+  </div>
+
+  <ng-template #entryRow let-item="item">
+    <div class="p-md flex justify-between items-center gap-md"
+         [class.cash-entry-row]="item.isCash"
+         [class.pending-entry-row]="showSpendStatus() && !item.isSpent"
+         [class.spent-entry-row]="showSpendStatus() && item.isSpent && item.color"
+         [style.--spent-color]="showSpendStatus() && item.isSpent && item.color ? item.color : null">
+      <div class="flex-1 cursor-pointer min-w-0" (click)="openDialog(item)">
+        <div class="flex items-center gap-sm min-w-0">
+          <span class="text-label-lg text-on-surface truncate">{{ item.description }}</span>
+          <span *ngIf="item.isRecurring"
+                class="shrink-0 text-label-sm px-2 py-0.5 rounded-full border border-primary/40 text-primary"
+                [title]="i18n.lang() === 'en' ? 'Recurring expense' : 'Gasto recurrente'">
+            <span class="material-symbols-outlined text-[14px] align-middle">repeat</span>
+          </span>
+          <span *ngIf="showSpendStatus() && !item.isSpent"
+                class="shrink-0 text-label-sm px-2 py-0.5 rounded-full border border-outline-variant text-on-surface-variant">
+            {{ i18n.lang() === 'en' ? 'Pending' : 'Pendiente' }}
+          </span>
+          <span *ngIf="showSpendStatus() && item.isSpent && item.color"
+                class="shrink-0 w-3 h-3 rounded-full border border-outline-variant"
+                [style.background-color]="item.color"
+                [title]="i18n.lang() === 'en' ? 'Registered expense' : 'Gasto registrado'"></span>
+        </div>
+        <div *ngIf="entrySubtitle(item)" class="text-body-md text-on-surface-variant truncate">{{ entrySubtitle(item) }}</div>
+      </div>
+      <div class="flex items-center gap-sm shrink-0">
+        <div class="text-numeral-md tabular-nums font-semibold"
+             [class.text-error]="isExpense"
+             [class.text-secondary]="!isExpense">
+          {{ formatMoney(item.amount) }}
+        </div>
+        <button type="button"
+                (click)="openDialog(item)"
+                class="text-on-surface-variant hover:opacity-80 p-1"
+                [title]="i18n.lang() === 'en' ? 'Edit entry' : 'Editar registro'">
+          <span class="material-symbols-outlined text-[20px]">edit</span>
+        </button>
+        <button type="button"
+                (click)="deleteEntry(item.id)"
+                class="text-error hover:opacity-80 p-1"
+                [title]="i18n.lang() === 'en' ? 'Delete entry' : 'Eliminar registro'">
+          <span class="material-symbols-outlined text-[20px]">delete</span>
+        </button>
+      </div>
+    </div>
+  </ng-template>
+
+  <div *ngIf="loading()" class="text-center py-xl text-on-surface-variant text-body-md">
+    {{ i18n.lang() === 'en' ? 'Loading entries...' : 'Cargando registros...' }}
+  </div>
+
+  <ng-container *ngIf="!loading()">
+  <div *ngIf="showGroupedByCategory(); else flatList" class="space-y-md">
+    <div *ngFor="let group of groupedEntries()" class="card-surface overflow-hidden">
+      <div class="px-md py-sm bg-surface-container flex justify-between items-center gap-md border-b border-outline-variant">
+        <span class="text-label-lg text-on-surface font-medium">{{ group.name }}</span>
+        <span class="text-label-md text-on-surface-variant tabular-nums">{{ formatMoney(group.total) }}</span>
+      </div>
+      <div class="divide-y divide-outline-variant">
+        <ng-container *ngFor="let item of group.items" [ngTemplateOutlet]="entryRow" [ngTemplateOutletContext]="{ item: item }"></ng-container>
+      </div>
+    </div>
+    <div *ngIf="groupedEntries().length === 0" class="card-surface p-xl text-center text-on-surface-variant text-body-md">
+      {{ i18n.lang() === 'en' ? 'No entries' : 'Sin registros' }}
+    </div>
+  </div>
+
+  <ng-template #flatList>
+    <div class="card-surface divide-y divide-outline-variant overflow-hidden">
+      <ng-container *ngFor="let item of entries()" [ngTemplateOutlet]="entryRow" [ngTemplateOutletContext]="{ item: item }"></ng-container>
+      <div *ngIf="entries().length === 0" class="p-xl text-center text-on-surface-variant text-body-md">
+        {{ i18n.lang() === 'en' ? 'No entries' : 'Sin registros' }}
+      </div>
+    </div>
+  </ng-template>
+  </ng-container>
+
+  <div *ngIf="showDialog" class="fixed inset-0 bg-black/50 flex items-center justify-center p-md z-50">
+    <div class="bg-surface-container-lowest w-full max-w-md p-xl rounded-[24px] border border-outline-variant shadow-card-hover max-h-[90vh] overflow-y-auto">
+      <h2 class="text-title-lg text-on-surface mb-lg">
+        {{ editingId
+          ? (i18n.lang() === 'en' ? 'Edit entry' : 'Editar registro')
+          : (i18n.lang() === 'en' ? 'Add entry' : 'Agregar registro') }}
+      </h2>
+      <div class="space-y-md"
+           appDialogForm
+           [dialogSubmitDisabled]="saving || !canSave()"
+           (dialogSubmit)="save()">
+        <div *ngIf="showCategoryField()">
+          <label class="text-label-lg text-on-surface-variant block mb-xs">
+            {{ i18n.t('category') }}<span *ngIf="isRequired(feature, 'categoryId')" class="text-error"> *</span>
+          </label>
+          <select [(ngModel)]="form.categoryId" class="input-outlined w-full" [required]="isRequired(feature, 'categoryId')">
+            <option value="">{{ i18n.lang() === 'en' ? 'Select category' : 'Seleccionar categoría' }}</option>
+            <option *ngFor="let cat of categories()" [value]="cat.id">{{ cat.name }}</option>
+          </select>
+        </div>
+        <div *ngIf="showSavingsTypeField()">
+          <label class="text-label-lg text-on-surface-variant block mb-xs">
+            {{ i18n.lang() === 'en' ? 'Savings account type' : 'Tipo de cuenta de ahorro' }}
+            <span *ngIf="isRequired(feature, 'savingsAccountTypeId')" class="text-error"> *</span>
+          </label>
+          <select *ngIf="categories().length > 0"
+                  [(ngModel)]="form.savingsAccountTypeId"
+                  class="input-outlined w-full"
+                  [required]="isRequired(feature, 'savingsAccountTypeId')">
+            <option value="">{{ i18n.lang() === 'en' ? 'Select type' : 'Seleccionar tipo' }}</option>
+            <option *ngFor="let cat of categories()" [value]="cat.id">{{ cat.name }}</option>
+          </select>
+          <p *ngIf="categories().length === 0" class="text-body-md text-on-surface-variant space-y-sm">
+            {{ i18n.lang() === 'en'
+              ? 'No active savings account types yet.'
+              : 'Aún no hay tipos de cuenta de ahorro activos.' }}
+            <a routerLink="/finance/savings-account-types/new"
+               (click)="closeDialog()"
+               class="inline-flex items-center gap-1 text-primary hover:underline">
+              <span class="material-symbols-outlined text-[18px]">add</span>
+              {{ i18n.lang() === 'en' ? 'Create savings account type' : 'Crear tipo de cuenta de ahorro' }}
+            </a>
+          </p>
+        </div>
+        <div *ngIf="showIncomeAccountField()">
+          <label class="text-label-lg text-on-surface-variant block mb-xs">
+            {{ i18n.lang() === 'en' ? 'Income account' : 'Cuenta de ingreso' }}
+            <span *ngIf="isRequired(feature, 'incomeAccountId')" class="text-error"> *</span>
+          </label>
+          <select [(ngModel)]="form.incomeAccountId" class="input-outlined w-full" [required]="isRequired(feature, 'incomeAccountId')">
+            <option value="">{{ i18n.lang() === 'en' ? 'Select account' : 'Seleccionar cuenta' }}</option>
+            <option *ngFor="let cat of categories()" [value]="cat.id">{{ cat.name }}</option>
+          </select>
+        </div>
+        <div *ngIf="feature !== 'income'">
+          <label class="text-label-lg text-on-surface-variant block mb-xs">
+            {{ i18n.lang() === 'en' ? 'Name' : 'Nombre' }}
+            <span *ngIf="isRequired(feature, 'description')" class="text-error"> *</span>
+          </label>
+          <input type="text" [(ngModel)]="form.description" class="input-outlined w-full" [required]="isRequired(feature, 'description')">
+        </div>
+        <div>
+          <label class="text-label-lg text-on-surface-variant block mb-xs">
+            {{ i18n.lang() === 'en' ? 'Amount' : 'Monto' }}
+            <span class="text-error"> *</span>
+          </label>
+          <input type="text" inputmode="decimal" [(ngModel)]="form.amount" class="input-outlined w-full" required>
+        </div>
+        <div *ngIf="showIsCashField()" class="flex items-center gap-sm">
+          <input type="checkbox" id="isCash" [(ngModel)]="form.isCash" class="rounded">
+          <label for="isCash" class="text-label-lg text-on-surface-variant">
+            {{ i18n.lang() === 'en' ? 'Cash payment' : 'Pago en efectivo' }}
+          </label>
+        </div>
+        <div *ngIf="showIsRecurringField()" class="flex items-center gap-sm">
+          <input type="checkbox" id="isRecurring" [(ngModel)]="form.isRecurring" class="rounded">
+          <label for="isRecurring" class="text-label-lg text-on-surface-variant">
+            {{ i18n.lang() === 'en' ? 'Recurring expense' : 'Gasto recurrente' }}
+          </label>
+        </div>
+        <div *ngIf="showNotesField()">
+          <label class="text-label-lg text-on-surface-variant block mb-xs">
+            {{ i18n.lang() === 'en' ? 'Notes (optional)' : 'Notas (opcional)' }}
+          </label>
+          <textarea [(ngModel)]="form.notes"
+                    rows="2"
+                    maxlength="500"
+                    class="input-outlined w-full"></textarea>
+        </div>
+        <div class="flex gap-md pt-md">
+          <button (click)="closeDialog()" class="flex-1 py-3 border border-outline-variant rounded-xl text-label-lg">
+            {{ i18n.t('cancel') }}
+          </button>
+          <button (click)="save()" [disabled]="saving || !canSave()" class="flex-1 btn-primary py-3 disabled:opacity-50">
+            {{ i18n.t('save') }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

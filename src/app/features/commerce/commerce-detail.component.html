@@ -1,0 +1,113 @@
+
+<app-loading-state *ngIf="loading() && !commerce()"></app-loading-state>
+<app-error-state *ngIf="error()" (retry)="retryLoad()"></app-error-state>
+
+<div class="space-y-lg" *ngIf="commerce() as c">
+  <div class="flex items-center gap-sm min-w-0">
+    <button type="button"
+            (click)="back()"
+            class="p-2 border border-outline-variant rounded-xl hover:bg-surface-container transition-colors shrink-0 text-on-surface">
+      <span class="material-symbols-outlined">arrow_back</span>
+    </button>
+    <div class="flex items-center gap-md min-w-0 flex-1">
+      <div class="w-10 h-10 rounded-xl bg-surface-container flex items-center justify-center shrink-0 overflow-hidden">
+        <img *ngIf="c.logo" [src]="c.logo" [alt]="c.name" class="w-full h-full object-cover">
+        <span *ngIf="!c.logo" class="material-symbols-outlined text-[24px] text-on-surface-variant">storefront</span>
+      </div>
+      <div class="min-w-0">
+        <h1 class="page-title truncate">{{ c.name }}</h1>
+        <div *ngIf="c.currencySymbol" class="text-body-md text-on-surface-variant tabular-nums">{{ c.currencySymbol }}</div>
+      </div>
+    </div>
+    <span *ngIf="c.urlsProcessing"
+          class="inline-flex items-center gap-xs px-sm py-xs rounded-full bg-primary-container text-on-primary-container text-label-md shrink-0">
+      <span class="material-symbols-outlined text-[16px] animate-spin">progress_activity</span>
+      {{ i18n.t('processing') }}
+    </span>
+  </div>
+
+  <div class="flex flex-wrap gap-sm">
+    <button type="button"
+            class="btn-primary py-2 px-md flex items-center gap-xs disabled:opacity-50"
+            [disabled]="!canRunBatch()"
+            (click)="onRunScrapingBatch()">
+      <span class="material-symbols-outlined text-[20px]">play_circle</span>
+      {{ i18n.t('processAll') }}
+    </button>
+    <button *ngIf="c.reprocessStrategy"
+            type="button"
+            class="btn-secondary py-2 px-md flex items-center gap-xs disabled:opacity-50"
+            [disabled]="!canReprocess() || isReprocessing()"
+            [title]="showReprocessWarning() ? i18n.t('reprocessAlreadyToday') : ''"
+            (click)="onReprocessProductUrls()">
+      <span class="material-symbols-outlined text-[20px]"
+            [class.animate-spin]="isReprocessing()">sync</span>
+      {{ i18n.t('reprocessProductUrls') }}
+    </button>
+    <span *ngIf="showReprocessWarning()"
+          class="inline-flex items-center gap-xs text-label-md text-on-surface-variant">
+      <span class="material-symbols-outlined text-[18px]">info</span>
+      {{ i18n.t('reprocessAlreadyToday') }}
+    </span>
+  </div>
+
+  <div *ngIf="c.activeJobs.length > 0" class="card-surface p-lg space-y-md">
+    <h2 class="text-headline-sm text-on-surface">{{ i18n.t('activeJobs') }}</h2>
+    <div class="divide-y divide-outline-variant">
+      <div *ngFor="let job of c.activeJobs" class="py-sm flex flex-wrap items-center justify-between gap-sm">
+        <div class="min-w-0">
+          <div class="text-label-lg text-on-surface">{{ job.jobType }}</div>
+          <div class="text-body-md text-on-surface-variant">{{ jobStatusLabel(job.status) }}</div>
+        </div>
+        <div *ngIf="job.startedAt" class="text-body-md text-on-surface-variant tabular-nums">
+          {{ job.startedAt | date:'short' }}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card-surface overflow-hidden">
+    <div class="p-lg border-b border-outline-variant">
+      <h2 class="text-headline-sm text-on-surface">{{ i18n.t('sourceUrls') }}</h2>
+    </div>
+    <div *ngIf="c.sourceUrls.length === 0" class="p-lg text-body-md text-on-surface-variant">
+      {{ i18n.t('noSourceUrls') }}
+    </div>
+    <div *ngIf="c.sourceUrls.length > 0" class="divide-y divide-outline-variant">
+      <div *ngFor="let url of c.sourceUrls" class="p-lg space-y-sm">
+        <div class="flex flex-wrap items-start justify-between gap-md">
+          <div class="min-w-0 flex-1 space-y-xs">
+            <div class="flex flex-wrap items-center gap-sm">
+              <span class="text-label-lg text-on-surface">{{ url.name }}</span>
+              <span class="inline-flex items-center px-xs py-0.5 rounded-full text-label-md"
+                    [class.bg-primary-container]="url.isActive"
+                    [class.text-on-primary-container]="url.isActive"
+                    [class.bg-surface-container]="!url.isActive"
+                    [class.text-on-surface-variant]="!url.isActive">
+                {{ url.isActive ? i18n.t('active') : i18n.t('inactive') }}
+              </span>
+              <span *ngIf="url.isProcessing"
+                    class="inline-flex items-center gap-xs px-sm py-xs rounded-full bg-primary-container text-on-primary-container text-label-md">
+                <span class="material-symbols-outlined text-[14px] animate-spin">progress_activity</span>
+                {{ i18n.t('processing') }}
+              </span>
+            </div>
+            <div class="text-body-md text-on-surface-variant break-all">{{ url.url }}</div>
+            <div class="text-body-md text-on-surface-variant">{{ i18n.t('sourceType') }}: {{ url.sourceType }}</div>
+            <div *ngIf="url.latestJob" class="text-body-md text-on-surface-variant">
+              {{ i18n.t('lastJob') }}: {{ jobStatusLabel(url.latestJob.status) }}
+              <span *ngIf="url.latestJob.finishedAt"> · {{ url.latestJob.finishedAt | date:'short' }}</span>
+            </div>
+          </div>
+          <button type="button"
+                  class="btn-secondary py-2 px-md flex items-center gap-xs shrink-0 disabled:opacity-50"
+                  [disabled]="!canProcessSourceUrl(url)"
+                  (click)="onProcessSourceUrl(url)">
+            <span class="material-symbols-outlined text-[18px]">play_arrow</span>
+            {{ i18n.t('processUrl') }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

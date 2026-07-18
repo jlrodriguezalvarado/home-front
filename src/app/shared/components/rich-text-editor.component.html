@@ -1,0 +1,34 @@
+<div class="rich-text-editor" [class.rich-text-editor--disabled]="disabled">
+  <div class="rich-text-editor__toolbar" role="toolbar" aria-label="Formatting">
+    <button type="button" class="rich-text-editor__btn" [disabled]="disabled" (mousedown)="runAction('bold', $event)" title="Bold">
+      <span class="material-symbols-outlined text-[18px]">format_bold</span>
+    </button>
+    <button type="button" class="rich-text-editor__btn" [disabled]="disabled" (mousedown)="runAction('italic', $event)" title="Italic">
+      <span class="material-symbols-outlined text-[18px]">format_italic</span>
+    </button>
+    <button type="button" class="rich-text-editor__btn" [disabled]="disabled" (mousedown)="runAction('underline', $event)" title="Underline">
+      <span class="material-symbols-outlined text-[18px]">format_underlined</span>
+    </button>
+    <span class="rich-text-editor__divider"></span>
+    <button type="button" class="rich-text-editor__btn" [disabled]="disabled" (mousedown)="runAction('bulletList', $event)" title="Bullet list">
+      <span class="material-symbols-outlined text-[18px]">format_list_bulleted</span>
+    </button>
+    <button type="button" class="rich-text-editor__btn" [disabled]="disabled" (mousedown)="runAction('orderedList', $event)" title="Numbered list">
+      <span class="material-symbols-outlined text-[18px]">format_list_numbered</span>
+    </button>
+    <span class="rich-text-editor__divider"></span>
+    <button type="button" class="rich-text-editor__btn" [disabled]="disabled" (mousedown)="runAction('link', $event)" title="Link">
+      <span class="material-symbols-outlined text-[18px]">link</span>
+    </button>
+  </div>
+  <div
+    #editor
+    class="rich-text-editor__content rich-text-content"
+    [attr.contenteditable]="!disabled"
+    [attr.data-placeholder]="placeholder"
+    [style.min-height]="minHeight"
+    (input)="onInput()"
+    (blur)="onBlur()"
+    (paste)="onPaste($event)">
+  </div>
+</div>

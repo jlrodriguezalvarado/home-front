@@ -1,0 +1,28 @@
+<div class="space-y-md" appDialogForm (dialogSubmit)="save()">
+  <div>
+    <label class="text-label-lg text-on-surface-variant block mb-xs">{{ i18n.t('contactDisplayName') }}</label>
+    <input
+      type="text"
+      [ngModel]="displayNameDraft()"
+      (ngModelChange)="displayNameDraft.set($event)"
+      maxlength="255"
+      required
+      class="input-outlined w-full">
+  </div>
+  <div class="flex gap-md pt-md">
+    <button
+      type="button"
+      (click)="cancel()"
+      [disabled]="saving()"
+      class="flex-1 py-3 border border-outline-variant rounded-xl text-label-lg disabled:opacity-50">
+      {{ i18n.t('cancel') }}
+    </button>
+    <button
+      type="button"
+      (click)="save()"
+      [disabled]="!displayNameDraft().trim() || saving()"
+      class="flex-1 btn-primary py-3 disabled:opacity-50">
+      {{ i18n.t('save') }}
+    </button>
+  </div>
+</div>

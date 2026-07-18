@@ -1,0 +1,228 @@
+
+
+<div class="space-y-lg">
+
+  <div class="flex flex-col xl:flex-row items-start xl:items-center justify-between gap-md">
+    <div class="flex items-center gap-sm flex-wrap min-w-0 flex-1 w-full xl:w-auto -mx-margin-mobile px-margin-mobile xl:mx-0 xl:px-0">
+      <h1 class="page-title shrink-0 hidden md:block">{{ i18n.t('products') }}</h1>
+      <select [(ngModel)]="selectedCommerceId" (ngModelChange)="onCommerceChange($event)"
+              class="input-outlined py-2 px-md text-body-md shrink-0 w-[150px] max-w-[150px]">
+        <option *ngFor="let c of commerces()" [value]="c.id">{{ c.name }}</option>
+      </select>
+      <div class="relative min-w-0 flex-1 xl:flex-none xl:w-[300px] xl:max-w-[300px]">
+        <select [(ngModel)]="selectedCategoryId" (ngModelChange)="onCategoryChange($event)"
+                class="input-outlined py-2 pl-md text-body-md w-full truncate"
+                [class.pr-9]="selectedCategoryId"
+                [class.pr-md]="!selectedCategoryId">
+          <option [ngValue]="null">{{ allCategoriesLabel }}</option>
+          <option *ngFor="let cat of categories()" [ngValue]="cat.id">{{ cat.name }}</option>
+        </select>
+        @if (selectedCategoryId) {
+          <button type="button"
+                  class="absolute right-5 top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-on-surface"
+                  (click)="clearCategory($event)"
+                  [attr.aria-label]="i18n.t('cancel')">
+            <span class="material-symbols-outlined text-[18px]">close</span>
+          </button>
+        }
+      </div>
+    </div>
+    <div class="flex gap-sm shrink-0 w-full xl:w-auto xl:max-w-md">
+      <div class="relative flex-1 min-w-0">
+        <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
+        <input type="text" [placeholder]="i18n.t('search')"
+               [(ngModel)]="searchDraft" (ngModelChange)="onSearchChange($event)"
+               class="input-outlined pl-10 py-2 w-full">
+      </div>
+      <button type="button"
+              class="w-11 h-11 shrink-0 flex items-center justify-center rounded-xl border border-outline-variant bg-surface-container-low text-on-surface hover:bg-surface-container-high transition-colors"
+              (click)="openBarcodeScanner()"
+              [attr.aria-label]="i18n.t('scanBarcode')">
+        <span class="material-symbols-outlined text-[22px]">barcode_scanner</span>
+      </button>
+    </div>
+  </div>
+
+
+
+  <app-loading-state *ngIf="loading() && products().length === 0"></app-loading-state>
+
+  <app-error-state *ngIf="error()" (retry)="reloadProducts()"></app-error-state>
+
+  <app-empty-state *ngIf="!loading() && !error() && products().length === 0" icon="inventory_2"></app-empty-state>
+
+
+
+  <div *ngIf="products().length > 0" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-sm md:gap-md">
+
+    <div *ngFor="let product of products()"
+
+         class="card-surface overflow-hidden flex flex-col hover:shadow-card-hover transition-shadow group h-full">
+
+      <div class="aspect-square bg-white dark:bg-surface-container-lowest relative overflow-hidden">
+
+        @if (product.imageUrl; as imageUrl) {
+
+          <button type="button"
+
+                  class="w-full h-full p-2 md:p-3 cursor-zoom-in focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary"
+
+                  (click)="openImagePreview(product)"
+
+                  [attr.aria-label]="product.name">
+
+            <img [src]="imageUrl"
+
+                 [alt]="product.name"
+
+                 class="w-full h-full object-contain pointer-events-none"
+
+                 loading="lazy">
+
+          </button>
+
+        } @else {
+
+          <div class="w-full h-full flex items-center justify-center bg-surface-container text-on-surface-variant">
+
+            <span class="material-symbols-outlined text-[32px]">image</span>
+
+          </div>
+
+        }
+
+      </div>
+
+      <div class="p-sm md:p-md flex-1 flex flex-col gap-xs min-h-0">
+
+        <p class="text-label-md text-on-surface-variant truncate">{{ commerceName(product.commerceId) }}</p>
+
+        <h3 class="text-label-md md:text-label-lg text-on-surface line-clamp-2 leading-snug min-h-[2.5rem]">
+
+          {{ product.name }}
+
+        </h3>
+
+        <div class="mt-auto pt-sm space-y-sm">
+
+          <p class="text-primary text-numeral-md tabular-nums font-semibold leading-tight">
+
+            {{ unitPriceLabel(product) }}
+
+          </p>
+
+          <div class="flex justify-end">
+
+            @if (qtyInCart(product.id) <= 0) {
+
+              <button (click)="addToCart(product)"
+
+                      class="w-9 h-9 flex items-center justify-center bg-primary text-on-primary rounded-full hover:opacity-90 transition-opacity shadow-card"
+
+                      [attr.aria-label]="i18n.t('addToCart')">
+
+                <span class="material-symbols-outlined text-[20px]">add_shopping_cart</span>
+
+              </button>
+
+            } @else {
+
+              <app-quantity-editor
+
+                [product]="product"
+
+                [quantity]="qtyInCart(product.id)"
+
+                [compact]="true"
+
+                (setQuantity)="onSetQuantity(product.id, $event)"
+
+              />
+
+            }
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+
+
+  <div *ngIf="hasMore()" #loadMoreSentinel class="flex justify-center py-lg">
+
+    <div *ngIf="loading() && products().length > 0"
+
+         class="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin"
+
+         role="status"
+
+         aria-hidden="true"></div>
+
+  </div>
+
+</div>
+
+
+
+@if (barcodeScannerOpen()) {
+
+  <app-barcode-scanner-dialog
+
+    (scanned)="onBarcodeScanned($event)"
+
+    (closed)="closeBarcodeScanner()">
+
+  </app-barcode-scanner-dialog>
+
+}
+
+
+
+@if (previewImage(); as preview) {
+
+  <div class="fixed inset-0 z-[70] flex flex-col bg-black/95"
+
+       role="dialog"
+
+       aria-modal="true"
+
+       [attr.aria-label]="preview.alt"
+
+       (click)="closeImagePreview()">
+
+    <div class="flex justify-end p-sm safe-top">
+
+      <button type="button"
+
+              class="w-10 h-10 flex items-center justify-center rounded-full text-white/90 hover:bg-white/10 transition-colors"
+
+              (click)="closeImagePreview()"
+
+              [attr.aria-label]="i18n.t('cancel')">
+
+        <span class="material-symbols-outlined text-[24px]">close</span>
+
+      </button>
+
+    </div>
+
+    <div class="flex-1 flex items-center justify-center min-h-0 px-sm pb-sm md:px-xl md:pb-xl">
+
+      <img [src]="preview.url"
+
+           [alt]="preview.alt"
+
+           class="max-h-full max-w-full w-full md:w-auto object-contain"
+
+           (click)="$event.stopPropagation()">
+
+    </div>
+
+  </div>
+
+}

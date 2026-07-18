@@ -1,0 +1,49 @@
+
+<div class="space-y-lg">
+  <div class="flex items-center gap-md">
+    <a routerLink="/finance" class="p-2 border border-outline-variant rounded-xl hover:bg-surface-container transition-colors">
+      <span class="material-symbols-outlined">arrow_back</span>
+    </a>
+    <h1 class="page-title">{{ i18n.lang() === 'en' ? 'Financial years' : 'Años financieros' }}</h1>
+  </div>
+
+  <div *ngIf="loading()" class="text-center py-xl text-on-surface-variant">
+    {{ i18n.lang() === 'en' ? 'Loading...' : 'Cargando...' }}
+  </div>
+
+  <div *ngIf="!loading()" class="flex flex-wrap gap-sm">
+    <button *ngFor="let y of years()"
+            (click)="selectYear(y.year)"
+            class="px-lg py-2 rounded-xl border text-label-lg transition-colors"
+            [class.border-primary]="selectedYear() === y.year"
+            [class.text-primary]="selectedYear() === y.year"
+            [class.bg-surface-container]="selectedYear() === y.year"
+            [class.border-outline-variant]="selectedYear() !== y.year">
+      {{ y.year }}
+    </button>
+    <div *ngIf="years().length === 0" class="text-on-surface-variant">
+      {{ i18n.lang() === 'en' ? 'No financial years found' : 'No se encontraron años financieros' }}
+    </div>
+  </div>
+
+  <div class="flex flex-wrap gap-sm">
+    <a routerLink="/finance/income-accounts"
+       class="card-surface px-md py-sm inline-flex items-center gap-sm hover:bg-surface-container transition-colors">
+      <span class="material-symbols-outlined text-primary">account_balance_wallet</span>
+      <span class="text-label-lg text-on-surface">
+        {{ i18n.lang() === 'en' ? 'Income accounts' : 'Cuentas de ingreso' }}
+      </span>
+    </a>
+  </div>
+
+  <div *ngIf="selectedYear() as year" class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-sm">
+    <button *ngFor="let m of [1,2,3,4,5,6,7,8,9,10,11,12]; let i = index"
+            (click)="goToMonth(m)"
+            class="card-surface p-md text-center transition-colors hover:bg-surface-container"
+            [class.ring-2]="hasData(m)"
+            [class.ring-primary]="hasData(m)">
+      <div class="text-label-lg text-on-surface">{{ monthNames[i] }}</div>
+      <div class="text-body-sm text-on-surface-variant">{{ m }}</div>
+    </button>
+  </div>
+</div>

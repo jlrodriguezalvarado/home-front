@@ -1,4 +1,7 @@
 export const environment = {
-  production: true,
-  API_BASE_URL: 'http://localhost:8000/api/'
+  production: false,
+  apiUrl: 'http://localhost:8000/api',
+  wsUrl: 'ws://localhost:8000/ws',
 };
+
+// 95.111.237.211

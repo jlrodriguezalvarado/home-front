@@ -1,0 +1,52 @@
+
+<div class="space-y-lg">
+  <h1 class="page-title">{{ i18n.t('purchaseHistory') }}</h1>
+
+  <app-loading-state *ngIf="loading() && purchases().length === 0"></app-loading-state>
+  <app-error-state *ngIf="error()" (retry)="loadPurchases()"></app-error-state>
+  <app-empty-state *ngIf="!loading() && !error() && purchases().length === 0" icon="receipt_long"></app-empty-state>
+
+  <div class="space-y-md">
+    <div *ngFor="let p of purchases()"
+         class="card-surface p-md hover:shadow-card-hover transition-shadow">
+      <div class="flex items-start gap-md">
+        <div class="flex items-center gap-md flex-1 cursor-pointer min-w-0" (click)="viewDetail(p)">
+          <div class="w-12 h-12 rounded-xl bg-surface-container flex items-center justify-center text-primary shrink-0">
+            <span class="material-symbols-outlined">receipt_long</span>
+          </div>
+          <div class="min-w-0 flex-1">
+            <div class="text-label-lg text-on-surface truncate">{{ p.commerceName }}</div>
+            <div class="text-body-md text-on-surface-variant">{{ p.date | date:'mediumDate' }}</div>
+            <div class="text-primary text-numeral-md tabular-nums font-semibold mt-xs md:hidden">{{ p.total }}</div>
+          </div>
+        </div>
+        <div class="hidden md:flex items-center gap-md shrink-0">
+          <div class="text-primary text-numeral-md tabular-nums font-semibold">{{ p.total }}</div>
+          <button (click)="usePurchase(p)"
+                  class="px-md py-1 bg-secondary-container text-on-secondary-container text-label-md rounded-full hover:opacity-90 transition-opacity">
+            USE
+          </button>
+          <button (click)="toggleFavorite(p)" class="text-on-surface-variant hover:text-error transition-colors">
+            <span class="material-symbols-outlined" [class.material-symbols-filled]="p.isFavorite" [class.text-error]="p.isFavorite">favorite</span>
+          </button>
+        </div>
+      </div>
+      <div class="flex items-center justify-end gap-sm mt-sm md:hidden">
+        <button (click)="usePurchase(p)"
+                class="px-md py-1.5 bg-secondary-container text-on-secondary-container text-label-md rounded-full">
+          USE
+        </button>
+        <button (click)="toggleFavorite(p)" class="p-2 text-on-surface-variant">
+          <span class="material-symbols-outlined" [class.material-symbols-filled]="p.isFavorite" [class.text-error]="p.isFavorite">favorite</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div *ngIf="hasMore()" class="flex justify-center py-md">
+    <button (click)="loadMore()" [disabled]="loading()"
+            class="px-lg py-2 bg-surface-container text-on-surface rounded-xl hover:bg-surface-container-high transition-colors text-label-lg">
+      {{ loading() ? '...' : i18n.t('loadMore') }}
+    </button>
+  </div>
+</div>

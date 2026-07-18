@@ -1,0 +1,89 @@
+
+<div class="space-y-lg">
+  <div class="flex items-center justify-between gap-md flex-wrap">
+    <div>
+      <h2 class="text-title-lg text-on-surface">PDF Report</h2>
+      <p class="text-body-md text-on-surface-variant mt-xs">
+        {{ i18n.lang() === 'en'
+          ? 'Generate yearly report (all months with data) for'
+          : 'Generar reporte anual (todos los meses con datos) para' }}
+        <strong>{{ year }}</strong>
+        {{ i18n.lang() === 'en' ? 'triggered from month' : 'desde el mes' }}
+        <strong>{{ month }}</strong>.
+      </p>
+    </div>
+    <div class="flex items-center gap-sm shrink-0">
+      <a routerLink="/finance/reports"
+         class="px-md py-2 border border-outline-variant rounded-xl text-label-md hover:bg-surface-container transition-colors flex items-center gap-1">
+        <span class="material-symbols-outlined text-[18px]">history</span>
+        {{ i18n.lang() === 'en' ? 'All reports' : 'Todos los reportes' }}
+      </a>
+      <button type="button" (click)="generate()" [disabled]="busy()" class="btn-primary flex items-center gap-2">
+        <span class="material-symbols-outlined text-[20px]">picture_as_pdf</span>
+        {{ busy()
+          ? (i18n.lang() === 'en' ? 'Generating...' : 'Generando...')
+          : (i18n.lang() === 'en' ? 'Generate report' : 'Generar reporte') }}
+      </button>
+    </div>
+  </div>
+  <div *ngIf="loading()" class="text-center py-lg text-on-surface-variant">
+    {{ i18n.lang() === 'en' ? 'Loading reports...' : 'Cargando reportes...' }}
+  </div>
+  <div *ngIf="!loading()" class="card-surface overflow-hidden">
+    <div class="hidden md:grid md:grid-cols-[1.2fr_0.8fr_0.8fr_1fr_auto] gap-md px-md py-sm border-b border-outline-variant text-label-md text-on-surface-variant">
+      <span>{{ i18n.lang() === 'en' ? 'Created' : 'Fecha creación' }}</span>
+      <span>{{ i18n.lang() === 'en' ? 'Trigger month' : 'Mes disparador' }}</span>
+      <span>{{ i18n.lang() === 'en' ? 'Status' : 'Estado' }}</span>
+      <span>{{ i18n.lang() === 'en' ? 'Included months' : 'Meses incluidos' }}</span>
+      <span class="text-right">{{ i18n.lang() === 'en' ? 'Actions' : 'Acciones' }}</span>
+    </div>
+    <div *ngFor="let report of reports()" class="p-md border-b border-outline-variant last:border-b-0">
+      <div class="md:grid md:grid-cols-[1.2fr_0.8fr_0.8fr_1fr_auto] gap-md md:items-center">
+        <div class="text-body-md text-on-surface">
+          <span class="md:hidden text-label-sm text-on-surface-variant block">{{ i18n.lang() === 'en' ? 'Created' : 'Fecha creación' }}</span>
+          {{ report.createdAt | date:'short' }}
+        </div>
+        <div class="text-body-md text-on-surface mt-xs md:mt-0">
+          <span class="md:hidden text-label-sm text-on-surface-variant block">{{ i18n.lang() === 'en' ? 'Trigger month' : 'Mes disparador' }}</span>
+          {{ formatTriggerMonth(report.triggeredFromMonth) }}
+        </div>
+        <div class="mt-xs md:mt-0">
+          <span class="md:hidden text-label-sm text-on-surface-variant block">{{ i18n.lang() === 'en' ? 'Status' : 'Estado' }}</span>
+          <span class="inline-flex items-center gap-1 px-sm py-xs rounded-full text-label-sm" [ngClass]="statusClass(report.status)">
+            <span *ngIf="isPending(report)" class="material-symbols-outlined text-[14px] animate-spin">progress_activity</span>
+            {{ statusLabel(report.status) }}
+          </span>
+        </div>
+        <div class="text-body-md text-on-surface-variant mt-xs md:mt-0">
+          <span class="md:hidden text-label-sm text-on-surface-variant block">{{ i18n.lang() === 'en' ? 'Included months' : 'Meses incluidos' }}</span>
+          {{ formatIncludedMonths(report.includedMonths) }}
+        </div>
+        <div class="flex items-center justify-end gap-sm mt-sm md:mt-0">
+          <button *ngIf="canDownload(report)"
+                  type="button"
+                  (click)="downloadReport(report)"
+                  class="text-primary hover:opacity-80 p-1"
+                  [title]="i18n.lang() === 'en' ? 'Download' : 'Descargar'">
+            <span class="material-symbols-outlined text-[20px]">download</span>
+          </button>
+          <button type="button"
+                  (click)="deleteReport(report)"
+                  class="text-error hover:opacity-80 p-1"
+                  [disabled]="isPending(report)"
+                  [title]="i18n.lang() === 'en' ? 'Delete' : 'Eliminar'">
+            <span class="material-symbols-outlined text-[20px]">delete</span>
+          </button>
+        </div>
+      </div>
+      <div *ngIf="report.status === 'failed' && report.errorMessage"
+           class="mt-sm text-body-sm text-error bg-error-container/30 rounded-lg px-md py-sm">
+        {{ report.errorMessage }}
+      </div>
+    </div>
+    <div *ngIf="reports().length === 0" class="p-xl text-center text-on-surface-variant text-body-md">
+      {{ i18n.lang() === 'en'
+        ? 'No reports for this year yet.'
+        : 'No hay reportes para este año aún.' }}
+    </div>
+  </div>
+</div>

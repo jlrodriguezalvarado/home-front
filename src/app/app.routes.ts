@@ -25,6 +25,10 @@ export const routes: Routes = [
         loadComponent: () => import('./features/commerce/commerce-list.component').then(m => m.CommerceListComponent)
       },
       {
+        path: 'commerces/:id',
+        loadComponent: () => import('./features/commerce/commerce-detail.component').then(m => m.CommerceDetailComponent)
+      },
+      {
         path: 'products',
         loadComponent: () => import('./features/products/product-list.component').then(m => m.ProductListComponent)
       },
@@ -49,12 +53,28 @@ export const routes: Routes = [
         loadComponent: () => import('./features/exchange/exchange-dashboard.component').then(m => m.ExchangeDashboardComponent)
       },
       {
+        path: 'price-comparisons',
+        loadChildren: () => import('./features/price-comparisons/price-comparisons.routes').then(m => m.PRICE_COMPARISONS_ROUTES)
+      },
+      {
+        path: 'meal-planning',
+        loadChildren: () => import('./features/meal-planning/meal-planning.routes').then(m => m.MEAL_PLANNING_ROUTES),
+      },
+      {
         path: 'finance',
         loadChildren: () => import('./features/finance/finance.routes').then(m => m.FINANCE_ROUTES)
       },
       {
         path: 'mosaic',
         loadComponent: () => import('./features/mosaic/mosaic.component').then(m => m.MosaicComponent)
+      },
+      {
+        path: 'chat',
+        loadChildren: () => import('./features/chat/chat.routes').then(m => m.CHAT_ROUTES),
+      },
+      {
+        path: 'profile',
+        loadComponent: () => import('./features/profile/profile-settings.component').then(m => m.ProfileSettingsComponent),
       }
     ]
   },

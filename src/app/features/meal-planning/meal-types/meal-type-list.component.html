@@ -1,0 +1,73 @@
+<div class="space-y-lg">
+  <app-meal-planning-nav></app-meal-planning-nav>
+  <div class="flex flex-wrap items-center justify-between gap-md">
+    <h1 class="page-title">{{ i18n.t('mealTypes') }}</h1>
+    <button (click)="openDialog()" class="btn-primary flex items-center gap-2">
+      <span class="material-symbols-outlined text-[20px]">add</span>
+      {{ i18n.t('mealType') }}
+    </button>
+  </div>
+  <app-loading-state *ngIf="loading() && mealTypes().length === 0"></app-loading-state>
+  <app-error-state *ngIf="error()" (retry)="load()"></app-error-state>
+  <app-empty-state
+    *ngIf="!loading() && !error() && mealTypes().length === 0"
+    icon="restaurant"
+    [title]="i18n.t('mealTypes')">
+  </app-empty-state>
+  <div *ngIf="!loading() && !error() && mealTypes().length > 0" class="space-y-sm">
+    <div *ngFor="let item of mealTypes()" class="card-surface p-lg flex flex-wrap items-center justify-between gap-md">
+      <div>
+        <div class="text-headline-md text-on-surface">{{ item.name }}</div>
+        <div class="text-body-md text-on-surface-variant">{{ item.code }} · #{{ item.sortOrder }}</div>
+      </div>
+      <div class="flex flex-wrap items-center gap-md">
+        <span
+          class="text-label-md px-sm py-xs rounded-lg"
+          [class.bg-primary-container]="item.isActive"
+          [class.text-on-primary-container]="item.isActive"
+          [class.bg-surface-container]="!item.isActive"
+          [class.text-on-surface-variant]="!item.isActive">
+          {{ item.isActive ? i18n.t('active') : i18n.t('inactive') }}
+        </span>
+        <button (click)="toggleActive(item)" class="text-primary text-label-md hover:underline">
+          {{ item.isActive ? i18n.t('inactive') : i18n.t('active') }}
+        </button>
+        <button (click)="openDialog(item)" class="text-primary text-label-md hover:underline flex items-center gap-1">
+          <span class="material-symbols-outlined text-[18px]">edit</span>
+          {{ i18n.t('edit') }}
+        </button>
+        <button (click)="deleteMealType(item)" class="text-error text-label-md hover:underline flex items-center gap-1">
+          <span class="material-symbols-outlined text-[18px]">delete</span>
+          {{ i18n.t('delete') }}
+        </button>
+      </div>
+    </div>
+  </div>
+  <div *ngIf="showDialog()" class="fixed inset-0 bg-black/50 flex items-center justify-center p-md z-50">
+    <div class="bg-surface-container-lowest w-full max-w-md p-xl rounded-[24px] border border-outline-variant shadow-card-hover">
+      <h2 class="text-title-lg text-on-surface mb-lg">{{ editingId() ? i18n.t('edit') : i18n.t('add') }} {{ i18n.t('mealType') }}</h2>
+      <div class="space-y-md" appDialogForm (dialogSubmit)="save()">
+        <div>
+          <label class="text-label-lg text-on-surface-variant block mb-xs">{{ i18n.t('name') }}</label>
+          <input type="text" [ngModel]="form().name" (ngModelChange)="updateFormField('name', $event)" class="input-outlined">
+        </div>
+        <div>
+          <label class="text-label-lg text-on-surface-variant block mb-xs">Code</label>
+          <input type="text" [ngModel]="form().code" (ngModelChange)="updateFormField('code', $event)" class="input-outlined uppercase">
+        </div>
+        <div>
+          <label class="text-label-lg text-on-surface-variant block mb-xs">Sort order</label>
+          <input type="number" [ngModel]="form().sortOrder" (ngModelChange)="updateFormField('sortOrder', +$event)" class="input-outlined tabular-nums">
+        </div>
+        <label class="flex items-center gap-sm text-body-md text-on-surface">
+          <input type="checkbox" [ngModel]="form().isActive" (ngModelChange)="updateFormField('isActive', $event)">
+          {{ i18n.t('active') }}
+        </label>
+        <div class="flex gap-md pt-md">
+          <button (click)="closeDialog()" type="button" class="flex-1 py-3 border border-outline-variant rounded-xl text-label-lg">{{ i18n.t('cancel') }}</button>
+          <button (click)="save()" type="button" class="flex-1 btn-primary py-3">{{ i18n.t('save') }}</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

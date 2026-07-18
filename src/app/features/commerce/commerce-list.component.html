@@ -1,0 +1,55 @@
+
+<div class="space-y-lg">
+  <h1 class="page-title">{{ i18n.t('stores') }}</h1>
+  <app-loading-state *ngIf="loading()"></app-loading-state>
+  <app-error-state *ngIf="!loading() && error()" (retry)="load()"></app-error-state>
+  <app-empty-state
+    *ngIf="!loading() && !error() && commerces().length === 0"
+    icon="storefront"
+    [title]="i18n.lang() === 'en' ? 'No stores yet' : 'Sin tiendas'"
+    [message]="i18n.lang() === 'en' ? 'Stores will appear here once created.' : 'Las tiendas aparecerán aquí cuando se creen.'">
+  </app-empty-state>
+  <div *ngIf="!loading() && !error() && commerces().length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-md">
+    <div *ngFor="let c of commerces()"
+         class="card-surface p-lg hover:shadow-card-hover transition-shadow flex flex-col gap-md cursor-pointer"
+         (click)="viewDetail(c.id)">
+      <div class="flex items-center gap-md">
+        <div class="w-12 h-12 rounded-xl bg-surface-container flex items-center justify-center shrink-0 overflow-hidden">
+          <img *ngIf="c.logo" [src]="c.logo" [alt]="c.name" class="w-full h-full object-cover">
+          <span *ngIf="!c.logo" class="material-symbols-outlined text-[28px] text-on-surface-variant">storefront</span>
+        </div>
+        <div class="min-w-0 flex-1">
+          <div class="flex flex-wrap items-center gap-sm">
+            <div class="text-headline-md text-on-surface truncate">{{ c.name }}</div>
+            <span *ngIf="c.urlsProcessing"
+                  class="inline-flex items-center gap-xs px-sm py-xs rounded-full bg-primary-container text-on-primary-container text-label-md shrink-0">
+              <span class="material-symbols-outlined text-[14px] animate-spin">progress_activity</span>
+              {{ i18n.t('processing') }}
+            </span>
+          </div>
+          <div *ngIf="c.currencySymbol" class="text-body-md text-on-surface-variant tabular-nums">{{ c.currencySymbol }}</div>
+          <div *ngIf="c.activeJobsCount > 0 && !c.urlsProcessing"
+               class="text-label-md text-on-surface-variant">
+            {{ c.activeJobsCount }} {{ i18n.t('activeJobs').toLowerCase() }}
+          </div>
+        </div>
+      </div>
+      <div class="flex flex-col gap-xs">
+        <button type="button"
+                class="btn-primary py-2 px-md w-full flex items-center justify-center gap-xs"
+                (click)="viewDetail(c.id); $event.stopPropagation()">
+          <span class="material-symbols-outlined text-[20px]">visibility</span>
+          {{ i18n.t('viewDetail') }}
+        </button>
+        <button type="button"
+                class="btn-secondary py-2 px-md w-full flex items-center justify-center gap-xs disabled:opacity-50"
+                [disabled]="isActionDisabled(c.id)"
+                (click)="onReprocessProductUrls($event, c.id)">
+          <span class="material-symbols-outlined text-[20px]"
+                [class.animate-spin]="isReprocessing(c.id)">sync</span>
+          {{ i18n.t('reprocessProductUrls') }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

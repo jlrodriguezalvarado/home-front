@@ -1,0 +1,27 @@
+<div class="fixed inset-0 z-[80] flex flex-col bg-black"
+     role="dialog"
+     aria-modal="true"
+     [attr.aria-label]="i18n.t('scanBarcode')">
+  <div class="flex items-center justify-between gap-sm p-sm safe-top">
+    <p class="text-title-md text-white truncate">{{ i18n.t('scanBarcode') }}</p>
+    <button type="button"
+            class="w-10 h-10 flex shrink-0 items-center justify-center rounded-full text-white/90 hover:bg-white/10 transition-colors"
+            (click)="close()"
+            [attr.aria-label]="i18n.t('cancel')">
+      <span class="material-symbols-outlined text-[24px]">close</span>
+    </button>
+  </div>
+  <div class="relative flex-1 flex flex-col items-center justify-center min-h-0 px-sm pb-sm">
+    <div #scannerHost class="barcode-scanner-host w-full max-w-lg overflow-hidden rounded-2xl bg-black"></div>
+    @if (starting()) {
+      <div class="absolute inset-0 flex items-center justify-center bg-black/60">
+        <div class="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin"
+             role="status"
+             aria-hidden="true"></div>
+      </div>
+    }
+    <p class="mt-md text-body-md text-white/80 text-center max-w-sm px-md">
+      {{ i18n.t('barcodeScannerHint') }}
+    </p>
+  </div>
+</div>

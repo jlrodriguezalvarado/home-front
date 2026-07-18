@@ -1,0 +1,186 @@
+<input
+  #imageInput
+  type="file"
+  accept="image/*"
+  class="hidden"
+  (change)="onImageSelected($event)">
+<app-loading-state *ngIf="loading()"></app-loading-state>
+<app-error-state *ngIf="error()" (retry)="ngOnInit()"></app-error-state>
+<form *ngIf="!loading() && !error()" [formGroup]="form" (ngSubmit)="save()" class="recipe-form">
+  <div class="recipe-cover">
+    <img
+      *ngIf="displayImageUrl() as imageUrl"
+      [src]="imageUrl"
+      alt=""
+      class="recipe-cover__image">
+    <div *ngIf="!displayImageUrl()" class="recipe-cover__placeholder">
+      <span class="material-symbols-outlined text-[48px] text-on-surface-variant">restaurant</span>
+      <p class="text-body-md text-on-surface-variant mt-sm">
+        {{ i18n.lang() === 'en' ? 'Add a cover photo' : 'Añade una foto de portada' }}
+      </p>
+    </div>
+    <div class="recipe-cover__gradient"></div>
+    <div class="recipe-cover__top safe-top">
+      <a routerLink="/meal-planning/recipes" class="recipe-cover__back" [attr.aria-label]="i18n.t('recipes')">
+        <span class="material-symbols-outlined text-[22px]">arrow_back</span>
+      </a>
+    </div>
+    <div class="recipe-cover__bottom">
+      <p class="recipe-cover__title">{{ form.get('name')?.value || (i18n.lang() === 'en' ? 'Untitled recipe' : 'Receta sin título') }}</p>
+      <div class="recipe-cover__actions">
+        <button type="button" (click)="openImagePicker()" class="recipe-cover__action-btn">
+          <span class="material-symbols-outlined text-[18px]">photo_camera</span>
+          {{ displayImageUrl() ? (i18n.lang() === 'en' ? 'Change' : 'Cambiar') : (i18n.lang() === 'en' ? 'Add photo' : 'Añadir foto') }}
+        </button>
+        <button
+          *ngIf="displayImageUrl()"
+          type="button"
+          (click)="removeImage()"
+          class="recipe-cover__action-btn recipe-cover__action-btn--danger">
+          <span class="material-symbols-outlined text-[18px]">delete</span>
+          {{ i18n.lang() === 'en' ? 'Remove' : 'Quitar' }}
+        </button>
+      </div>
+    </div>
+  </div>
+  <div class="recipe-form-body space-y-lg w-full md:max-w-3xl md:mx-auto md:pt-lg">
+    <h1 class="page-title">{{ editingId() ? i18n.t('editRecipe') : i18n.t('newRecipe') }}</h1>
+    <div class="card-surface p-lg space-y-md">
+      <div>
+        <label class="text-label-lg text-on-surface-variant block mb-xs">{{ i18n.t('name') }} *</label>
+        <input type="text" formControlName="name" class="input-outlined">
+        <p *ngIf="form.get('name')?.touched && form.get('name')?.invalid" class="text-error text-body-md mt-xs">
+          {{ i18n.lang() === 'en' ? 'Name is required' : 'El nombre es obligatorio' }}
+        </p>
+      </div>
+      <div>
+        <label class="text-label-lg text-on-surface-variant block mb-xs">{{ i18n.t('description') }}</label>
+        <app-rich-text-editor
+          formControlName="description"
+          [placeholder]="i18n.lang() === 'en' ? 'Recipe instructions and notes...' : 'Instrucciones y notas de la receta...'">
+        </app-rich-text-editor>
+      </div>
+      <div>
+        <label class="text-label-lg text-on-surface-variant block mb-xs">{{ i18n.t('link') }}</label>
+        <input type="url" formControlName="link" class="input-outlined" placeholder="https://">
+        <p *ngIf="form.get('link')?.touched && form.get('link')?.invalid" class="text-error text-body-md mt-xs">
+          {{ i18n.lang() === 'en' ? 'Enter a valid URL (http or https)' : 'Introduce una URL válida (http o https)' }}
+        </p>
+      </div>
+      <label class="flex items-center gap-sm text-body-md text-on-surface">
+        <input type="checkbox" formControlName="isActive">
+        {{ i18n.t('active') }}
+      </label>
+    </div>
+    <div class="card-surface p-lg space-y-md">
+      <h2 class="text-title-lg text-on-surface">{{ i18n.lang() === 'en' ? 'Video' : 'Video' }}</h2>
+      <input type="file" accept="video/*" (change)="onVideoSelected($event)" class="input-outlined w-full">
+      <div *ngIf="displayVideoUrl() as videoUrl" class="space-y-sm">
+        <video [src]="videoUrl" controls class="max-h-64 rounded-xl w-full"></video>
+        <button type="button" (click)="removeVideo()" class="text-error text-label-md flex items-center gap-1">
+          <span class="material-symbols-outlined text-[18px]">delete</span>
+          {{ i18n.lang() === 'en' ? 'Remove video' : 'Quitar video' }}
+        </button>
+      </div>
+    </div>
+    <div class="card-surface p-lg space-y-md">
+      <div class="flex flex-wrap items-center justify-between gap-sm">
+        <h2 class="text-title-lg text-on-surface">{{ i18n.t('ingredients') }}</h2>
+        <div class="flex flex-wrap items-center gap-sm">
+          <button type="button" (click)="openManageIngredients()" class="btn-secondary flex items-center gap-1">
+            <span class="material-symbols-outlined text-[18px]">tune</span>
+            {{ i18n.t('manageIngredients') }}
+          </button>
+          <button type="button" (click)="addIngredientRow()" class="btn-secondary flex items-center gap-1">
+            <span class="material-symbols-outlined text-[18px]">add</span>
+            {{ i18n.t('add') }}
+          </button>
+        </div>
+      </div>
+      <div formArrayName="ingredients" class="space-y-md">
+        <div
+          *ngFor="let row of ingredientsArray.controls; let i = index"
+          [formGroupName]="i"
+          class="border border-outline-variant rounded-xl p-md space-y-sm">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-md">
+            <div>
+              <div class="flex items-center justify-between gap-sm mb-xs">
+                <label class="text-label-lg text-on-surface-variant">{{ i18n.t('ingredient') }} *</label>
+                <div class="flex items-center gap-1">
+                  <button
+                    type="button"
+                    (click)="openCreateIngredient(i)"
+                    class="text-primary text-label-md hover:underline flex items-center gap-0.5"
+                    [attr.aria-label]="i18n.t('newIngredient')">
+                    <span class="material-symbols-outlined text-[18px]">add</span>
+                  </button>
+                  <button
+                    type="button"
+                    (click)="openEditSelectedIngredient(i)"
+                    [disabled]="!row.get('ingredient')?.value"
+                    class="text-primary text-label-md hover:underline flex items-center gap-0.5 disabled:opacity-40 disabled:pointer-events-none"
+                    [attr.aria-label]="i18n.t('editIngredient')">
+                    <span class="material-symbols-outlined text-[18px]">edit</span>
+                  </button>
+                </div>
+              </div>
+              <select formControlName="ingredient" (change)="onIngredientChange(i)" class="input-outlined">
+                <option value="">—</option>
+                <option *ngFor="let ing of ingredients()" [value]="ing.id">{{ ing.name }}</option>
+              </select>
+            </div>
+            <div>
+              <label class="text-label-lg text-on-surface-variant block mb-xs">{{ i18n.t('defaultProduct') }}</label>
+              <input
+                type="text"
+                class="input-outlined"
+                [value]="associatedProductName(i) ?? '—'"
+                [readonly]="hasIngredientDefaultProduct(i)">
+            </div>
+            <div>
+              <label class="text-label-lg text-on-surface-variant block mb-xs">{{ i18n.t('quantity') }} *</label>
+              <input type="text" formControlName="quantity" class="input-outlined tabular-nums" [attr.inputmode]="isUnitRow(i) ? 'numeric' : 'decimal'" (blur)="onQuantityBlur(i)">
+              <p *ngIf="row.get('quantity')?.touched && row.get('quantity')?.invalid" class="text-error text-body-md mt-xs">
+                {{
+                  row.get('quantity')?.errors?.['integerQuantity']
+                    ? (i18n.lang() === 'en' ? 'Unit quantities must be whole numbers' : 'Las cantidades por unidad deben ser enteras')
+                    : (i18n.lang() === 'en' ? 'Quantity must be greater than 0' : 'La cantidad debe ser mayor que 0')
+                }}
+              </p>
+            </div>
+            <div>
+              <label class="text-label-lg text-on-surface-variant block mb-xs">{{ i18n.t('unit') }}</label>
+              <input type="text" formControlName="unit" class="input-outlined" [readonly]="hasIngredientDefaultProduct(i)">
+            </div>
+            <div class="md:col-span-2">
+              <label class="text-label-lg text-on-surface-variant block mb-xs">{{ i18n.t('notes') }}</label>
+              <input type="text" formControlName="notes" class="input-outlined">
+            </div>
+          </div>
+          <button type="button" (click)="removeIngredientRow(i)" class="text-error text-label-md flex items-center gap-1">
+            <span class="material-symbols-outlined text-[18px]">delete</span>
+            {{ i18n.t('delete') }}
+          </button>
+        </div>
+      </div>
+    </div>
+    <div class="flex gap-md pb-lg">
+      <a routerLink="/meal-planning/recipes" class="flex-1 py-3 border border-outline-variant rounded-xl text-label-lg text-center">{{ i18n.t('cancel') }}</a>
+      <button type="submit" [disabled]="saving()" class="flex-1 btn-primary py-3 flex items-center justify-center gap-2">
+        <span *ngIf="saving() && hasMediaUpload()" class="material-symbols-outlined text-[20px] animate-spin">progress_activity</span>
+        {{ savingLabel() }}
+      </button>
+    </div>
+  </div>
+</form>
+<app-ingredient-manage-dialog
+  *ngIf="showManageIngredients()"
+  (changed)="onIngredientsManaged($event)"
+  (closed)="closeManageIngredients()">
+</app-ingredient-manage-dialog>
+<app-ingredient-form-dialog
+  *ngIf="showIngredientForm()"
+  [ingredient]="ingredientFormTarget()"
+  (saved)="onIngredientFormSaved($event)"
+  (closed)="closeIngredientForm()">
+</app-ingredient-form-dialog>

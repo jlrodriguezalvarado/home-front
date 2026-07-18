@@ -1,0 +1,16 @@
+:host {
+  display: block;
+}
+.barcode-scanner-host {
+  min-height: min(60vh, 28rem);
+}
+:host ::ng-deep #qr-shaded-region {
+  border-radius: 0.75rem;
+}
+:host ::ng-deep video {
+  border-radius: 1rem;
+  object-fit: cover;
+}
+:host(.ios-scanner) ::ng-deep video {
+  object-fit: contain;
+}

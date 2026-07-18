@@ -1,0 +1,147 @@
+
+
+<div class="space-y-lg pb-44 md:pb-32">
+
+  <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-md">
+    <div class="flex items-center gap-sm flex-wrap min-w-0 flex-1 w-full md:w-auto">
+      <h1 class="page-title shrink-0">{{ i18n.t('shoppingCart') }}</h1>
+      <select
+        *ngIf="sortedCommerceIds().length > 0"
+        [ngModel]="filterCommerceId()"
+        (ngModelChange)="onFilterCommerceChange($event)"
+        class="input-outlined py-2 px-md text-body-md min-w-0 flex-1 sm:flex-none sm:max-w-[220px]">
+        <option *ngFor="let id of sortedCommerceIds()" [ngValue]="id">{{ commerceName(id) }}</option>
+      </select>
+    </div>
+    <div class="flex items-center gap-sm shrink-0 w-full md:w-auto justify-between md:justify-end">
+      <button
+        *ngIf="cart.items().length > 0"
+        type="button"
+        (click)="clearCart()"
+        class="py-2 px-md text-label-md rounded-xl border border-error text-error hover:bg-error-container transition-colors flex items-center justify-center gap-1">
+        <span class="material-symbols-outlined text-[18px]">delete_sweep</span>
+        {{ i18n.t('clearCart') }}
+      </button>
+      <button type="button"
+              class="w-11 h-11 shrink-0 flex items-center justify-center rounded-xl border border-outline-variant bg-surface-container-low text-on-surface hover:bg-surface-container-high transition-colors"
+              (click)="openBarcodeScanner()"
+              [attr.aria-label]="i18n.t('scanBarcode')">
+        <span class="material-symbols-outlined text-[22px]">barcode_scanner</span>
+      </button>
+    </div>
+  </div>
+
+
+
+  <div *ngIf="cart.items().length === 0" class="flex flex-col items-center justify-center py-xxl text-on-surface-variant">
+
+    <span class="material-symbols-outlined text-[64px] mb-md">shopping_cart</span>
+
+    <p class="text-body-lg">{{ i18n.lang() === 'en' ? 'Your cart is empty' : 'Tu carrito está vacío' }}</p>
+
+    <button type="button"
+            class="mt-lg btn-primary py-2 px-lg text-label-lg flex items-center gap-2"
+            (click)="openBarcodeScanner()">
+      <span class="material-symbols-outlined text-[20px]">barcode_scanner</span>
+      {{ i18n.t('scanBarcode') }}
+    </button>
+
+  </div>
+
+
+
+  <div *ngIf="filterCommerceId() as commerceId" class="space-y-xs md:space-y-sm">
+    <div *ngFor="let item of itemsForCommerce(commerceId)"
+         class="card-surface p-sm md:p-md flex items-center gap-sm">
+      <div class="flex gap-sm flex-1 min-w-0 items-center">
+        @if (item.product.imageUrl; as imageUrl) {
+          <button type="button"
+                  class="w-14 h-14 md:w-12 md:h-12 bg-surface-container rounded-lg overflow-hidden shrink-0 cursor-zoom-in focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary"
+                  (click)="openImagePreview(item.product)"
+                  [attr.aria-label]="item.product.name">
+            <img [src]="imageUrl"
+                 [alt]="item.product.name"
+                 class="w-full h-full object-cover pointer-events-none">
+          </button>
+        } @else {
+          <div class="w-14 h-14 md:w-12 md:h-12 bg-surface-container rounded-lg overflow-hidden shrink-0 flex items-center justify-center">
+            <span class="material-symbols-outlined text-on-surface-variant text-[20px]">image</span>
+          </div>
+        }
+        <div class="flex-1 min-w-0">
+          <div class="text-label-md text-on-surface leading-tight break-words">{{ item.product.name }}</div>
+          <div class="text-label-sm text-on-surface-variant flex items-center gap-1 flex-wrap mt-0.5">
+            <span class="text-primary tabular-nums font-semibold">{{ formatLineTotal(item) }}</span>
+          </div>
+        </div>
+      </div>
+      <div class="flex items-center gap-xs shrink-0">
+        <app-quantity-editor
+          [product]="item.product"
+          [quantity]="item.quantity"
+          [compact]="true"
+          (setQuantity)="cart.setQuantity(item.product.id, $event)"
+        />
+        <button type="button"
+                (click)="cart.removeProduct(item.product.id)"
+                class="text-error hover:opacity-80 p-1">
+          <span class="material-symbols-outlined text-[20px]">delete</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Checkout footer -->
+  <div *ngIf="visibleItems().length > 0"
+       class="flex card-surface p-md flex-wrap gap-sm items-center justify-between fixed bottom-20 md:bottom-0 left-0 md:left-64 right-0 z-30 bg-surface/90 glass border-t border-outline-variant safe-bottom">
+    <div class="text-body-md text-on-surface-variant">
+      <span class="text-on-surface font-semibold">{{ i18n.t('subtotal') }}</span>
+      ·
+      {{ visibleCount() }} {{ i18n.lang() === 'en' ? 'items' : 'artículos' }}
+      ·
+      <span class="text-primary font-semibold tabular-nums">{{ formatFooterTotal() }}</span>
+    </div>
+    <div class="flex flex-wrap gap-sm w-full md:w-auto">
+      <button (click)="copyMessage()" class="flex-1 md:flex-none px-md py-2 bg-surface-container rounded-xl text-label-lg hover:bg-surface-container-high transition-colors">
+        {{ i18n.lang() === 'en' ? 'Copy' : 'Copiar' }}
+      </button>
+      <button (click)="sendWhatsApp()" class="flex-1 md:flex-none px-md py-2 bg-secondary text-on-secondary rounded-xl text-label-lg">
+        WhatsApp
+      </button>
+      <button (click)="confirmPurchase()" class="flex-1 btn-primary py-2 min-w-[140px]">
+        {{ i18n.t('confirmPurchase') }}
+      </button>
+    </div>
+  </div>
+
+</div>
+
+@if (barcodeScannerOpen()) {
+  <app-barcode-scanner-dialog
+    (scanned)="onBarcodeScanned($event)"
+    (closed)="closeBarcodeScanner()">
+  </app-barcode-scanner-dialog>
+}
+
+@if (previewImage(); as preview) {
+  <div class="fixed inset-0 z-[70] flex flex-col bg-black/95"
+       role="dialog"
+       aria-modal="true"
+       [attr.aria-label]="preview.alt"
+       (click)="closeImagePreview()">
+    <div class="flex justify-end p-sm safe-top">
+      <button type="button"
+              class="w-10 h-10 flex items-center justify-center rounded-full text-white/90 hover:bg-white/10 transition-colors"
+              (click)="closeImagePreview()"
+              [attr.aria-label]="i18n.t('cancel')">
+        <span class="material-symbols-outlined text-[24px]">close</span>
+      </button>
+    </div>
+    <div class="flex-1 flex items-center justify-center min-h-0 px-sm pb-sm md:px-xl md:pb-xl">
+      <img [src]="preview.url"
+           [alt]="preview.alt"
+           class="max-h-full max-w-full w-full md:w-auto object-contain"
+           (click)="$event.stopPropagation()">
+    </div>
+  </div>
+}

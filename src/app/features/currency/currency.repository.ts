@@ -1,35 +1,30 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { environment } from '../../../environments/environment';
-import { Observable } from 'rxjs';
-
-export interface Currency {
-  code: string;
-  name: string;
-  symbol: string;
-  active: boolean;
-}
+import { Observable, map } from 'rxjs';
+import { Currency, PaginatedResponse } from '../../core/api/models';
+import { ApiService } from '../../core/api/api.service';
+import { API_ENDPOINTS } from '../../core/api/endpoints';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class CurrencyRepository {
-  private http = inject(HttpClient);
-  private readonly baseUrl = `${environment.API_BASE_URL}currencies/`;
+  private readonly api = inject(ApiService);
 
   list(): Observable<Currency[]> {
-    return this.http.get<Currency[]>(this.baseUrl);
+    return this.api.get<Currency[] | PaginatedResponse<Currency>>(API_ENDPOINTS.currencies.list).pipe(
+      map((res) => (Array.isArray(res) ? res : (res.results ?? []))),
+    );
   }
 
-  create(data: Currency): Observable<Currency> {
-    return this.http.post<Currency>(this.baseUrl, data);
+  create(data: Omit<Currency, 'id'>): Observable<Currency> {
+    return this.api.post<Currency>(API_ENDPOINTS.currencies.list, data);
   }
 
-  update(code: string, data: Partial<Currency>): Observable<Currency> {
-    return this.http.patch<Currency>(`${this.baseUrl}${code}/`, data);
+  update(id: string, data: Partial<Currency>): Observable<Currency> {
+    return this.api.patch<Currency>(API_ENDPOINTS.currencies.detail(id), data);
   }
 
-  delete(code: string): Observable<void> {
-    return this.http.delete<void>(`${this.baseUrl}${code}/`);
+  delete(id: string): Observable<void> {
+    return this.api.delete<void>(API_ENDPOINTS.currencies.detail(id));
   }
 }

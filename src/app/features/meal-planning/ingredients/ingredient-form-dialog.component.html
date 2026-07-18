@@ -1,0 +1,55 @@
+<div class="fixed inset-0 bg-black/50 flex items-center justify-center p-md z-[60]" (click)="close()">
+  <div
+    class="bg-surface-container-lowest w-full max-w-md p-xl rounded-[24px] border border-outline-variant shadow-card-hover max-h-[90vh] flex flex-col overflow-hidden"
+    (click)="$event.stopPropagation()">
+    <h2 class="text-title-lg text-on-surface mb-lg shrink-0">
+      {{ editingId() ? i18n.t('editIngredient') : i18n.t('newIngredient') }}
+    </h2>
+    <div class="space-y-md overflow-y-auto min-h-0 flex-1" appDialogForm (dialogSubmit)="save()">
+      <div>
+        <label class="text-label-lg text-on-surface-variant block mb-xs">{{ i18n.t('name') }}</label>
+        <input type="text" [ngModel]="form().name" (ngModelChange)="updateFormField('name', $event)" class="input-outlined">
+      </div>
+      <div>
+        <label class="text-label-lg text-on-surface-variant block mb-xs">{{ i18n.t('description') }}</label>
+        <textarea [ngModel]="form().description" (ngModelChange)="updateFormField('description', $event)" class="input-outlined min-h-[80px]"></textarea>
+      </div>
+      <div>
+        <label class="text-label-lg text-on-surface-variant block mb-xs">{{ i18n.t('defaultProduct') }}</label>
+        <div class="space-y-sm">
+          <div>
+            <label class="text-label-md text-on-surface-variant block mb-xs">{{ i18n.t('stores') }}</label>
+            <select
+              [ngModel]="selectedCommerceId()"
+              (ngModelChange)="onCommerceChange($event)"
+              class="input-outlined w-full">
+              <option *ngIf="!commerces().length" [ngValue]="null">—</option>
+              <option *ngFor="let c of commerces()" [ngValue]="c.id">{{ c.name }}</option>
+            </select>
+          </div>
+          <div>
+            <label class="text-label-md text-on-surface-variant block mb-xs">{{ i18n.t('products') }}</label>
+            <app-search-select
+              [options]="productOptions()"
+              [value]="form().defaultProductId"
+              [placeholder]="i18n.lang() === 'en' ? 'Select product' : 'Seleccionar producto'"
+              [searchPlaceholder]="i18n.t('search')"
+              [emptyLabel]="i18n.lang() === 'en' ? 'No products found' : 'Sin productos'"
+              [loading]="productsLoading()"
+              (valueChange)="onProductSelected($event)"
+              (searchChange)="onProductSearchChange($event)">
+            </app-search-select>
+          </div>
+        </div>
+      </div>
+      <label class="flex items-center gap-sm text-body-md text-on-surface">
+        <input type="checkbox" [ngModel]="form().isActive" (ngModelChange)="updateFormField('isActive', $event)">
+        {{ i18n.t('active') }}
+      </label>
+      <div class="flex gap-md pt-md">
+        <button (click)="close()" type="button" class="flex-1 py-3 border border-outline-variant rounded-xl text-label-lg">{{ i18n.t('cancel') }}</button>
+        <button (click)="save()" type="button" class="flex-1 btn-primary py-3">{{ i18n.t('save') }}</button>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,6 @@
+.expense-spend-batch {
+  border-left: 4px solid var(--batch-color, #888);
+}
+.batch-header {
+  background-color: color-mix(in srgb, var(--batch-color, #888) 12%, transparent);
+}

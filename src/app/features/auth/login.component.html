@@ -1,0 +1,83 @@
+
+<div class="h-full flex items-center justify-center bg-background text-on-surface p-md relative overflow-hidden">
+  <div class="absolute inset-0 emerald-pattern pointer-events-none"></div>
+
+  <div class="absolute top-md right-margin-mobile md:top-lg md:right-lg z-50 flex gap-2">
+    <button (click)="toggleLang()"
+            class="flex items-center gap-2 px-md py-sm bg-surface-container-lowest border border-outline-variant rounded-full shadow-card hover:bg-surface-container transition-colors">
+      <span class="material-symbols-outlined text-[18px] text-primary">language</span>
+      <span class="text-label-md text-on-surface-variant uppercase">{{ i18n.lang() }}</span>
+    </button>
+    <button (click)="theme.toggleTheme()"
+            class="flex items-center gap-2 px-md py-sm bg-surface-container-lowest border border-outline-variant rounded-full shadow-card hover:bg-surface-container transition-colors">
+      <span class="material-symbols-outlined text-[18px] text-primary">{{ theme.isDark() ? 'light_mode' : 'dark_mode' }}</span>
+    </button>
+  </div>
+
+  <main class="relative z-10 w-full max-w-[440px]">
+    <div class="bg-surface-container-lowest rounded-[24px] shadow-card p-xl md:p-xxl border border-outline-variant/30">
+      <div class="flex flex-col items-center mb-xl">
+        <div class="w-16 h-16 mb-md rounded-2xl bg-primary-container flex items-center justify-center">
+          <span class="material-symbols-outlined text-on-primary text-[32px]">home</span>
+        </div>
+        <h1 class="text-headline-md text-on-surface text-center">{{ t('welcomeBack') }}</h1>
+        <p class="text-body-md text-on-surface-variant text-center mt-xs">{{ t('loginSubtitle') }}</p>
+      </div>
+
+      <form (submit)="onSubmit()" class="space-y-lg">
+        <div class="space-y-xs">
+          <label class="text-label-lg text-on-surface-variant block ml-1">{{ t('email') }}</label>
+          <div class="relative">
+            <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-outline">mail</span>
+            <input type="email" [(ngModel)]="email" name="email" required
+                   placeholder="name@company.com"
+                   class="input-outlined pl-12 pr-md py-3">
+          </div>
+        </div>
+
+        <div class="space-y-xs">
+          <div class="flex justify-between items-center ml-1">
+            <label class="text-label-lg text-on-surface-variant">{{ t('password') }}</label>
+            <a class="text-label-md text-primary hover:underline cursor-pointer">{{ t('forgotPassword') }}</a>
+          </div>
+          <div class="relative">
+            <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-outline">lock</span>
+            <input [type]="showPassword ? 'text' : 'password'" [(ngModel)]="password" name="password" required
+                   placeholder="••••••••"
+                   class="input-outlined pl-12 pr-12 py-3">
+            <button type="button" (click)="showPassword = !showPassword"
+                    class="absolute inset-y-0 right-0 pr-md flex items-center text-outline-variant hover:text-outline transition-colors">
+              <span class="material-symbols-outlined">{{ showPassword ? 'visibility_off' : 'visibility' }}</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-sm">
+          <input type="checkbox" id="remember" [(ngModel)]="remember" name="remember"
+                 class="w-4 h-4 text-primary bg-surface-container-low border-outline-variant rounded focus:ring-primary">
+          <label for="remember" class="text-label-md text-on-surface-variant">{{ t('rememberDevice') }}</label>
+        </div>
+
+        <button type="submit" [disabled]="loading"
+                class="w-full btn-primary py-4 flex justify-center items-center gap-2 disabled:opacity-50">
+          <span>{{ loading ? '...' : t('login') }}</span>
+          <span class="material-symbols-outlined text-[20px]">arrow_forward</span>
+        </button>
+
+        <div *ngIf="error" class="text-error text-body-md text-center bg-error-container/30 rounded-lg py-2">{{ error }}</div>
+      </form>
+    </div>
+
+    <footer class="mt-lg flex justify-center items-center gap-md text-outline-variant">
+      <div class="flex items-center gap-1">
+        <span class="material-symbols-outlined text-[16px]">verified_user</span>
+        <span class="text-label-md">{{ t('secureLogin') }}</span>
+      </div>
+      <div class="w-1 h-1 bg-outline-variant rounded-full"></div>
+      <div class="flex items-center gap-1">
+        <span class="material-symbols-outlined text-[16px]">lock_clock</span>
+        <span class="text-label-md">256-bit AES</span>
+      </div>
+    </footer>
+  </main>
+</div>

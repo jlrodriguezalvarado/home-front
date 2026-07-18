@@ -1,0 +1,164 @@
+
+<div class="flex h-dvh bg-background text-on-surface overflow-hidden">
+  <!-- Sidebar Desktop -->
+  <aside class="hidden md:flex flex-col w-64 h-full sticky top-0 bg-surface border-r border-outline-variant shadow-card py-md overflow-y-auto shrink-0">
+    <div class="px-md mb-xl flex justify-center">
+      <a routerLink="/" class="flex flex-col items-center gap-sm text-center">
+        <img src="icons/icon-128x128.png" alt="Home Manager" class="h-12 w-12 object-contain" width="48" height="48">
+        <p class="text-label-md text-on-surface-variant">{{ t('premiumManagement') }}</p>
+      </a>
+    </div>
+
+    <nav class="flex-grow space-y-1">
+      <a *ngFor="let item of navItems"
+         [routerLink]="item.path"
+         routerLinkActive="nav-item-active"
+         [routerLinkActiveOptions]="{exact: item.path === '/'}"
+         class="nav-item-inactive relative">
+        <span class="material-symbols-outlined"
+              [class.material-symbols-filled]="isActive(item.path)">{{ item.icon }}</span>
+        <span class="text-label-lg">{{ t(item.label) }}</span>
+        <span
+          *ngIf="item.path === '/chat' && unreadCount() > 0"
+          class="absolute top-2 left-7 min-w-[18px] h-[18px] px-1 bg-error text-on-error text-[10px] font-medium rounded-full flex items-center justify-center">
+          {{ unreadCount() > 99 ? '99+' : unreadCount() }}
+        </span>
+      </a>
+    </nav>
+
+    <div class="mt-auto pt-md border-t border-outline-variant mx-2 space-y-1">
+      <button (click)="toggleLang()"
+              class="nav-item-inactive w-[calc(100%-16px)] text-left border-0 bg-transparent cursor-pointer">
+        <span class="material-symbols-outlined">language</span>
+        <span class="text-label-lg">{{ t('language') }}: {{ i18n.lang() | uppercase }}</span>
+      </button>
+      <button (click)="theme.toggleTheme()"
+              class="nav-item-inactive w-[calc(100%-16px)] text-left border-0 bg-transparent cursor-pointer">
+        <span class="material-symbols-outlined">{{ theme.isDark() ? 'light_mode' : 'dark_mode' }}</span>
+        <span class="text-label-lg">{{ t('darkMode') }}</span>
+      </button>
+      <button (click)="logout()"
+              class="nav-item-inactive w-[calc(100%-16px)] text-left border-0 bg-transparent cursor-pointer text-error">
+        <span class="material-symbols-outlined">logout</span>
+        <span class="text-label-lg">{{ t('logout') }}</span>
+      </button>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <div class="flex-grow flex flex-col min-w-0 h-full">
+    <!-- TopNavBar -->
+    <header class="sticky top-0 z-40 w-full bg-surface/80 glass border-b border-outline-variant shadow-card flex justify-between items-center px-margin-mobile md:px-lg h-16 shrink-0">
+      <!-- Mobile: menu + title -->
+      <div class="flex items-center gap-3 md:hidden">
+        <button (click)="toggleDrawer()"
+                class="p-2 rounded-full hover:bg-surface-container transition-colors"
+                aria-label="Open menu">
+          <span class="material-symbols-outlined text-on-surface">menu</span>
+        </button>
+        <img src="icons/icon-128x128.png" alt="Home Manager" class="h-9 w-9 object-contain shrink-0" width="36" height="36">
+      </div>
+
+      <!-- Desktop: search -->
+      <div class="hidden md:flex items-center flex-1 max-w-xl">
+        <div class="relative w-full">
+
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2 md:gap-md">
+        <app-notification-panel></app-notification-panel>
+        <app-user-profile-menu></app-user-profile-menu>
+      </div>
+    </header>
+
+    <div class="flex-1 min-h-0 px-margin-mobile md:px-xl"
+         [class.overflow-auto]="!isInChatRoom()"
+         [class.overflow-hidden]="isInChatRoom()"
+         [class.flex]="isInChatRoom()"
+         [class.flex-col]="isInChatRoom()"
+         [class.py-md]="!isInChatRoom()"
+         [class.md:py-xl]="!isInChatRoom()"
+         [class.md:pb-xl]="!isInChatRoom()"
+         [class.pb-24]="!isInChat()"
+         [class.pb-md]="isInChat() && !isInChatRoom()"
+         [appPullToRefresh]="!isInChatRoom()">
+      <div class="max-w-[1440px] mx-auto w-full"
+           [class.flex-1]="isInChatRoom()"
+           [class.min-h-0]="isInChatRoom()"
+           [class.flex]="isInChatRoom()"
+           [class.flex-col]="isInChatRoom()"
+           [class.h-full]="isInChatRoom()">
+        <router-outlet></router-outlet>
+      </div>
+    </div>
+
+    <!-- Bottom Nav Mobile -->
+    <nav *ngIf="!isInChat()"
+         class="md:hidden fixed bottom-0 left-0 right-0 bg-surface-container-lowest/95 glass border-t border-outline-variant flex justify-around items-center h-20 px-sm z-50 safe-bottom">
+      <a *ngFor="let item of mobileNavItems"
+         [routerLink]="item.path"
+         (click)="closeDrawer()"
+         routerLinkActive="nav-mobile-active"
+         [routerLinkActiveOptions]="{exact: item.path === '/'}"
+         class="relative flex flex-col items-center justify-center flex-1 h-full text-on-surface-variant">
+        <span class="material-symbols-outlined"
+              [class.material-symbols-filled]="isActive(item.path)">{{ item.icon }}</span>
+        <span
+          *ngIf="item.path === '/chat' && unreadCount() > 0"
+          class="absolute top-2 left-1/2 ml-2 min-w-[16px] h-[16px] px-0.5 bg-error text-on-error text-[9px] font-medium rounded-full flex items-center justify-center">
+          {{ unreadCount() > 99 ? '99+' : unreadCount() }}
+        </span>
+        <span class="text-label-md text-[10px] mt-0.5">{{ t(item.label) }}</span>
+      </a>
+    </nav>
+  </div>
+
+  <!-- Mobile Drawer Overlay -->
+  <div *ngIf="drawerOpen()"
+       (click)="closeDrawer()"
+       class="md:hidden fixed inset-0 bg-black/20 z-[60] backdrop-blur-sm transition-opacity"></div>
+
+  <!-- Mobile Drawer -->
+  <aside class="md:hidden fixed left-0 top-0 h-full w-72 bg-surface z-[70] border-r border-outline-variant transition-transform duration-300 ease-in-out flex flex-col"
+         [class.-translate-x-full]="!drawerOpen()"
+         [class.translate-x-0]="drawerOpen()">
+    <div class="p-lg border-b border-outline-variant flex justify-center">
+      <a routerLink="/" (click)="closeDrawer()" class="flex flex-col items-center gap-sm text-center">
+        <img src="icons/icon-128x128.png" alt="Home Manager" class="h-12 w-12 object-contain" width="48" height="48">
+        <p class="text-label-md text-on-surface-variant opacity-70">{{ t('premiumManagement') }}</p>
+      </a>
+    </div>
+
+    <nav class="py-md flex flex-col gap-1 flex-1 overflow-y-auto">
+      <a *ngFor="let item of navItems"
+         [routerLink]="item.path"
+         (click)="closeDrawer()"
+         routerLinkActive="nav-item-active"
+         [routerLinkActiveOptions]="{exact: item.path === '/'}"
+         class="nav-item-inactive">
+        <span class="material-symbols-outlined"
+              [class.material-symbols-filled]="isActive(item.path)">{{ item.icon }}</span>
+        <span class="text-label-lg">{{ t(item.label) }}</span>
+      </a>
+
+      <div class="h-px bg-outline-variant mx-4 my-2"></div>
+
+      <button (click)="toggleLang(); closeDrawer()"
+              class="nav-item-inactive w-[calc(100%-16px)] text-left border-0 bg-transparent cursor-pointer">
+        <span class="material-symbols-outlined">language</span>
+        <span class="text-label-lg">{{ t('language') }}: {{ i18n.lang() | uppercase }}</span>
+      </button>
+      <button (click)="theme.toggleTheme()"
+              class="nav-item-inactive w-[calc(100%-16px)] text-left border-0 bg-transparent cursor-pointer">
+        <span class="material-symbols-outlined">{{ theme.isDark() ? 'light_mode' : 'dark_mode' }}</span>
+        <span class="text-label-lg">{{ t('darkMode') }}</span>
+      </button>
+      <button (click)="logout()"
+              class="nav-item-inactive w-[calc(100%-16px)] text-left border-0 bg-transparent cursor-pointer text-error">
+        <span class="material-symbols-outlined">logout</span>
+        <span class="text-label-lg">{{ t('logout') }}</span>
+      </button>
+    </nav>
+  </aside>
+</div>
