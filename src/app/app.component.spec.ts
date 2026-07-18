@@ -1,12 +1,22 @@
 import { TestBed } from '@angular/core/testing';
 import { AppComponent } from './app.component';
 import { provideRouter } from '@angular/router';
+import { PwaUpdateService } from './core/services/pwa-update.service';
+import { ChatSessionService } from './features/chat/services/chat-session.service';
+import { ChatNotificationService } from './features/chat/services/chat-notification.service';
+import { NotificationsSessionService } from './core/notifications/notifications-session.service';
 
 describe('AppComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [AppComponent],
-      providers: [provideRouter([])]
+      providers: [
+        provideRouter([]),
+        { provide: PwaUpdateService, useValue: { init: jasmine.createSpy('init') } },
+        { provide: ChatSessionService, useValue: { start: jasmine.createSpy('start') } },
+        { provide: NotificationsSessionService, useValue: { start: jasmine.createSpy('start') } },
+        { provide: ChatNotificationService, useValue: { handleNotificationClick: jasmine.createSpy('handleNotificationClick') } },
+      ]
     }).compileComponents();
   });
 
