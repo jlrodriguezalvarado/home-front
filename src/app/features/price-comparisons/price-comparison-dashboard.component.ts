@@ -1,7 +1,8 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, DestroyRef, OnInit, inject, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
-import { Observable, forkJoin } from 'rxjs';
+import { Observable, finalize, forkJoin } from 'rxjs';
 import { I18nService } from '../../core/i18n/i18n.service';
 import { EmptyStateComponent } from '../../shared/components/empty-state.component';
 import { ErrorStateComponent } from '../../shared/components/error-state.component';
@@ -11,6 +12,7 @@ import { ConfirmService } from '../../shared/services/confirm.service';
 import { ToastService } from '../../shared/services/toast.service';
 import { ComparisonCategory, ComparisonPrice, ComparisonProduct, ComparisonStore, PriceComparison, PriceComparisonReport } from './price-comparison.models';
 import { PriceComparisonRepository } from './price-comparison.repository';
+import { formatDecimalMoney, normalizePriceInput } from './price-comparison.money';
 type Section = 'setup' | 'prices' | 'report';
 type EditorType = 'comparison' | 'store' | 'category' | 'product';
 type ManagedEntity = PriceComparison | ComparisonStore | ComparisonCategory | ComparisonProduct;
@@ -34,6 +36,7 @@ export class PriceComparisonDashboardComponent implements OnInit {
   readonly i18n = inject(I18nService);
   readonly confirm = inject(ConfirmService);
   readonly toast = inject(ToastService);
+  private readonly destroyRef = inject(DestroyRef);
   readonly comparisons = signal<PriceComparison[]>([]);
   readonly selected = signal<PriceComparison | null>(null);
   readonly stores = signal<ComparisonStore[]>([]);
@@ -65,17 +68,18 @@ export class PriceComparisonDashboardComponent implements OnInit {
   loadComparisons(preferredId?: string): void {
     this.loadingComparisons.set(true);
     this.listError.set(false);
-    this.repo.listComparisons().subscribe({
+    this.repo.listComparisons().pipe(
+      takeUntilDestroyed(this.destroyRef),
+      finalize(() => this.loadingComparisons.set(false)),
+    ).subscribe({
       next: (items) => {
         this.comparisons.set(items);
-        this.loadingComparisons.set(false);
         const currentId = preferredId ?? this.selected()?.id;
         const next = items.find((item) => item.id === currentId) ?? null;
         if (next) this.selectComparison(next);
         else if (this.selected()) this.clearSelection();
       },
       error: () => {
-        this.loadingComparisons.set(false);
         this.listError.set(true);
       },
     });
@@ -97,17 +101,18 @@ export class PriceComparisonDashboardComponent implements OnInit {
       categories: this.repo.listCategories(comparison.id),
       products: this.repo.listProducts(comparison.id),
       prices: this.repo.listPrices(comparison.id),
-    }).subscribe({
+    }).pipe(
+      takeUntilDestroyed(this.destroyRef),
+      finalize(() => this.loadingDetails.set(false)),
+    ).subscribe({
       next: ({ stores, categories, products, prices }) => {
         this.stores.set(stores);
         this.categories.set(categories);
         this.products.set(products);
         this.prices.set(prices);
-        this.priceDrafts.set(Object.fromEntries(prices.map((price) => [this.cellKey(price.storeId, price.productId), String(price.price)])));
-        this.loadingDetails.set(false);
+        this.priceDrafts.set(Object.fromEntries(prices.map((price) => [this.cellKey(price.storeId, price.productId), price.price])));
       },
       error: () => {
-        this.loadingDetails.set(false);
         this.detailsError.set(true);
       },
     });
@@ -121,13 +126,14 @@ export class PriceComparisonDashboardComponent implements OnInit {
     if (!comparison) return;
     this.loadingReport.set(true);
     this.reportError.set(false);
-    this.repo.getReport(comparison.id).subscribe({
+    this.repo.getReport(comparison.id).pipe(
+      takeUntilDestroyed(this.destroyRef),
+      finalize(() => this.loadingReport.set(false)),
+    ).subscribe({
       next: (report) => {
         this.report.set(report);
-        this.loadingReport.set(false);
       },
       error: () => {
-        this.loadingReport.set(false);
         this.report.set(null);
         this.reportError.set(true);
       },
@@ -175,9 +181,11 @@ export class PriceComparisonDashboardComponent implements OnInit {
       const payload = { comparison: comparison!.id, name, description: this.form.description.trim(), category_ids: this.form.categoryIds };
       request$ = id ? this.repo.updateProduct(id, payload) : this.repo.createProduct(payload);
     }
-    request$.subscribe({
+    request$.pipe(
+      takeUntilDestroyed(this.destroyRef),
+      finalize(() => this.saving.set(false)),
+    ).subscribe({
       next: (saved) => {
-        this.saving.set(false);
         this.editor.set(null);
         this.toast.success(this.tr('saved'));
         if (type === 'comparison') this.loadComparisons(saved.id);
@@ -187,7 +195,6 @@ export class PriceComparisonDashboardComponent implements OnInit {
         }
       },
       error: () => {
-        this.saving.set(false);
         this.toast.error(this.tr('saveError'));
       },
     });
@@ -196,7 +203,7 @@ export class PriceComparisonDashboardComponent implements OnInit {
     const confirmed = await this.confirm.confirm(this.tr('confirmDelete', { name: entity.name }), { variant: 'danger', confirmLabel: this.tr('delete') });
     if (!confirmed) return;
     const request$ = type === 'comparison' ? this.repo.deleteComparison(entity.id) : type === 'store' ? this.repo.deleteStore(entity.id) : type === 'category' ? this.repo.deleteCategory(entity.id) : this.repo.deleteProduct(entity.id);
-    request$.subscribe({
+    request$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: () => {
         this.toast.success(this.tr('deleted'));
         if (type === 'comparison') {
@@ -219,24 +226,25 @@ export class PriceComparisonDashboardComponent implements OnInit {
   savePrice(storeId: string, productId: string): void {
     const key = this.cellKey(storeId, productId);
     const raw = this.priceDrafts()[key]?.trim() ?? '';
-    const amount = Number(raw);
-    if (!raw || !Number.isFinite(amount) || amount < 0) {
+    const normalized = normalizePriceInput(raw);
+    if (normalized === null) {
       this.toast.error(this.tr('invalidPrice'));
       return;
     }
     const existing = this.priceFor(storeId, productId);
     this.setCellSaving(key, true);
-    const request$ = existing ? this.repo.updatePrice(existing.id, { price: raw }) : this.repo.createPrice({ store_id: storeId, product_id: productId, price: raw });
-    request$.subscribe({
+    const request$ = existing ? this.repo.updatePrice(existing.id, { price: normalized }) : this.repo.createPrice({ store_id: storeId, product_id: productId, price: normalized });
+    request$.pipe(
+      takeUntilDestroyed(this.destroyRef),
+      finalize(() => this.setCellSaving(key, false)),
+    ).subscribe({
       next: (saved) => {
         this.prices.update((items) => existing ? items.map((item) => item.id === saved.id ? saved : item) : [...items, saved]);
-        this.updateDraft(storeId, productId, String(saved.price));
+        this.updateDraft(storeId, productId, saved.price);
         this.report.set(null);
-        this.setCellSaving(key, false);
         this.toast.success(this.tr('saved'));
       },
       error: () => {
-        this.setCellSaving(key, false);
         this.toast.error(this.tr('saveError'));
       },
     });
@@ -248,16 +256,17 @@ export class PriceComparisonDashboardComponent implements OnInit {
     if (!confirmed) return;
     const key = this.cellKey(storeId, productId);
     this.setCellSaving(key, true);
-    this.repo.deletePrice(existing.id).subscribe({
+    this.repo.deletePrice(existing.id).pipe(
+      takeUntilDestroyed(this.destroyRef),
+      finalize(() => this.setCellSaving(key, false)),
+    ).subscribe({
       next: () => {
         this.prices.update((items) => items.filter((item) => item.id !== existing.id));
         this.priceDrafts.update((drafts) => ({ ...drafts, [key]: '' }));
         this.report.set(null);
-        this.setCellSaving(key, false);
         this.toast.success(this.tr('deleted'));
       },
       error: () => {
-        this.setCellSaving(key, false);
         this.toast.error(this.tr('deleteError'));
       },
     });
@@ -271,8 +280,8 @@ export class PriceComparisonDashboardComponent implements OnInit {
   categoryList(categories: { name: string }[]): string {
     return categories.map((category) => category.name).join(', ');
   }
-  formatPrice(value: number | null): string {
-    return value === null ? '—' : new Intl.NumberFormat(this.i18n.lang(), { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(value);
+  formatPrice(value: string | null): string {
+    return formatDecimalMoney(value, this.i18n.lang());
   }
   private cellKey(storeId: string, productId: string): string {
     return `${storeId}:${productId}`;
