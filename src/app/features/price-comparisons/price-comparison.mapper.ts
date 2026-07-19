@@ -1,4 +1,5 @@
 import { ComparisonCategory, ComparisonPrice, ComparisonProduct, ComparisonStore, PriceComparison, PriceComparisonReport, ProductCategory, ReportOffer, ReportProduct, StoreRanking } from './price-comparison.models';
+import { compareNullableDecimals, decimalDifference, decimalText } from './price-comparison.money';
 type ApiRecord = Record<string, unknown>;
 function record(value: unknown, context: string): ApiRecord {
   if (!value || typeof value !== 'object' || Array.isArray(value)) throw new Error(`Invalid ${context} response`);
@@ -88,7 +89,7 @@ export function mapPrice(raw: unknown): ComparisonPrice {
   const source = record(raw, 'price');
   const store = value(source, 'store');
   const product = value(source, 'product');
-  const price = numberValue(source, 'price', 'amount', 'value');
+  const price = decimalText(value(source, 'price', 'amount', 'value'));
   if (price === null) throw new Error('Price is missing or invalid');
   return {
     id: requiredId(source, 'Price', 'id', 'uuid'),
@@ -101,7 +102,7 @@ export function mapPrice(raw: unknown): ComparisonPrice {
 }
 function mapOffer(raw: unknown, productId = '', productName = ''): ReportOffer {
   const source = record(raw, 'report offer');
-  const price = numberValue(source, 'price', 'amount', 'value');
+  const price = decimalText(value(source, 'price', 'amount', 'value'));
   if (price === null) throw new Error('Report offer price is missing or invalid');
   return {
     id: text(source, 'id', 'uuid'),
@@ -118,8 +119,9 @@ function mapReportProduct(raw: unknown): ReportProduct {
   const name = text(source, 'name', 'product_name', 'productName');
   const prices = value(source, 'prices', 'offers');
   const cheapest = value(source, 'cheapest_offers', 'cheapestOffers', 'best_offers', 'bestOffers');
-  const minPrice = numberValue(source, 'min_price', 'minPrice', 'minimum_price', 'minimumPrice');
-  const maxPrice = numberValue(source, 'max_price', 'maxPrice', 'maximum_price', 'maximumPrice');
+  const minPrice = decimalText(value(source, 'min_price', 'minPrice', 'minimum_price', 'minimumPrice'));
+  const maxPrice = decimalText(value(source, 'max_price', 'maxPrice', 'maximum_price', 'maximumPrice'));
+  const explicitRange = decimalText(value(source, 'price_range', 'priceRange'));
   return {
     id,
     name,
@@ -129,16 +131,16 @@ function mapReportProduct(raw: unknown): ReportProduct {
     cheapestOffers: cheapest == null ? [] : list(cheapest).map((item) => mapOffer(item, id, name)),
     minPrice,
     maxPrice,
-    priceRange: numberValue(source, 'price_range', 'priceRange') ?? (minPrice !== null && maxPrice !== null ? maxPrice - minPrice : null),
+    priceRange: explicitRange ?? (minPrice !== null && maxPrice !== null ? decimalDifference(maxPrice, minPrice) : null),
   };
 }
 function mapRanking(raw: unknown): StoreRanking {
   const source = record(raw, 'store ranking');
-  const total = numberValue(source, 'total', 'basket_total', 'basketTotal');
+  const total = decimalText(value(source, 'total', 'basket_total', 'basketTotal'));
   return {
     storeId: requiredId(source, 'Store ranking', 'store_id', 'storeId', 'id'),
     storeName: text(source, 'store_name', 'storeName', 'name'),
-    total: total ?? 0,
+    total: total ?? '0',
     pricedProducts: numberValue(source, 'priced_products', 'pricedProducts') ?? 0,
     missingProducts: numberValue(source, 'missing_products', 'missingProducts') ?? 0,
     isComplete: Boolean(value(source, 'is_complete', 'isComplete')),
@@ -150,7 +152,8 @@ export function mapReport(raw: unknown): PriceComparisonReport {
   const comparisonRaw = value(source, 'comparison');
   if (!comparisonRaw || typeof comparisonRaw !== 'object') throw new Error('Report comparison is missing');
   const stores = mapList(value(source, 'stores') ?? [], mapStore);
-  const products = mapList(value(source, 'products') ?? [], mapReportProduct).sort((a, b) => (a.minPrice ?? Number.POSITIVE_INFINITY) - (b.minPrice ?? Number.POSITIVE_INFINITY));
+  const products = mapList(value(source, 'products') ?? [], mapReportProduct)
+    .sort((a, b) => compareNullableDecimals(a.minPrice, b.minPrice));
   const rankings = mapList(value(summary, 'store_rankings', 'storeRankings') ?? [], mapRanking);
   const bestRaw = value(summary, 'best_complete_basket_stores', 'bestCompleteBasketStores') ?? [];
   const best = list(bestRaw).map((item) => {
