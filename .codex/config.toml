@@ -1,0 +1,15 @@
+[agents]
+max_threads = 3
+max_depth = 1
+
+[agents.django_api]
+description = "Implements and reviews Django/DRF/PostgreSQL/Celery API work according to the approved dated plan."
+config_file = "../../.agents/django_api.toml"
+
+[agents.angular_frontend]
+description = "Implements and reviews Angular/RxJS/PWA work against approved API contracts and the dated plan."
+config_file = "../../.agents/angular_frontend.toml"
+
+[agents.qa]
+description = "Performs plan-to-diff review and runs the complete API/frontend verification matrix after implementation."
+config_file = "../../.agents/qa.toml"
