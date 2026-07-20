@@ -16,7 +16,7 @@ Production-ready web frontend for Home Manager, replicating Flutter app function
    ```
 
 2. **Configure API:**
-   Edit `src/environments/environment.ts` or `src/environments/environment.development.ts` to set `API_BASE_URL`.
+   Edit `src/environments/environment.development.ts` to set the development `apiUrl` and `wsUrl`.
    Default: `http://localhost:8000/api/`
 
 3. **Run development server:**

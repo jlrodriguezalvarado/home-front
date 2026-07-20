@@ -13,20 +13,32 @@ Guía para compilar y publicar el frontend Angular como PWA detrás de Nginx.
 
 La PWA usa `@angular/service-worker`. El service worker **solo funciona con HTTPS** (o `localhost` en desarrollo).
 
-## 1. Configurar la URL del API
+## 1. Configurar las URLs del API y WebSocket
 
-Antes del build de producción, edita `src/environments/environment.ts`:
+`angular.json` reemplaza `environment.ts` por `environment.prod.ts` durante el
+build de producción. Ese archivo es local y está ignorado por Git: no lo agregues
+al repositorio. Si todavía no existe, créalo a partir de
+`src/environments/environment.prod.example.ts` y ajusta ambas URLs:
 
 ```typescript
 export const environment = {
   production: true,
   apiUrl: 'https://tu-dominio.com/api',
+  wsUrl: 'wss://tu-dominio.com/ws',
 };
 ```
 
 `apiUrl` debe apuntar al endpoint base del backend **incluyendo** `/api`. La app también resuelve URLs de media quitando `/api` del origen (`resolveMediaUrl` en `src/app/core/api/api-url.ts`).
 
-> **Nota:** `angular.json` no define `fileReplacements` entre `environment.ts` y `environment.development.ts`. El build de producción usa siempre `environment.ts`. Ajusta ese archivo antes de desplegar.
+`wsUrl` debe usar `wss://` bajo HTTPS e incluir el prefijo `/ws`. Para frontend y
+API bajo el mismo dominio puedes conservar las URLs relativas/dinámicas del ejemplo.
+
+Antes de cada build confirma el archivo que realmente se sustituirá:
+
+```bash
+git check-ignore -v src/environments/environment.prod.ts
+sed -n '1,80p' src/environments/environment.prod.ts
+```
 
 ## 2. Build de producción
 
@@ -190,7 +202,7 @@ En el navegador:
 ```bash
 git pull
 npm ci
-# Revisa environment.ts
+# Revisa environment.prod.ts (local e ignorado)
 npm run build:prod
 sudo rsync -av --delete dist/home-manager/browser/ /var/www/home-manager/
 sudo systemctl reload nginx   # opcional; los estáticos ya están actualizados
