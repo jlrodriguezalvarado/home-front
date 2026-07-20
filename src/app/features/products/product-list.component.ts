@@ -18,7 +18,8 @@ import { ErrorStateComponent } from '../../shared/components/error-state.compone
 
 import { CommerceRepository } from '../commerce/commerce.repository';
 
-import { Product, Category, Commerce } from '../../core/api/models';
+import { Product, Category } from './product.models';
+import { Commerce } from '../commerce/commerce.models';
 
 import { I18nService } from '../../core/i18n/i18n.service';
 import { CommerceReprocessService } from '../../core/notifications/commerce-reprocess.service';
@@ -490,4 +491,3 @@ export class ProductListComponent implements OnInit, OnDestroy {
   }
 
 }
-

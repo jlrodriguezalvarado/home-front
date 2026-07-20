@@ -15,7 +15,7 @@ import { Router } from '@angular/router';
 import { CommerceRepository } from '../commerce/commerce.repository';
 import { ProductFilterStorageService } from '../products/product-filter-storage.service';
 
-import { Commerce } from '../../core/api/models';
+import { Commerce } from '../commerce/commerce.models';
 
 import { CartItem } from '../../core/models/shopping.models';
 
@@ -381,4 +381,3 @@ export class CartComponent implements OnInit, OnDestroy {
     this.toast.success(this.i18n.t('cartCleared'));
   }
 }
-

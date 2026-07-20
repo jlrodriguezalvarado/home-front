@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable, map } from 'rxjs';
-import { Currency } from '../../core/api/models';
+import { Currency } from './currency.models';
 import { ApiService } from '../../core/api/api.service';
 import { API_ENDPOINTS } from '../../core/api/endpoints';
 import { ApiListResponse, apiListResults } from '../../core/api/api-page';

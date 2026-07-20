@@ -8,7 +8,7 @@ import { CommerceRepository } from '../../commerce/commerce.repository';
 import { Ingredient, IngredientFormValue } from '../models/meal-planning.models';
 import { mapIngredientToFormValue } from '../mappers/meal-planning.mapper';
 import { Product } from '../../../core/models/shopping.models';
-import { Commerce } from '../../../core/api/models';
+import { Commerce } from '../../commerce/commerce.models';
 import { I18nService } from '../../../core/i18n/i18n.service';
 import { ToastService } from '../../../shared/services/toast.service';
 import { SearchSelectComponent, SearchSelectOption } from '../../../shared/components/search-select.component';

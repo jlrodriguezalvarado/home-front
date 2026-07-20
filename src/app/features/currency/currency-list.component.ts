@@ -2,7 +2,7 @@ import { Component, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CurrencyRepository } from './currency.repository';
-import { Currency } from '../../core/api/models';
+import { Currency } from './currency.models';
 import { I18nService } from '../../core/i18n/i18n.service';
 import { ConfirmService } from '../../shared/services/confirm.service';
 import { DialogFormDirective } from '../../shared/directives/dialog-form.directive';
