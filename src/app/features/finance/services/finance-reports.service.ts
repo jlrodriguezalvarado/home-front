@@ -25,17 +25,20 @@ export class FinanceReportsService {
   private readonly api = inject(ApiService);
 
   listYears(): Observable<FinancialYearOption[]> {
-    return this.api
-      .get<unknown>(API_ENDPOINTS.finance.years, { params: { perPage: 200 } })
-      .pipe(
-        map((res) => this.decodeList(res).map((item) => ({
+    return this.api.get<unknown>(API_ENDPOINTS.finance.years, { params: { perPage: 200 } }).pipe(
+      map((res) =>
+        this.decodeList(res).map((item) => ({
           id: String(item['id'] ?? ''),
           year: Number(item['year']),
-        }))),
-      );
+        })),
+      ),
+    );
   }
 
-  listByYear(year: number, options: ReportListOptions = {}): Observable<PaginatedResponse<GeneratedReport>> {
+  listByYear(
+    year: number,
+    options: ReportListOptions = {},
+  ): Observable<PaginatedResponse<GeneratedReport>> {
     const params: Record<string, string | number> = {
       year,
       perPage: options.perPage ?? DEFAULT_PER_PAGE,
@@ -54,7 +57,8 @@ export class FinanceReportsService {
             ...(options.status ? { status: options.status } : {}),
           }).pipe(
             switchMap((byFinancialYear) => {
-              if (byFinancialYear.results.length > 0 || byFinancialYear.count > 0) return of(byFinancialYear);
+              if (byFinancialYear.results.length > 0 || byFinancialYear.count > 0)
+                return of(byFinancialYear);
               return this.fetchAllFilteredByYear(year, options);
             }),
           );
@@ -64,7 +68,10 @@ export class FinanceReportsService {
     );
   }
 
-  private fetchAllFilteredByYear(year: number, options: ReportListOptions): Observable<PaginatedResponse<GeneratedReport>> {
+  private fetchAllFilteredByYear(
+    year: number,
+    options: ReportListOptions,
+  ): Observable<PaginatedResponse<GeneratedReport>> {
     const params: Record<string, string | number> = { perPage: 200 };
     if (options.status) params['status'] = options.status;
     return this.fetchReports(params).pipe(
@@ -80,7 +87,9 @@ export class FinanceReportsService {
     );
   }
 
-  private fetchReports(params: Record<string, string | number>): Observable<PaginatedResponse<GeneratedReport>> {
+  private fetchReports(
+    params: Record<string, string | number>,
+  ): Observable<PaginatedResponse<GeneratedReport>> {
     return this.api
       .get<unknown>(API_ENDPOINTS.finance.reports, { params })
       .pipe(map((res) => this.decodePaginated(res)));
@@ -98,6 +107,18 @@ export class FinanceReportsService {
     return this.api
       .post<Record<string, unknown>>(API_ENDPOINTS.finance.reportsGenerate, body)
       .pipe(map((res) => this.mapReport(res)));
+  }
+
+  generateAndWait(
+    year: number,
+    triggeredFromMonth?: number,
+    pollIntervalMs = 3000,
+  ): Observable<GeneratedReport> {
+    return this.generate(year, triggeredFromMonth).pipe(
+      switchMap((report) =>
+        isReportPending(report) ? this.waitForReportCompletion(report, pollIntervalMs) : of(report),
+      ),
+    );
   }
 
   delete(id: string): Observable<void> {
@@ -139,7 +160,11 @@ export class FinanceReportsService {
 
   private decodeList(data: unknown): Record<string, unknown>[] {
     if (Array.isArray(data)) return data as Record<string, unknown>[];
-    if (data && typeof data === 'object' && Array.isArray((data as { results?: unknown[] }).results)) {
+    if (
+      data &&
+      typeof data === 'object' &&
+      Array.isArray((data as { results?: unknown[] }).results)
+    ) {
       return (data as { results: Record<string, unknown>[] }).results;
     }
     return [];

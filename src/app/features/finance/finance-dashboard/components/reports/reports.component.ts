@@ -2,7 +2,7 @@ import { Component, DestroyRef, inject, OnInit, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-import { Subscription, catchError, of, switchMap, timer } from 'rxjs';
+import { Subscription, catchError, finalize, of, switchMap, timer } from 'rxjs';
 import { takeWhile } from 'rxjs/operators';
 import { bindFinancePeriodLoads } from '../../../finance-period-route.util';
 import { GeneratedReport } from '../../../models/finance.models';
@@ -44,8 +44,18 @@ export class FinanceReportsComponent implements OnInit {
   private financialYearId = '';
 
   readonly monthNames = [
-    'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'May',
+    'Jun',
+    'Jul',
+    'Aug',
+    'Sep',
+    'Oct',
+    'Nov',
+    'Dec',
   ];
 
   ngOnInit() {
@@ -74,26 +84,19 @@ export class FinanceReportsComponent implements OnInit {
     if (!Number.isFinite(yearNum)) return;
 
     this.busy.set(true);
-    this.reportsService.generate(yearNum, Number.isFinite(monthNum) ? monthNum : undefined).subscribe({
-      next: (report) => {
-        if (isReportPending(report)) {
-          this.reportsService.waitForReportCompletion(report, POLL_INTERVAL_MS).subscribe({
-            next: (final) => this.handleReportResult(final),
-            error: (err) => {
-              this.busy.set(false);
-              this.toast.error(financeApiErrorMessage(err, this.i18n.lang()));
-              this.reloadReports();
-            },
-          });
-        } else {
-          this.handleReportResult(report);
-        }
-      },
-      error: (err) => {
-        this.busy.set(false);
-        this.toast.error(financeApiErrorMessage(err, this.i18n.lang()));
-      },
-    });
+    this.reportsService
+      .generateAndWait(yearNum, Number.isFinite(monthNum) ? monthNum : undefined, POLL_INTERVAL_MS)
+      .pipe(
+        finalize(() => this.busy.set(false)),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe({
+        next: (report) => this.handleReportResult(report),
+        error: (err) => {
+          this.toast.error(financeApiErrorMessage(err, this.i18n.lang()));
+          this.reloadReports();
+        },
+      });
   }
 
   async deleteReport(report: GeneratedReport) {
@@ -160,7 +163,20 @@ export class FinanceReportsComponent implements OnInit {
     if (month == null) return '—';
     const lang = this.i18n.lang();
     if (lang === 'en') return this.monthNames[month - 1] ?? String(month);
-    const esMonths = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+    const esMonths = [
+      'Ene',
+      'Feb',
+      'Mar',
+      'Abr',
+      'May',
+      'Jun',
+      'Jul',
+      'Ago',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dic',
+    ];
     return esMonths[month - 1] ?? String(month);
   }
 
@@ -191,7 +207,9 @@ export class FinanceReportsComponent implements OnInit {
           financialYear: this.financialYearId || undefined,
         });
       }),
-      catchError(() => of({ count: 0, next: null, previous: null, results: [] as GeneratedReport[] })),
+      catchError(() =>
+        of({ count: 0, next: null, previous: null, results: [] as GeneratedReport[] }),
+      ),
     );
   }
 
@@ -213,12 +231,13 @@ export class FinanceReportsComponent implements OnInit {
   }
 
   private handleReportResult(report: GeneratedReport) {
-    this.busy.set(false);
     this.updateReportInList(report);
     this.ensurePolling(report);
     const lang = this.i18n.lang();
     if (isReportFailed(report)) {
-      this.toast.error(report.errorMessage ?? (lang === 'en' ? 'Report failed' : 'Reporte fallido'));
+      this.toast.error(
+        report.errorMessage ?? (lang === 'en' ? 'Report failed' : 'Reporte fallido'),
+      );
       this.reloadReports();
       return;
     }
@@ -245,8 +264,10 @@ export class FinanceReportsComponent implements OnInit {
             this.stopPolling(updated.id);
             if (isReportFailed(updated)) {
               this.toast.error(
-                updated.errorMessage
-                  ?? (this.i18n.lang() === 'en' ? 'Report generation failed' : 'Error al generar reporte'),
+                updated.errorMessage ??
+                  (this.i18n.lang() === 'en'
+                    ? 'Report generation failed'
+                    : 'Error al generar reporte'),
               );
             }
           }

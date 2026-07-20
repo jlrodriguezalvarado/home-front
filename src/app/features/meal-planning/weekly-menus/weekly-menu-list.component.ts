@@ -1,8 +1,9 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, DestroyRef, inject, OnInit, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
-import { catchError, of } from 'rxjs';
+import { catchError, finalize, of, Subscription, switchMap } from 'rxjs';
 import { WeeklyMenuRepository } from '../repositories/weekly-menu.repository';
 import { MenuDay, MenuMeal, WeeklyMenu } from '../models/meal-planning.models';
 import { I18nService } from '../../../core/i18n/i18n.service';
@@ -36,6 +37,8 @@ export class WeeklyMenuListComponent implements OnInit {
   i18n = inject(I18nService);
   confirm = inject(ConfirmService);
   toast = inject(ToastService);
+  private readonly destroyRef = inject(DestroyRef);
+  private menuLoadSubscription?: Subscription;
   menus = signal<WeeklyMenu[]>([]);
   currentMenu = signal<WeeklyMenu | null>(null);
   loading = signal(false);
@@ -60,37 +63,23 @@ export class WeeklyMenuListComponent implements OnInit {
   loadCurrentMenu() {
     this.currentMenuLoading.set(true);
     this.currentMenuError.set(false);
-    this.repo.current().pipe(
-      catchError((err: { status?: number }) => {
-        if (err?.status === 404) return of(null);
-        this.currentMenuError.set(true);
-        return of(null);
-      }),
-    ).subscribe({
-      next: (menu) => {
-        if (!menu) {
-          this.currentMenu.set(null);
-          this.currentMenuLoading.set(false);
-          return;
-        }
-        this.repo.get(menu.id).subscribe({
-          next: (full) => {
-            this.currentMenu.set(full);
-            this.currentMenuLoading.set(false);
-            this.collapsedDays.set(new Set(full.days.map((day) => day.id)));
-          },
-          error: () => {
-            this.currentMenu.set(menu);
-            this.currentMenuLoading.set(false);
-            this.collapsedDays.set(new Set(menu.days.map((day) => day.id)));
-          },
-        });
-      },
-      error: () => {
-        this.currentMenuLoading.set(false);
-        this.currentMenuError.set(true);
-      },
-    });
+    this.repo
+      .current()
+      .pipe(
+        catchError((err: { status?: number }) => {
+          if (err?.status !== 404) this.currentMenuError.set(true);
+          return of(null);
+        }),
+        switchMap((menu) =>
+          menu ? this.repo.get(menu.id).pipe(catchError(() => of(menu))) : of(null),
+        ),
+        finalize(() => this.currentMenuLoading.set(false)),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe((menu) => {
+        this.currentMenu.set(menu);
+        this.collapsedDays.set(new Set((menu?.days ?? []).map((day) => day.id)));
+      });
   }
 
   load() {
@@ -102,21 +91,26 @@ export class WeeklyMenuListComponent implements OnInit {
     if (this.favoritesOnly()) params['is_favorite'] = true;
     if (this.templatesOnly()) params['is_template'] = true;
     if (this.currentOnly()) params['is_current'] = true;
-    this.repo.list(params).subscribe({
-      next: (res) => {
-        let items = res;
-        if (this.favoritesOnly()) items = items.filter((m) => m.isFavorite);
-        if (this.templatesOnly()) items = items.filter((m) => m.isTemplate);
-        if (this.currentOnly()) items = items.filter((m) => m.isCurrent);
-        items = [...items].sort((a, b) => Number(b.isCurrent) - Number(a.isCurrent));
-        this.menus.set(items);
-        this.loading.set(false);
-      },
-      error: () => {
-        this.loading.set(false);
-        this.error.set(true);
-      },
-    });
+    this.menuLoadSubscription?.unsubscribe();
+    this.menuLoadSubscription = this.repo
+      .list(params)
+      .pipe(
+        finalize(() => this.loading.set(false)),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe({
+        next: (res) => {
+          let items = res;
+          if (this.favoritesOnly()) items = items.filter((m) => m.isFavorite);
+          if (this.templatesOnly()) items = items.filter((m) => m.isTemplate);
+          if (this.currentOnly()) items = items.filter((m) => m.isCurrent);
+          items = [...items].sort((a, b) => Number(b.isCurrent) - Number(a.isCurrent));
+          this.menus.set(items);
+        },
+        error: () => {
+          this.error.set(true);
+        },
+      });
   }
 
   onSearchChange(value: string) {
@@ -172,11 +166,13 @@ export class WeeklyMenuListComponent implements OnInit {
     this.repo.toggleFavorite(menu.id).subscribe({
       next: (updated) => {
         this.menus.update((items) => {
-          const next = items.map((item) => item.id === updated.id ? updated : item);
+          const next = items.map((item) => (item.id === updated.id ? updated : item));
           if (this.favoritesOnly()) return next.filter((item) => item.isFavorite);
           return next;
         });
-        this.toast.success(updated.isFavorite ? this.i18n.t('markAsFavorite') : this.i18n.t('removeFavorite'));
+        this.toast.success(
+          updated.isFavorite ? this.i18n.t('markAsFavorite') : this.i18n.t('removeFavorite'),
+        );
       },
       error: () => this.toast.error(this.i18n.lang() === 'en' ? 'Action failed' : 'Acción fallida'),
     });
@@ -234,16 +230,19 @@ export class WeeklyMenuListComponent implements OnInit {
       this.toast.error(this.i18n.lang() === 'en' ? 'Name is required' : 'El nombre es obligatorio');
       return;
     }
-    this.repo.clone(sourceId, {
-      name: form.name,
-    }).subscribe({
-      next: (created) => {
-        this.toast.success(this.i18n.t('clone'));
-        this.closeCloneDialog();
-        this.router.navigate(['/meal-planning/weekly-menus', created.id, 'edit']);
-      },
-      error: () => this.toast.error(this.i18n.lang() === 'en' ? 'Clone failed' : 'Error al clonar'),
-    });
+    this.repo
+      .clone(sourceId, {
+        name: form.name,
+      })
+      .subscribe({
+        next: (created) => {
+          this.toast.success(this.i18n.t('clone'));
+          this.closeCloneDialog();
+          this.router.navigate(['/meal-planning/weekly-menus', created.id, 'edit']);
+        },
+        error: () =>
+          this.toast.error(this.i18n.lang() === 'en' ? 'Clone failed' : 'Error al clonar'),
+      });
   }
 
   async deleteMenu(menu: WeeklyMenu, event: Event) {
@@ -265,7 +264,8 @@ export class WeeklyMenuListComponent implements OnInit {
         this.load();
         this.loadCurrentMenu();
       },
-      error: () => this.toast.error(this.i18n.lang() === 'en' ? 'Delete failed' : 'Error al eliminar'),
+      error: () =>
+        this.toast.error(this.i18n.lang() === 'en' ? 'Delete failed' : 'Error al eliminar'),
     });
   }
 }
