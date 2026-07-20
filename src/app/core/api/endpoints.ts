@@ -1,8 +1,8 @@
 export const API_ENDPOINTS = {
   auth: {
-    login: '/auth/login',
-    refresh: '/auth/refresh',
-    me: '/authme/',
+    login: '/auth/login/',
+    refresh: '/auth/refresh/',
+    me: '/auth/me/',
     changePassword: '/auth/change-password/',
   },
   products: {
@@ -10,7 +10,7 @@ export const API_ENDPOINTS = {
     detail: (id: string) => `/products/${id}/`,
     scrapeByIds: '/products/scrape-by-ids/',
   },
-  productCategories: '/product-categories',
+  productCategories: '/product-categories/',
   commerces: {
     list: '/commerces/',
     detail: (id: string) => `/commerces/${id}/`,
@@ -28,7 +28,7 @@ export const API_ENDPOINTS = {
     refreshPrices: '/carts/current/refresh-prices/',
   },
   currencies: {
-    list: '/currencies',
+    list: '/currencies/',
     detail: (id: string) => `/currencies/${id}/`,
   },
   exchangeRates: {
