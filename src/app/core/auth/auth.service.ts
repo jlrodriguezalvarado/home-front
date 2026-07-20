@@ -1,5 +1,5 @@
 import { Injectable, signal, computed, inject } from '@angular/core';
-import { Observable, Subject, tap, catchError, throwError } from 'rxjs';
+import { Observable, Subject, catchError, finalize, shareReplay, tap, throwError } from 'rxjs';
 import { ApiService } from '../api/api.service';
 import { API_ENDPOINTS } from '../api/endpoints';
 import { clearUserScopedStorage } from './user-session-storage';
@@ -36,6 +36,7 @@ export class AuthService {
 
   private _accessToken = signal<string | null>(localStorage.getItem(this.ACCESS_TOKEN_KEY));
   private _refreshToken = signal<string | null>(localStorage.getItem(this.REFRESH_TOKEN_KEY));
+  private refreshInFlight$: Observable<AuthTokens> | null = null;
 
   isAuthenticated = computed(() => !!this._accessToken());
   readonly loggedOut$ = this.loggedOutSubject.asObservable();
@@ -49,16 +50,18 @@ export class AuthService {
   }
 
   login(credentials: { email: string; password: string }): Observable<AuthTokens> {
-    return this.api.post<AuthTokens>(API_ENDPOINTS.auth.login, credentials).pipe(
-      tap((tokens) => this.saveTokens(tokens)),
-    );
+    return this.api
+      .post<AuthTokens>(API_ENDPOINTS.auth.login, credentials)
+      .pipe(tap((tokens) => this.saveTokens(tokens)));
   }
 
   refreshToken(): Observable<AuthTokens> {
+    if (this.refreshInFlight$) return this.refreshInFlight$;
+
     const refresh = this.getRefreshToken();
     if (!refresh) return throwError(() => new Error('No refresh token available'));
 
-    return this.api.post<AuthTokens>(API_ENDPOINTS.auth.refresh, { refresh }).pipe(
+    const request$ = this.api.post<AuthTokens>(API_ENDPOINTS.auth.refresh, { refresh }).pipe(
       tap((tokens) => {
         this.saveTokens({ ...tokens, refresh });
       }),
@@ -66,7 +69,13 @@ export class AuthService {
         this.logout();
         return throwError(() => err);
       }),
+      finalize(() => {
+        if (this.refreshInFlight$ === request$) this.refreshInFlight$ = null;
+      }),
+      shareReplay({ bufferSize: 1, refCount: false }),
     );
+    this.refreshInFlight$ = request$;
+    return request$;
   }
 
   getCurrentUser(): Observable<AuthUser> {

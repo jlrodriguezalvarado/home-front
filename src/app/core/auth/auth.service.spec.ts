@@ -1,13 +1,17 @@
 import { TestBed } from '@angular/core/testing';
+import { Subject, of } from 'rxjs';
 import { ApiService } from '../api/api.service';
-import { AuthService } from './auth.service';
+import { AuthService, AuthTokens } from './auth.service';
 
-describe('AuthService logout', () => {
+describe('AuthService', () => {
+  const api = jasmine.createSpyObj<ApiService>('ApiService', ['post']);
+
   beforeEach(() => {
     localStorage.clear();
     sessionStorage.clear();
+    api.post.calls.reset();
     TestBed.configureTestingModule({
-      providers: [{ provide: ApiService, useValue: {} }]
+      providers: [{ provide: ApiService, useValue: api }],
     });
   });
 
@@ -52,5 +56,27 @@ describe('AuthService logout', () => {
     service.logout();
 
     expect(loggedOut).toHaveBeenCalledTimes(1);
+  });
+
+  it('shares one refresh request across concurrent subscribers', () => {
+    localStorage.setItem('refresh_token', 'refresh-1');
+    const refreshResponse = new Subject<AuthTokens>();
+    api.post.and.returnValue(refreshResponse);
+    const service = TestBed.inject(AuthService);
+    const first = jasmine.createSpy('first');
+    const second = jasmine.createSpy('second');
+
+    service.refreshToken().subscribe(first);
+    service.refreshToken().subscribe(second);
+
+    expect(api.post).toHaveBeenCalledTimes(1);
+    refreshResponse.next({ access: 'access-2', refresh: 'rotated-refresh' });
+    refreshResponse.complete();
+    expect(first).toHaveBeenCalledWith({ access: 'access-2', refresh: 'rotated-refresh' });
+    expect(second).toHaveBeenCalledWith({ access: 'access-2', refresh: 'rotated-refresh' });
+
+    api.post.and.returnValue(of({ access: 'access-3', refresh: 'ignored-refresh' }));
+    service.refreshToken().subscribe();
+    expect(api.post).toHaveBeenCalledTimes(2);
   });
 });
