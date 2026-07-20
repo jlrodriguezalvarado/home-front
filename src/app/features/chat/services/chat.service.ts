@@ -53,6 +53,12 @@ export class ChatService {
     this.notifications.setActiveConversation(null);
   }
 
+  reset(): void {
+    this.closeConversation();
+    this.currentUserId.set(null);
+    this.store.clear();
+  }
+
   applyInboxMessage(message: ChatMessage): void {
     this.applyServerMessage(message, 'sent');
     this.notifications.applyActiveConversationMessage(message);

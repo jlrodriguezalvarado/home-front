@@ -18,6 +18,9 @@ export class ChatSessionService {
   private started = false;
 
   constructor() {
+    this.auth.loggedOut$
+      .pipe(takeUntilDestroyed())
+      .subscribe(() => void this.stop(false));
     this.inboxWs.messages$
       .pipe(takeUntilDestroyed())
       .subscribe((event) => {
@@ -52,12 +55,11 @@ export class ChatSessionService {
     });
   }
 
-  async stop(): Promise<void> {
-    if (!this.started) return;
+  async stop(unsubscribePush = true): Promise<void> {
     this.started = false;
     this.inboxWs.disconnect();
-    this.notifications.setCurrentUserId(null);
-    this.notifications.setActiveConversation(null);
-    await this.push.unsubscribeOnLogout();
+    this.chat.reset();
+    this.notifications.reset();
+    await this.push.unsubscribeOnLogout(unsubscribePush);
   }
 }

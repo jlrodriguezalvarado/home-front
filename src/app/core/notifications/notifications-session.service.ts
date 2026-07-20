@@ -1,4 +1,5 @@
 import { Injectable, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AuthService } from '../auth/auth.service';
 import { NotificationsService } from './notifications.service';
 import { NotificationsWebSocketService } from './notifications-websocket.service';
@@ -10,6 +11,12 @@ export class NotificationsSessionService {
   private readonly notifications = inject(NotificationsService);
   private started = false;
 
+  constructor() {
+    this.auth.loggedOut$
+      .pipe(takeUntilDestroyed())
+      .subscribe(() => this.stop());
+  }
+
   start(): void {
     if (!this.auth.isAuthenticated() || this.started) return;
     this.started = true;
@@ -18,7 +25,6 @@ export class NotificationsSessionService {
   }
 
   stop(): void {
-    if (!this.started) return;
     this.started = false;
     this.notificationsWs.disconnect();
     this.notifications.reset();

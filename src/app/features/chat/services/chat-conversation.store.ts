@@ -22,6 +22,16 @@ export class ChatConversationStore {
     this.newMessagesBelow.set(0);
   }
 
+  clear(): void {
+    this.conversationId.set(null);
+    this.messages.set([]);
+    this.nextBefore.set(null);
+    this.hasMore.set(false);
+    this.loadingInitial.set(false);
+    this.loadingOlder.set(false);
+    this.newMessagesBelow.set(0);
+  }
+
   setInitialPage(
     items: ChatMessageItem[],
     nextBefore: string | null,

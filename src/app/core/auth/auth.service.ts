@@ -1,7 +1,8 @@
 import { Injectable, signal, computed, inject } from '@angular/core';
-import { Observable, tap, catchError, throwError } from 'rxjs';
+import { Observable, Subject, tap, catchError, throwError } from 'rxjs';
 import { ApiService } from '../api/api.service';
 import { API_ENDPOINTS } from '../api/endpoints';
+import { clearUserScopedStorage } from './user-session-storage';
 
 export interface AuthTokens {
   access: string;
@@ -31,11 +32,13 @@ export class AuthService {
   private readonly api = inject(ApiService);
   private readonly ACCESS_TOKEN_KEY = 'access_token';
   private readonly REFRESH_TOKEN_KEY = 'refresh_token';
+  private readonly loggedOutSubject = new Subject<void>();
 
   private _accessToken = signal<string | null>(localStorage.getItem(this.ACCESS_TOKEN_KEY));
   private _refreshToken = signal<string | null>(localStorage.getItem(this.REFRESH_TOKEN_KEY));
 
   isAuthenticated = computed(() => !!this._accessToken());
+  readonly loggedOut$ = this.loggedOutSubject.asObservable();
 
   getAccessToken(): string | null {
     return this._accessToken();
@@ -74,13 +77,15 @@ export class AuthService {
     return this.api.post<ChangePasswordResponse>(API_ENDPOINTS.auth.changePassword, payload);
   }
 
-  logout() {
+  logout(): void {
     this._accessToken.set(null);
     this._refreshToken.set(null);
     localStorage.removeItem(this.ACCESS_TOKEN_KEY);
     localStorage.removeItem(this.REFRESH_TOKEN_KEY);
     sessionStorage.removeItem(this.ACCESS_TOKEN_KEY);
     sessionStorage.removeItem(this.REFRESH_TOKEN_KEY);
+    clearUserScopedStorage();
+    this.loggedOutSubject.next();
   }
 
   private saveTokens(tokens: AuthTokens) {

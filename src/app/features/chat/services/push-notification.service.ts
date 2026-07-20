@@ -63,23 +63,31 @@ export class PushNotificationService {
     }
   }
 
-  async unsubscribe(): Promise<boolean> {
+  async unsubscribe(notifyServer = true): Promise<boolean> {
     if (!this.isSupported()) return false;
     try {
       const registration = await this.getRegistration();
       const subscription = await registration.pushManager.getSubscription();
       if (!subscription) return false;
-      await firstValueFrom(this.repo.unsubscribePushSubscription(subscription.endpoint));
-      await subscription.unsubscribe();
-      return true;
+      let serverUnsubscribed = true;
+      if (notifyServer) {
+        try {
+          await firstValueFrom(this.repo.unsubscribePushSubscription(subscription.endpoint));
+        } catch (error) {
+          serverUnsubscribed = false;
+          console.error('Failed to remove the push subscription from the server', error);
+        }
+      }
+      const browserUnsubscribed = await subscription.unsubscribe();
+      return browserUnsubscribed && serverUnsubscribed;
     } catch (error) {
       console.error('Failed to unsubscribe from push notifications', error);
       return false;
     }
   }
 
-  async unsubscribeOnLogout(): Promise<void> {
-    await this.unsubscribe();
+  async unsubscribeOnLogout(notifyServer = true): Promise<void> {
+    await this.unsubscribe(notifyServer);
   }
 
   async hasActiveSubscription(): Promise<boolean> {
