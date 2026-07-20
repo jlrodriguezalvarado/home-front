@@ -1,7 +1,6 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { HttpErrorResponse } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { I18nService, AppStringKey } from '../../core/i18n/i18n.service';
 import { AuthService } from '../../core/auth/auth.service';
@@ -10,6 +9,7 @@ import { DialogFormDirective } from '../../shared/directives/dialog-form.directi
 import { ChatSessionService } from '../chat/services/chat-session.service';
 import { NotificationsSessionService } from '../../core/notifications/notifications-session.service';
 import { MediaPermissionKind, MediaPermissionService } from '../../shared/services/media-permission.service';
+import { normalizeAppError } from '../../core/api/app-error';
 
 const API_FIELD_TO_CONTROL: Record<string, string> = {
   current_password: 'currentPassword',
@@ -145,10 +145,11 @@ export class ProfileSettingsComponent implements OnInit {
           void this.router.navigate(['/login']);
         });
       },
-      error: (err: HttpErrorResponse) => {
+      error: (error: unknown) => {
         this.passwordSaving.set(false);
+        const err = normalizeAppError(error);
         if (err.status === 400) {
-          this.applyApiFieldErrors(err.error);
+          this.applyApiFieldErrors(err.fieldErrors);
           return;
         }
         if (err.status === 401) {

@@ -1,7 +1,6 @@
 import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { HttpErrorResponse } from '@angular/common/http';
 import { ExpenseSpendGroup, ExpenseSpendPendingItem } from '../../../models/finance.models';
 import {
   ExpenseSpendService,
@@ -12,6 +11,7 @@ import {
 } from '../../../services/expense-spend.service';
 import { formatFinanceMoney } from '../../../finance.utils';
 import { financeApiErrorMessage } from '../../../services/finance-api.utils';
+import { normalizeAppError } from '../../../../../core/api/app-error';
 import { I18nService } from '../../../../../core/i18n/i18n.service';
 import { ToastService } from '../../../../../shared/services/toast.service';
 import { DialogFormDirective } from '../../../../../shared/directives/dialog-form.directive';
@@ -190,7 +190,7 @@ export class ExpenseSpendRegisterComponent implements OnChanges {
         error: (err) => {
           this.saving.set(false);
           this.toast.error(financeApiErrorMessage(err, this.i18n.lang()));
-          if (err instanceof HttpErrorResponse && err.status === 400) {
+          if (normalizeAppError(err).status === 400) {
             this.loadPending();
           }
         },

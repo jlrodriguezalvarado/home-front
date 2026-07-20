@@ -1,11 +1,11 @@
 import { Component, ElementRef, inject, OnDestroy, OnInit, signal, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormArray, FormBuilder, ReactiveFormsModule, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
-import { HttpErrorResponse } from '@angular/common/http';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { RecipeRepository } from '../repositories/recipe.repository';
 import { IngredientRepository } from '../repositories/ingredient.repository';
 import { ProductRepository } from '../../products/product.repository';
+import { AppError, normalizeAppError } from '../../../core/api/app-error';
 import { Ingredient, RecipePayload } from '../models/meal-planning.models';
 import { Product } from '../../../core/models/shopping.models';
 import { I18nService } from '../../../core/i18n/i18n.service';
@@ -426,7 +426,7 @@ export class RecipeFormComponent implements OnInit, OnDestroy {
         this.toast.success(this.i18n.t('save'));
         this.router.navigate(['/meal-planning/recipes']);
       },
-      error: (err: HttpErrorResponse) => {
+      error: (err: unknown) => {
         this.saving.set(false);
         this.toast.error(this.extractSaveErrorMessage(err));
       },
@@ -437,19 +437,13 @@ export class RecipeFormComponent implements OnInit, OnDestroy {
     if (url?.startsWith('blob:')) URL.revokeObjectURL(url);
   }
 
-  private extractSaveErrorMessage(err: HttpErrorResponse): string {
+  private extractSaveErrorMessage(error: unknown): string {
     const fallback = this.i18n.lang() === 'en' ? 'Save failed' : 'Error al guardar';
-    const body = err.error;
-    if (typeof body === 'string' && body.trim()) return body;
-    if (!body || typeof body !== 'object') return fallback;
-    const record = body as Record<string, unknown>;
-    const detail = record['detail'];
-    if (typeof detail === 'string' && detail.trim()) return detail;
+    const err: AppError = normalizeAppError(error);
     for (const key of ['image', 'video', 'non_field_errors']) {
-      const value = record[key];
-      if (Array.isArray(value) && value.length > 0) return String(value[0]);
-      if (typeof value === 'string' && value.trim()) return value;
+      const value = err.fieldErrors[key]?.[0];
+      if (value) return value;
     }
-    return fallback;
+    return err.message || fallback;
   }
 }

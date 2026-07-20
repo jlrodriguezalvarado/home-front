@@ -2,12 +2,12 @@ import { Component, DestroyRef, inject, OnInit, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import { HttpErrorResponse } from '@angular/common/http';
 import { interval, Subscription } from 'rxjs';
 import { CommerceRepository } from './commerce.repository';
 import { CommerceDetail, SourceUrlDetail } from './commerce.models';
 import { I18nService } from '../../core/i18n/i18n.service';
 import { ToastService } from '../../shared/services/toast.service';
+import { normalizeAppError } from '../../core/api/app-error';
 import { CommerceReprocessService } from '../../core/notifications/commerce-reprocess.service';
 import { LoadingStateComponent } from '../../shared/components/loading-state.component';
 import { ErrorStateComponent } from '../../shared/components/error-state.component';
@@ -106,7 +106,7 @@ export class CommerceDetailComponent implements OnInit {
         this.toast.info(this.i18n.t('batchProcessingStarted'));
         this.load(true);
       },
-      error: (err: HttpErrorResponse) => this.handleScrapingError(err),
+      error: (err: unknown) => this.handleScrapingError(err),
     });
   }
 
@@ -123,7 +123,7 @@ export class CommerceDetailComponent implements OnInit {
         this.toast.info(this.processingStartedMessage(sourceUrl.name));
         this.load(true);
       },
-      error: (err: HttpErrorResponse) => this.handleScrapingError(err),
+      error: (err: unknown) => this.handleScrapingError(err),
     });
   }
 
@@ -147,7 +147,8 @@ export class CommerceDetailComponent implements OnInit {
       : `Procesamiento iniciado para ${categoryName}`;
   }
 
-  private handleScrapingError(err: HttpErrorResponse) {
+  private handleScrapingError(error: unknown) {
+    const err = normalizeAppError(error);
     if (err.status === 409) {
       this.toast.info(this.i18n.t('processingAlreadyRunning'));
       this.load(true);

@@ -1,11 +1,12 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient, HttpErrorResponse, HttpEventType } from '@angular/common/http';
+import { HttpClient, HttpEventType } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 import { filter, map } from 'rxjs/operators';
 import { apiUrl } from '../../../core/api/api-url';
 import { API_ENDPOINTS } from '../../../core/api/endpoints';
 import { ChatMediaUploadResponse } from '../models/chat.models';
 import { mapChatMediaUploadFromApi } from '../mappers/chat.mapper';
+import { normalizeAppError } from '../../../core/api/app-error';
 
 export interface ChatMediaUploadProgress {
   progress: number;
@@ -47,19 +48,15 @@ export class ChatMediaService {
   }
 
   mapUploadError(error: unknown): 'chatMediaTypeNotSupported' | 'chatMediaFileTooLarge' | 'chatMediaUploadFailed' {
-    if (error instanceof HttpErrorResponse) {
-      if (error.status === 400) {
-        const body = error.error;
-        const detail = typeof body === 'object' && body != null
-          ? String((body as Record<string, unknown>)['detail'] ?? (body as Record<string, unknown>)['message'] ?? '')
-          : String(body ?? '');
-        const normalized = detail.toLowerCase();
-        if (normalized.includes('size') || normalized.includes('large') || normalized.includes('big')) {
-          return 'chatMediaFileTooLarge';
-        }
-        if (normalized.includes('type') || normalized.includes('format') || normalized.includes('support')) {
-          return 'chatMediaTypeNotSupported';
-        }
+    const appError = normalizeAppError(error);
+    if (appError.status === 400) {
+      const fieldMessages = Object.values(appError.fieldErrors).flat().join(' ');
+      const normalized = `${appError.message} ${fieldMessages}`.toLowerCase();
+      if (normalized.includes('size') || normalized.includes('large') || normalized.includes('big')) {
+        return 'chatMediaFileTooLarge';
+      }
+      if (normalized.includes('type') || normalized.includes('format') || normalized.includes('support')) {
+        return 'chatMediaTypeNotSupported';
       }
     }
     return 'chatMediaUploadFailed';
