@@ -5,6 +5,7 @@ import { PaginatedResponse, Category } from '../../core/api/models';
 import { Product } from '../../core/models/shopping.models';
 import { ApiService } from '../../core/api/api.service';
 import { API_ENDPOINTS } from '../../core/api/endpoints';
+import { ApiListResponse, apiListResults, normalizeApiPage } from '../../core/api/api-page';
 import { mapApiProductToProduct } from './product.mapper';
 
 @Injectable({
@@ -32,13 +33,15 @@ export class ProductRepository {
     if (params.page) httpParams = httpParams.set('page', params.page.toString());
     if (params.perPage) httpParams = httpParams.set('perPage', params.perPage.toString());
 
-    return this.api.get<unknown>(API_ENDPOINTS.products.list, { params: httpParams }).pipe(
-      map((resp) => this.mapPaginatedResponse(resp)),
-    );
+    return this.api
+      .get<ApiListResponse<unknown>>(API_ENDPOINTS.products.list, { params: httpParams })
+      .pipe(map((resp) => this.mapPaginatedResponse(resp)));
   }
 
   listByNextUrl(nextUrl: string): Observable<PaginatedResponse<Product>> {
-    return this.http.get<unknown>(nextUrl).pipe(map((resp) => this.mapPaginatedResponse(resp)));
+    return this.http
+      .get<ApiListResponse<unknown>>(nextUrl)
+      .pipe(map((resp) => this.mapPaginatedResponse(resp)));
   }
 
   get(id: string): Observable<Product> {
@@ -57,7 +60,7 @@ export class ProductRepository {
       .get<Category[] | PaginatedResponse<Category>>(API_ENDPOINTS.productCategories, {
         params: httpParams,
       })
-      .pipe(map((res) => (Array.isArray(res) ? res : (res.results ?? []))));
+      .pipe(map(apiListResults));
   }
 
   update(id: string, data: Partial<Product>): Observable<Product> {
@@ -83,14 +86,11 @@ export class ProductRepository {
     return this.api.post(API_ENDPOINTS.commerces.updateProductsPriceBatch(commerceId), body);
   }
 
-  private mapPaginatedResponse(resp: unknown): PaginatedResponse<Product> {
-    const data = resp as Record<string, unknown>;
-    const results = Array.isArray(resp) ? resp : ((data['results'] as unknown[]) ?? []);
+  private mapPaginatedResponse(resp: ApiListResponse<unknown>): PaginatedResponse<Product> {
+    const page = normalizeApiPage(resp);
     return {
-      count: Array.isArray(resp) ? results.length : Number(data['count'] ?? results.length),
-      next: Array.isArray(resp) ? null : ((data['next'] as string | null) ?? null),
-      previous: Array.isArray(resp) ? null : ((data['previous'] as string | null) ?? null),
-      results: results.map((p) => mapApiProductToProduct(p as Record<string, unknown>)),
+      ...page,
+      results: page.results.map((p) => mapApiProductToProduct(p as Record<string, unknown>)),
     };
   }
 }

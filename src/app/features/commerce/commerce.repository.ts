@@ -1,10 +1,10 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable, map } from 'rxjs';
-import { PaginatedResponse } from '../../core/api/models';
 import { CommerceReprocessResponse } from '../../core/notifications/notifications.models';
 import { ApiService } from '../../core/api/api.service';
 import { API_ENDPOINTS } from '../../core/api/endpoints';
 import { resolveMediaUrl } from '../../core/api/api-url';
+import { ApiListResponse, apiListResults } from '../../core/api/api-page';
 import {
   CommerceDetail,
   CommerceListItem,
@@ -25,12 +25,9 @@ export class CommerceRepository {
   }
 
   list(): Observable<CommerceListItem[]> {
-    return this.api.get<any[] | PaginatedResponse<any>>(API_ENDPOINTS.commerces.list).pipe(
-      map((res) => {
-        const items = Array.isArray(res) ? res : (res.results ?? []);
-        return items.map(mapCommerceListItem);
-      }),
-    );
+    return this.api
+      .get<ApiListResponse<any>>(API_ENDPOINTS.commerces.list)
+      .pipe(map((res) => apiListResults(res).map(mapCommerceListItem)));
   }
 
   getById(commerceId: string): Observable<CommerceDetail> {
