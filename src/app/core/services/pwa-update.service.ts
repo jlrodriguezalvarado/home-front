@@ -1,4 +1,4 @@
-import { Injectable, inject } from '@angular/core';
+import { Injectable, inject, signal } from '@angular/core';
 import { SwUpdate, VersionReadyEvent } from '@angular/service-worker';
 import { filter, interval } from 'rxjs';
 import { I18nService } from '../i18n/i18n.service';
@@ -9,7 +9,7 @@ const RELOAD_DELAY_MS = 5000;
 const INITIAL_CHECK_DELAY_MS = 8000;
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class PwaUpdateService {
   private readonly swUpdate = inject(SwUpdate);
@@ -17,8 +17,19 @@ export class PwaUpdateService {
   private readonly i18n = inject(I18nService);
   private reloadScheduled = false;
   private refreshInProgress = false;
+  private initialized = false;
+  readonly online = signal(typeof navigator === 'undefined' || navigator.onLine);
+  readonly updateAvailable = signal(false);
+  readonly lastCheckedAt = signal<Date | null>(null);
 
   init(): void {
+    if (this.initialized) return;
+    this.initialized = true;
+    window.addEventListener('online', () => {
+      this.online.set(true);
+      void this.checkForUpdate();
+    });
+    window.addEventListener('offline', () => this.online.set(false));
     if (!this.swUpdate.isEnabled) {
       return;
     }
@@ -35,7 +46,10 @@ export class PwaUpdateService {
     }, INITIAL_CHECK_DELAY_MS);
     this.swUpdate.versionUpdates
       .pipe(filter((event): event is VersionReadyEvent => event.type === 'VERSION_READY'))
-      .subscribe(() => this.scheduleReload());
+      .subscribe(() => {
+        this.updateAvailable.set(true);
+        this.scheduleReload();
+      });
   }
 
   async refreshApp(): Promise<void> {
@@ -62,12 +76,13 @@ export class PwaUpdateService {
   }
 
   private async checkForUpdate(): Promise<void> {
-    if (!this.swUpdate.isEnabled) {
+    if (!this.swUpdate.isEnabled || !this.online()) {
       return;
     }
     try {
       await this.forceServiceWorkerCheck();
       await this.swUpdate.checkForUpdate();
+      this.lastCheckedAt.set(new Date());
     } catch {
       // Ignore transient network errors during background checks
     }
