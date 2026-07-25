@@ -1,5 +1,15 @@
-import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges, inject, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import {
+  Component,
+  EventEmitter,
+  Input,
+  OnChanges,
+  Output,
+  SimpleChanges,
+  inject,
+  signal,
+  ChangeDetectionStrategy,
+} from '@angular/core';
+
 import { FormsModule } from '@angular/forms';
 import { ExpenseSpendGroup, ExpenseSpendPendingItem } from '../../../models/finance.models';
 import {
@@ -19,7 +29,8 @@ import { DialogFormDirective } from '../../../../../shared/directives/dialog-for
 @Component({
   selector: 'app-expense-spend-register',
   standalone: true,
-  imports: [CommonModule, FormsModule, DialogFormDirective],
+  imports: [FormsModule, DialogFormDirective],
+  changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './expense-spend-register.component.html',
 })
 export class ExpenseSpendRegisterComponent implements OnChanges {
@@ -126,9 +137,7 @@ export class ExpenseSpendRegisterComponent implements OnChanges {
   canSubmit(): boolean {
     const normalized = normalizeExpenseSpendColor(this.color);
     return (
-      this.selectedCount() > 0 &&
-      !!this.registeredAt.trim() &&
-      isValidExpenseSpendColor(normalized)
+      this.selectedCount() > 0 && !!this.registeredAt.trim() && isValidExpenseSpendColor(normalized)
     );
   }
 
@@ -144,9 +153,7 @@ export class ExpenseSpendRegisterComponent implements OnChanges {
     const normalizedColor = normalizeExpenseSpendColor(this.color);
     if (this.selectedCount() === 0) {
       this.toast.error(
-        this.i18n.lang() === 'en'
-          ? 'Select at least one expense'
-          : 'Selecciona al menos un gasto',
+        this.i18n.lang() === 'en' ? 'Select at least one expense' : 'Selecciona al menos un gasto',
       );
       return;
     }
@@ -180,9 +187,7 @@ export class ExpenseSpendRegisterComponent implements OnChanges {
         next: () => {
           this.saving.set(false);
           this.toast.success(
-            this.i18n.lang() === 'en'
-              ? 'Expenses registered'
-              : 'Gastos registrados',
+            this.i18n.lang() === 'en' ? 'Expenses registered' : 'Gastos registrados',
           );
           this.registered.emit();
           this.close();

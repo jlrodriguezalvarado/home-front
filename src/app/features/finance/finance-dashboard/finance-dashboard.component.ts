@@ -1,16 +1,27 @@
-import { Component, DestroyRef, effect, inject, OnInit, signal } from '@angular/core';
+import {
+  Component,
+  DestroyRef,
+  effect,
+  inject,
+  OnInit,
+  signal,
+  ChangeDetectionStrategy,
+} from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute, Router, RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
+import {
+  ActivatedRoute,
+  Router,
+  RouterOutlet,
+  RouterLink,
+  RouterLinkActive,
+} from '@angular/router';
 import { EMPTY, Subject, forkJoin, switchMap, tap, filter, map } from 'rxjs';
 import { FinanceRepository, FinanceSummary } from '../finance.repository';
 import { FinanceRefreshService } from '../finance-refresh.service';
 import { formatFinanceMoney } from '../finance.utils';
-import {
-  financeFormErrorMessage,
-  validateFinanceListForm,
-} from '../finance-form-rules';
+import { financeFormErrorMessage, validateFinanceListForm } from '../finance-form-rules';
 import { writeFinancePeriod } from '../finance-period.storage';
 import { IncomeAccount, MonthlyIncomeEntry, AppCurrency } from '../models/finance.models';
 import { financeApiErrorMessage } from '../services/finance-api.utils';
@@ -52,6 +63,7 @@ const PRIMARY_METRIC_IDS = new Set(['expense', 'balance', 'total']);
     ExpenseSpendHistoryDialogComponent,
   ],
   templateUrl: './finance-dashboard.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './finance-dashboard.component.scss',
 })
 export class FinanceDashboardComponent implements OnInit {
@@ -215,19 +227,99 @@ export class FinanceDashboardComponent implements OnInit {
     const totalCode = s.total.currency.code || 'USD';
     const totalSymbol = s.total.currency.symbol || '$';
     return [
-      { id: 'income', labelEn: 'Month income', labelEs: 'Ingreso del mes', value: s.totalIncome, colorClass: 'text-secondary', action: 'income' },
-      { id: 'expense', labelEn: 'Month expense', labelEs: 'Gasto del mes', value: s.totalExpenses, colorClass: 'text-error' },
-      { id: 'initialExpense', labelEn: 'Initial month expense', labelEs: 'Gasto inicial del mes', value: s.initialMonthExpense, colorClass: 'text-orange-600' },
-      { id: 'currentSavings', labelEn: 'Current global savings', labelEs: 'Ahorro global actual', value: s.currentGlobalSavings, colorClass: 'text-amber-700' },
-      { id: 'previousSavings', labelEn: 'Previous global savings', labelEs: 'Ahorro global anterior', value: s.previousGlobalSavings, colorClass: 'text-amber-900' },
-      { id: 'totalSavings', labelEn: 'Total global savings', labelEs: 'Ahorro global total', value: s.totalGlobalSavings, colorClass: 'text-teal-600' },
-      { id: 'nextExpense', labelEn: 'Next month expense', labelEs: 'Gasto próximo mes', value: s.nextMonthExpense, colorClass: 'text-purple-600' },
-      { id: 'initialRemainder', labelEn: 'Initial month remainder', labelEs: 'Remanente inicial del mes', value: s.initialMonthRemainder, colorClass: 'text-blue-grey' },
-      { id: 'balance', labelEn: 'Available', labelEs: 'Disponible', value: s.balance, colorClass: 'text-primary' },
-      { id: 'availableNext', labelEn: 'Available next month', labelEs: 'Disponible próximo mes', value: s.availableNextMonth, colorClass: 'text-indigo-600' },
-      { id: 'cash', labelEn: 'Cash', labelEs: 'Efectivo', value: s.cash, colorClass: 'text-green-600' },
-      { id: 'total', labelEn: `Total (${totalCode})`, labelEs: `Total (${totalCode})`, value: s.total.amount, colorClass: 'text-cyan-600', currencySymbol: totalSymbol },
-      { id: 'previousRemainder', labelEn: 'Previous month remainder', labelEs: 'Remanente mes anterior', value: s.previousMonthRemainder, colorClass: 'text-on-surface-variant' },
+      {
+        id: 'income',
+        labelEn: 'Month income',
+        labelEs: 'Ingreso del mes',
+        value: s.totalIncome,
+        colorClass: 'text-secondary',
+        action: 'income',
+      },
+      {
+        id: 'expense',
+        labelEn: 'Month expense',
+        labelEs: 'Gasto del mes',
+        value: s.totalExpenses,
+        colorClass: 'text-error',
+      },
+      {
+        id: 'initialExpense',
+        labelEn: 'Initial month expense',
+        labelEs: 'Gasto inicial del mes',
+        value: s.initialMonthExpense,
+        colorClass: 'text-orange-600',
+      },
+      {
+        id: 'currentSavings',
+        labelEn: 'Current global savings',
+        labelEs: 'Ahorro global actual',
+        value: s.currentGlobalSavings,
+        colorClass: 'text-amber-700',
+      },
+      {
+        id: 'previousSavings',
+        labelEn: 'Previous global savings',
+        labelEs: 'Ahorro global anterior',
+        value: s.previousGlobalSavings,
+        colorClass: 'text-amber-900',
+      },
+      {
+        id: 'totalSavings',
+        labelEn: 'Total global savings',
+        labelEs: 'Ahorro global total',
+        value: s.totalGlobalSavings,
+        colorClass: 'text-teal-600',
+      },
+      {
+        id: 'nextExpense',
+        labelEn: 'Next month expense',
+        labelEs: 'Gasto próximo mes',
+        value: s.nextMonthExpense,
+        colorClass: 'text-purple-600',
+      },
+      {
+        id: 'initialRemainder',
+        labelEn: 'Initial month remainder',
+        labelEs: 'Remanente inicial del mes',
+        value: s.initialMonthRemainder,
+        colorClass: 'text-blue-grey',
+      },
+      {
+        id: 'balance',
+        labelEn: 'Available',
+        labelEs: 'Disponible',
+        value: s.balance,
+        colorClass: 'text-primary',
+      },
+      {
+        id: 'availableNext',
+        labelEn: 'Available next month',
+        labelEs: 'Disponible próximo mes',
+        value: s.availableNextMonth,
+        colorClass: 'text-indigo-600',
+      },
+      {
+        id: 'cash',
+        labelEn: 'Cash',
+        labelEs: 'Efectivo',
+        value: s.cash,
+        colorClass: 'text-green-600',
+      },
+      {
+        id: 'total',
+        labelEn: `Total (${totalCode})`,
+        labelEs: `Total (${totalCode})`,
+        value: s.total.amount,
+        colorClass: 'text-cyan-600',
+        currencySymbol: totalSymbol,
+      },
+      {
+        id: 'previousRemainder',
+        labelEn: 'Previous month remainder',
+        labelEs: 'Remanente mes anterior',
+        value: s.previousMonthRemainder,
+        colorClass: 'text-on-surface-variant',
+      },
     ];
   }
 
@@ -407,16 +499,18 @@ export class FinanceDashboardComponent implements OnInit {
   }
 
   canSaveIncome(): boolean {
-    return validateFinanceListForm('income', {
-      description: '',
-      amount: this.incomeForm.amount,
-      notes: this.incomeForm.notes,
-      isCash: false,
-      isRecurring: false,
-      categoryId: '',
-      savingsAccountTypeId: '',
-      incomeAccountId: this.incomeForm.incomeAccountId,
-    }) === null;
+    return (
+      validateFinanceListForm('income', {
+        description: '',
+        amount: this.incomeForm.amount,
+        notes: this.incomeForm.notes,
+        isCash: false,
+        isRecurring: false,
+        categoryId: '',
+        savingsAccountTypeId: '',
+        incomeAccountId: this.incomeForm.incomeAccountId,
+      }) === null
+    );
   }
 
   saveIncome() {
@@ -513,12 +607,12 @@ export class FinanceDashboardComponent implements OnInit {
         this.refresh.notify();
         const message =
           result.createdCount === 0 && result.skippedCount === 0
-            ? (lang === 'en'
+            ? lang === 'en'
               ? 'No recurring expenses found in the previous month'
-              : 'No se encontraron gastos recurrentes en el mes anterior')
-            : (lang === 'en'
+              : 'No se encontraron gastos recurrentes en el mes anterior'
+            : lang === 'en'
               ? `Replicated ${result.createdCount} expense(s), skipped ${result.skippedCount}`
-              : `Se replicaron ${result.createdCount} gasto(s), se omitieron ${result.skippedCount}`);
+              : `Se replicaron ${result.createdCount} gasto(s), se omitieron ${result.skippedCount}`;
         this.toast.success(message);
       },
       error: (err) => {

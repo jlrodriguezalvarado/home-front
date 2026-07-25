@@ -1,5 +1,5 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
+
 import { FormsModule } from '@angular/forms';
 import { CurrencyRepository } from './currency.repository';
 import { Currency } from './currency.models';
@@ -10,8 +10,9 @@ import { DialogFormDirective } from '../../shared/directives/dialog-form.directi
 @Component({
   selector: 'app-currency-list',
   standalone: true,
-  imports: [CommonModule, FormsModule, DialogFormDirective],
+  imports: [FormsModule, DialogFormDirective],
   templateUrl: './currency-list.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './currency-list.component.scss',
 })
 export class CurrencyListComponent implements OnInit {
@@ -29,7 +30,7 @@ export class CurrencyListComponent implements OnInit {
   }
 
   load() {
-    this.repo.list().subscribe(res => this.currencies.set(res));
+    this.repo.list().subscribe((res) => this.currencies.set(res));
   }
 
   openDialog(c?: Currency) {
@@ -63,9 +64,7 @@ export class CurrencyListComponent implements OnInit {
 
   async deleteCurrency(c: Currency) {
     const message =
-      this.i18n.lang() === 'en'
-        ? `Delete currency ${c.code}?`
-        : `¿Eliminar la divisa ${c.code}?`;
+      this.i18n.lang() === 'en' ? `Delete currency ${c.code}?` : `¿Eliminar la divisa ${c.code}?`;
     const confirmed = await this.confirm.confirm(message, {
       variant: 'danger',
       confirmLabel: this.i18n.t('delete'),

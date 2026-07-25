@@ -1,37 +1,77 @@
-<div class="fixed inset-0 bg-black/50 flex items-center justify-center p-md z-50" (click)="close()">
-  <div class="bg-surface-container-lowest w-full max-w-lg p-xl rounded-[24px] border border-outline-variant shadow-card-hover max-h-[90vh] overflow-y-auto" (click)="$event.stopPropagation()">
-    <h2 class="text-title-lg text-on-surface mb-lg">{{ i18n.t('copyFavoriteDay') }}</h2>
-    <app-loading-state *ngIf="loading()"></app-loading-state>
-    <app-error-state *ngIf="error()" (retry)="load()"></app-error-state>
-    <app-empty-state *ngIf="!loading() && !error() && days().length === 0" icon="favorite" [title]="i18n.t('favorites')"></app-empty-state>
-    <div *ngIf="!loading() && !error() && days().length > 0" class="space-y-md">
-      <div
-        *ngFor="let day of days()"
-        (click)="selectDay(day)"
-        class="card-surface p-md cursor-pointer transition-shadow"
-        [class.ring-2]="selectedDayId() === day.id"
-        [class.ring-primary]="selectedDayId() === day.id">
-        <div class="text-headline-md text-on-surface">{{ day.dayName || day.name }}</div>
-        <div *ngIf="day.meals.length" class="mt-sm space-y-xs">
-          <div *ngFor="let meal of day.meals" class="text-body-md text-on-surface-variant">
-            {{ meal.mealType.name }} · {{ meal.recipe?.name || meal.name || meal.notes }}
+<div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-md" (click)="close()">
+  <div
+    class="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-[24px] border border-outline-variant bg-surface-container-lowest p-xl shadow-card-hover"
+    (click)="$event.stopPropagation()"
+  >
+    <h2 class="mb-lg text-title-lg text-on-surface">{{ i18n.t('copyFavoriteDay') }}</h2>
+    @if (loading()) {
+      <app-loading-state></app-loading-state>
+    }
+    @if (error()) {
+      <app-error-state (retry)="load()"></app-error-state>
+    }
+    @if (!loading() && !error() && days().length === 0) {
+      <app-empty-state icon="favorite" [title]="i18n.t('favorites')"></app-empty-state>
+    }
+    @if (!loading() && !error() && days().length > 0) {
+      <div class="space-y-md">
+        @for (day of days(); track day) {
+          <div
+            (click)="selectDay(day)"
+            class="card-surface cursor-pointer p-md transition-shadow"
+            [class.ring-2]="selectedDayId() === day.id"
+            [class.ring-primary]="selectedDayId() === day.id"
+          >
+            <div class="text-headline-md text-on-surface">{{ day.dayName || day.name }}</div>
+            @if (day.meals.length) {
+              <div class="mt-sm space-y-xs">
+                @for (meal of day.meals; track meal) {
+                  <div class="text-body-md text-on-surface-variant">
+                    {{ meal.mealType.name }} · {{ meal.recipe?.name || meal.name || meal.notes }}
+                  </div>
+                }
+              </div>
+            }
           </div>
+        }
+        <div class="space-y-sm">
+          <label class="flex cursor-pointer items-center gap-sm text-body-md text-on-surface">
+            <input
+              type="radio"
+              name="copyMode"
+              [checked]="replaceExisting()"
+              (change)="replaceExisting.set(true)"
+            />
+            {{ i18n.t('replaceExistingMeals') }}
+          </label>
+          <label class="flex cursor-pointer items-center gap-sm text-body-md text-on-surface">
+            <input
+              type="radio"
+              name="copyMode"
+              [checked]="!replaceExisting()"
+              (change)="replaceExisting.set(false)"
+            />
+            {{ i18n.t('appendMeals') }}
+          </label>
+        </div>
+        <div class="flex gap-md pt-md">
+          <button
+            (click)="close()"
+            type="button"
+            class="flex-1 rounded-xl border border-outline-variant py-3 text-label-lg"
+          >
+            {{ i18n.t('cancel') }}
+          </button>
+          <button
+            (click)="confirmCopy()"
+            [disabled]="!selectedDayId()"
+            type="button"
+            class="btn-primary flex-1 py-3"
+          >
+            {{ i18n.t('copyFavoriteDay') }}
+          </button>
         </div>
       </div>
-      <div class="space-y-sm">
-        <label class="flex items-center gap-sm text-body-md text-on-surface cursor-pointer">
-          <input type="radio" name="copyMode" [checked]="replaceExisting()" (change)="replaceExisting.set(true)">
-          {{ i18n.t('replaceExistingMeals') }}
-        </label>
-        <label class="flex items-center gap-sm text-body-md text-on-surface cursor-pointer">
-          <input type="radio" name="copyMode" [checked]="!replaceExisting()" (change)="replaceExisting.set(false)">
-          {{ i18n.t('appendMeals') }}
-        </label>
-      </div>
-      <div class="flex gap-md pt-md">
-        <button (click)="close()" type="button" class="flex-1 py-3 border border-outline-variant rounded-xl text-label-lg">{{ i18n.t('cancel') }}</button>
-        <button (click)="confirmCopy()" [disabled]="!selectedDayId()" type="button" class="flex-1 btn-primary py-3">{{ i18n.t('copyFavoriteDay') }}</button>
-      </div>
-    </div>
+    }
   </div>
 </div>

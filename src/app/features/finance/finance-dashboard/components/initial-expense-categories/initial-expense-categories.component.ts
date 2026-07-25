@@ -1,5 +1,12 @@
-import { Component, DestroyRef, inject, OnInit, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import {
+  Component,
+  DestroyRef,
+  inject,
+  OnInit,
+  signal,
+  ChangeDetectionStrategy,
+} from '@angular/core';
+
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { of } from 'rxjs';
@@ -14,7 +21,8 @@ import { DialogFormDirective } from '../../../../../shared/directives/dialog-for
 @Component({
   selector: 'app-initial-expense-categories',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, DialogFormDirective],
+  imports: [FormsModule, RouterLink, DialogFormDirective],
+  changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './initial-expense-categories.component.html',
 })
 export class InitialExpenseCategoriesComponent implements OnInit {
@@ -94,11 +102,15 @@ export class InitialExpenseCategoriesComponent implements OnInit {
     };
     const onError = () => {
       this.saving = false;
-      this.toast.error(this.i18n.lang() === 'en' ? 'Error saving category' : 'Error al guardar categoría');
+      this.toast.error(
+        this.i18n.lang() === 'en' ? 'Error saving category' : 'Error al guardar categoría',
+      );
     };
 
     if (this.editingId) {
-      this.repo.updateInitialExpenseCategory(this.editingId, name).subscribe({ next: onDone, error: onError });
+      this.repo
+        .updateInitialExpenseCategory(this.editingId, name)
+        .subscribe({ next: onDone, error: onError });
     } else {
       this.repo.createInitialExpenseCategory(name).subscribe({ next: onDone, error: onError });
     }
@@ -115,7 +127,10 @@ export class InitialExpenseCategoriesComponent implements OnInit {
         this.reloadCategories();
         this.toast.success(this.i18n.lang() === 'en' ? 'Category deleted' : 'Categoría eliminada');
       },
-      error: () => this.toast.error(this.i18n.lang() === 'en' ? 'Error deleting category' : 'Error al eliminar categoría'),
+      error: () =>
+        this.toast.error(
+          this.i18n.lang() === 'en' ? 'Error deleting category' : 'Error al eliminar categoría',
+        ),
     });
   }
 }

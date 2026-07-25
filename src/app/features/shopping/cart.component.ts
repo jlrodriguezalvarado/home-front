@@ -1,6 +1,14 @@
-import { Component, effect, inject, OnInit, OnDestroy, HostListener, computed, signal } from '@angular/core';
-
-import { CommonModule } from '@angular/common';
+import {
+  Component,
+  effect,
+  inject,
+  OnInit,
+  OnDestroy,
+  HostListener,
+  computed,
+  signal,
+  ChangeDetectionStrategy,
+} from '@angular/core';
 
 import { FormsModule } from '@angular/forms';
 
@@ -24,17 +32,11 @@ import { BarcodeScannerDialogComponent } from '../../shared/components/barcode-s
 import { ProductRepository } from '../products/product.repository';
 
 import {
-
   formatPrice,
-
   formatUnitPrice,
-
   lineTotal,
-
   moneyDecimalString,
-
   quantityStringForPurchase,
-
 } from './utils/price.utils';
 
 import { isPresentationUnitKg } from './utils/presentation-unit.utils';
@@ -42,22 +44,18 @@ import { formatCartListMessage } from './utils/cart-list-message.utils';
 import { ToastService } from '../../shared/services/toast.service';
 import { ConfirmService } from '../../shared/services/confirm.service';
 
-
-
 @Component({
-
   selector: 'app-cart',
 
   standalone: true,
 
-  imports: [CommonModule, FormsModule, QuantityEditorComponent, BarcodeScannerDialogComponent],
+  imports: [FormsModule, QuantityEditorComponent, BarcodeScannerDialogComponent],
 
   templateUrl: './cart.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './cart.component.scss',
 })
-
 export class CartComponent implements OnInit, OnDestroy {
-
   cart = inject(CartService);
 
   i18n = inject(I18nService);
@@ -73,15 +71,11 @@ export class CartComponent implements OnInit, OnDestroy {
   toast = inject(ToastService);
   confirm = inject(ConfirmService);
 
-
-
   commerces = signal<Commerce[]>([]);
 
   filterCommerceId = signal<string | null>(null);
   barcodeScannerOpen = signal(false);
   previewImage = signal<{ url: string; alt: string } | null>(null);
-
-
 
   commerceIds = computed(() => this.cart.commerceIds());
 
@@ -105,17 +99,11 @@ export class CartComponent implements OnInit, OnDestroy {
     return this.cart.itemsByCommerce()[commerceId] ?? [];
   }
 
-
-
   visibleCount = computed(() => this.cart.visibleQuantityCountFor(this.visibleItems()));
-
-
 
   isPresentationUnitKg = isPresentationUnitKg;
 
   formatUnitPrice = formatUnitPrice;
-
-
 
   constructor() {
     effect(() => {
@@ -172,37 +160,39 @@ export class CartComponent implements OnInit, OnDestroy {
       this.toast.error(this.i18n.t('barcodeCommerceRequired'));
       return;
     }
-    this.productRepo.list({
-      search: code,
-      commerce_id: commerceId,
-      page: 1,
-      perPage: 5,
-    }).subscribe({
-      next: (res) => {
-        const product = res.results[0];
-        if (!product) {
-          this.toast.error(this.i18n.t('barcodeProductNotFound'));
-          return;
-        }
-        const snapshot =
-          product.commerceId && product.commerceId !== commerceId
-            ? product
-            : { ...product, commerceId };
-        this.cart.addProduct(snapshot);
-        this.filterCommerceId.set(snapshot.commerceId);
-        this.cart.setFilterCommerceId(snapshot.commerceId);
-        this.toast.success(this.i18n.t('barcodeProductAdded'));
-      },
-      error: () => this.toast.error(this.i18n.t('barcodeProductNotFound')),
-    });
+    this.productRepo
+      .list({
+        search: code,
+        commerce_id: commerceId,
+        page: 1,
+        perPage: 5,
+      })
+      .subscribe({
+        next: (res) => {
+          const product = res.results[0];
+          if (!product) {
+            this.toast.error(this.i18n.t('barcodeProductNotFound'));
+            return;
+          }
+          const snapshot =
+            product.commerceId && product.commerceId !== commerceId
+              ? product
+              : { ...product, commerceId };
+          this.cart.addProduct(snapshot);
+          this.filterCommerceId.set(snapshot.commerceId);
+          this.cart.setFilterCommerceId(snapshot.commerceId);
+          this.toast.success(this.i18n.t('barcodeProductAdded'));
+        },
+        error: () => this.toast.error(this.i18n.t('barcodeProductNotFound')),
+      });
   }
 
   private resolveBarcodeCommerceId(): string {
     return (
-      this.filterCommerceId()?.trim()
-      || this.productFilter.load()?.commerceId?.trim()
-      || this.commerces()[0]?.id?.trim()
-      || ''
+      this.filterCommerceId()?.trim() ||
+      this.productFilter.load()?.commerceId?.trim() ||
+      this.commerces()[0]?.id?.trim() ||
+      ''
     );
   }
 
@@ -235,17 +225,11 @@ export class CartComponent implements OnInit, OnDestroy {
     this.filterCommerceId.set(effective);
   }
 
-
-
   onFilterCommerceChange(commerceId: string) {
-
     this.filterCommerceId.set(commerceId);
 
     this.cart.setFilterCommerceId(commerceId);
-
   }
-
-
 
   commerceName(commerceId: string): string {
     const trimmed = commerceId?.trim();
@@ -292,73 +276,52 @@ export class CartComponent implements OnInit, OnDestroy {
     const commerceId = this.filterCommerceId()!;
 
     const data = {
-
       commerce: commerceId,
 
       items: items.map((i) => ({
-
         product: i.product.apiId,
 
         quantity: quantityStringForPurchase(i.quantity, i.product.presentationUnit),
 
         price: moneyDecimalString(i.product.originalPrice),
-
       })),
-
     };
 
-
-
     this.purchaseRepo.create(data).subscribe({
-
       next: () => {
-
         this.cart.removeProducts(items.map((i) => i.product.id));
 
         if (this.cart.items().length === 0) {
-
           this.filterCommerceId.set(null);
 
           this.cart.setFilterCommerceId(null);
-
         } else {
-
           this.filterCommerceId.set(this.cart.resolveEffectiveFilterCommerceId());
-
         }
 
         this.router.navigate(['/purchases']);
-
       },
 
       error: () =>
         this.toast.error(
           this.i18n.lang() === 'en' ? 'Error creating purchase' : 'Error al crear la compra',
         ),
-
     });
-
   }
-
-
 
   private formatMessage(): string {
     return formatCartListMessage(this.visibleItems());
   }
 
-
-
   copyMessage() {
-
-    navigator.clipboard.writeText(this.formatMessage()).then(() =>
-      this.toast.success(
-        this.i18n.lang() === 'en' ? 'Message copied to clipboard' : 'Mensaje copiado',
-      ),
-    );
-
+    navigator.clipboard
+      .writeText(this.formatMessage())
+      .then(() =>
+        this.toast.success(
+          this.i18n.lang() === 'en' ? 'Message copied to clipboard' : 'Mensaje copiado',
+        ),
+      );
   }
-
-
 
   sendWhatsApp() {
     const msg = encodeURIComponent(this.formatMessage());

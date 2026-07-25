@@ -13,59 +13,80 @@
       [ngModel]="searchQuery()"
       (ngModelChange)="onSearchChange($event)"
       [placeholder]="i18n.t('search')"
-      class="input-outlined flex-1 min-w-[200px]">
+      class="input-outlined min-w-[200px] flex-1"
+    />
     <select
       [ngModel]="activeFilter()"
       (ngModelChange)="onActiveFilterChange($event)"
-      class="input-outlined">
+      class="input-outlined"
+    >
       <option value="all">{{ i18n.t('all') }}</option>
       <option value="active">{{ i18n.t('active') }}</option>
       <option value="inactive">{{ i18n.t('inactive') }}</option>
     </select>
   </div>
-  <app-loading-state *ngIf="loading() && filteredIngredients().length === 0"></app-loading-state>
-  <app-error-state *ngIf="error()" (retry)="load()"></app-error-state>
-  <app-empty-state
-    *ngIf="!loading() && !error() && filteredIngredients().length === 0"
-    icon="restaurant"
-    [title]="i18n.t('ingredients')">
-  </app-empty-state>
-  <div *ngIf="!loading() && !error() && filteredIngredients().length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-md">
-    <div *ngFor="let item of filteredIngredients()" class="card-surface p-lg hover:shadow-card-hover transition-shadow">
-      <div class="flex justify-between items-start gap-md">
-        <div class="min-w-0">
-          <div class="text-headline-md text-on-surface truncate">{{ item.name }}</div>
-          <div *ngIf="item.description" class="text-body-md text-on-surface-variant mt-xs line-clamp-2">{{ item.description }}</div>
-          <div class="text-body-md text-on-surface-variant mt-sm">
-            <span class="text-label-lg">{{ i18n.t('defaultProduct') }}:</span>
-            {{ item.defaultProduct?.name ?? '—' }}
+  @if (loading() && filteredIngredients().length === 0) {
+    <app-loading-state></app-loading-state>
+  }
+  @if (error()) {
+    <app-error-state (retry)="load()"></app-error-state>
+  }
+  @if (!loading() && !error() && filteredIngredients().length === 0) {
+    <app-empty-state icon="restaurant" [title]="i18n.t('ingredients')"> </app-empty-state>
+  }
+  @if (!loading() && !error() && filteredIngredients().length > 0) {
+    <div class="grid grid-cols-1 gap-md md:grid-cols-2 lg:grid-cols-3">
+      @for (item of filteredIngredients(); track item) {
+        <div class="card-surface p-lg transition-shadow hover:shadow-card-hover">
+          <div class="flex items-start justify-between gap-md">
+            <div class="min-w-0">
+              <div class="truncate text-headline-md text-on-surface">{{ item.name }}</div>
+              @if (item.description) {
+                <div class="mt-xs line-clamp-2 text-body-md text-on-surface-variant">
+                  {{ item.description }}
+                </div>
+              }
+              <div class="mt-sm text-body-md text-on-surface-variant">
+                <span class="text-label-lg">{{ i18n.t('defaultProduct') }}:</span>
+                {{ item.defaultProduct?.name ?? '—' }}
+              </div>
+              <span
+                class="mt-sm inline-block rounded-lg px-sm py-xs text-label-md"
+                [class.bg-primary-container]="item.isActive"
+                [class.text-on-primary-container]="item.isActive"
+                [class.bg-surface-container]="!item.isActive"
+                [class.text-on-surface-variant]="!item.isActive"
+              >
+                {{ item.isActive ? i18n.t('active') : i18n.t('inactive') }}
+              </span>
+            </div>
+            <div class="flex shrink-0 flex-col gap-sm">
+              <button
+                (click)="openDialog(item)"
+                class="flex items-center gap-1 text-label-md text-primary hover:underline"
+              >
+                <span class="material-symbols-outlined text-[18px]">edit</span>
+                {{ i18n.t('edit') }}
+              </button>
+              <button
+                (click)="deleteIngredient(item)"
+                class="flex items-center gap-1 text-label-md text-error hover:underline"
+              >
+                <span class="material-symbols-outlined text-[18px]">delete</span>
+                {{ i18n.t('delete') }}
+              </button>
+            </div>
           </div>
-          <span
-            class="inline-block mt-sm text-label-md px-sm py-xs rounded-lg"
-            [class.bg-primary-container]="item.isActive"
-            [class.text-on-primary-container]="item.isActive"
-            [class.bg-surface-container]="!item.isActive"
-            [class.text-on-surface-variant]="!item.isActive">
-            {{ item.isActive ? i18n.t('active') : i18n.t('inactive') }}
-          </span>
         </div>
-        <div class="flex flex-col gap-sm shrink-0">
-          <button (click)="openDialog(item)" class="text-primary text-label-md hover:underline flex items-center gap-1">
-            <span class="material-symbols-outlined text-[18px]">edit</span>
-            {{ i18n.t('edit') }}
-          </button>
-          <button (click)="deleteIngredient(item)" class="text-error text-label-md hover:underline flex items-center gap-1">
-            <span class="material-symbols-outlined text-[18px]">delete</span>
-            {{ i18n.t('delete') }}
-          </button>
-        </div>
-      </div>
+      }
     </div>
-  </div>
-  <app-ingredient-form-dialog
-    *ngIf="showDialog()"
-    [ingredient]="editingIngredient()"
-    (saved)="onIngredientSaved($event)"
-    (closed)="closeDialog()">
-  </app-ingredient-form-dialog>
+  }
+  @if (showDialog()) {
+    <app-ingredient-form-dialog
+      [ingredient]="editingIngredient()"
+      (saved)="onIngredientSaved($event)"
+      (closed)="closeDialog()"
+    >
+    </app-ingredient-form-dialog>
+  }
 </div>

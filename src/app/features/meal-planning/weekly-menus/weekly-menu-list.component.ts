@@ -1,6 +1,13 @@
-import { Component, DestroyRef, inject, OnInit, signal } from '@angular/core';
+import {
+  Component,
+  DestroyRef,
+  inject,
+  OnInit,
+  signal,
+  ChangeDetectionStrategy,
+} from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { CommonModule } from '@angular/common';
+
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { catchError, finalize, of, Subscription, switchMap } from 'rxjs';
@@ -19,7 +26,6 @@ import { MealRecipeDisplayComponent } from './meal-recipe-display.component';
   selector: 'app-weekly-menu-list',
   standalone: true,
   imports: [
-    CommonModule,
     FormsModule,
     RouterLink,
     LoadingStateComponent,
@@ -29,6 +35,7 @@ import { MealRecipeDisplayComponent } from './meal-recipe-display.component';
     MealRecipeDisplayComponent,
   ],
   templateUrl: './weekly-menu-list.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './weekly-menu-list.component.scss',
 })
 export class WeeklyMenuListComponent implements OnInit {

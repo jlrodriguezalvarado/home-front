@@ -1,5 +1,5 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
+
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { RecipeRepository } from '../repositories/recipe.repository';
@@ -16,7 +16,6 @@ import { MealPlanningNavComponent } from '../meal-planning-nav.component';
   selector: 'app-recipe-list',
   standalone: true,
   imports: [
-    CommonModule,
     FormsModule,
     RouterLink,
     LoadingStateComponent,
@@ -25,6 +24,7 @@ import { MealPlanningNavComponent } from '../meal-planning-nav.component';
     MealPlanningNavComponent,
   ],
   templateUrl: './recipe-list.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './recipe-list.component.scss',
 })
 export class RecipeListComponent implements OnInit {
@@ -78,11 +78,13 @@ export class RecipeListComponent implements OnInit {
     this.repo.toggleFavorite(recipe.id).subscribe({
       next: (updated) => {
         this.recipes.update((items) => {
-          const next = items.map((item) => item.id === updated.id ? updated : item);
+          const next = items.map((item) => (item.id === updated.id ? updated : item));
           if (this.favoritesOnly()) return next.filter((item) => item.isFavorite);
           return next;
         });
-        this.toast.success(updated.isFavorite ? this.i18n.t('markAsFavorite') : this.i18n.t('removeFavorite'));
+        this.toast.success(
+          updated.isFavorite ? this.i18n.t('markAsFavorite') : this.i18n.t('removeFavorite'),
+        );
       },
       error: () => this.toast.error(this.i18n.lang() === 'en' ? 'Action failed' : 'Acción fallida'),
     });
@@ -105,7 +107,8 @@ export class RecipeListComponent implements OnInit {
         this.toast.success(this.i18n.t('delete'));
         this.load();
       },
-      error: () => this.toast.error(this.i18n.lang() === 'en' ? 'Delete failed' : 'Error al eliminar'),
+      error: () =>
+        this.toast.error(this.i18n.lang() === 'en' ? 'Delete failed' : 'Error al eliminar'),
     });
   }
 }

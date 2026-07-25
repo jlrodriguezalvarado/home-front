@@ -1,0 +1,16 @@
+---
+description: Angular patterns and Django API consumption rules
+globs: "**/*"
+alwaysApply: false
+---
+
+# Angular frontend layer
+
+- Full policy: `.agents/policies/angular-frontend.md` and `.agents/policies/integration.md`.
+- Stack: Angular 22 / RxJS / PWA (TypeScript 6+, Node 22+).
+- Data source: sibling `../home-api` (`environment.apiUrl` / `wsUrl`). Do not invent endpoints that diverge from the approved contract or OpenAPI.
+- Keep feature DTOs/mappers/repositories colocated. Never hand-edit generated OpenAPI types; regenerate from `../home-api/docs/openapi.yaml`.
+- Feature folders: root page in the feature dir; routed children each in their own named subfolder; parent-only children under `components/<name>/`.
+- Preserve decimal strings at the HTTP boundary. Normalize errors via `AppError`. Use `switchMap`, `finalize`, and `takeUntilDestroyed` deliberately.
+- UI strings: `src/app/core/i18n/en.json` and `es.json` only. Use `i18n.t('key')`.
+- Prefer delegating substantive frontend work to the `angular-frontend` subagent with a filled `.agents/HANDOFF.md` block.

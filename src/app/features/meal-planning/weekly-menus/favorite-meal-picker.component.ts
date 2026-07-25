@@ -1,5 +1,14 @@
-import { Component, EventEmitter, inject, Input, OnInit, Output, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import {
+  Component,
+  EventEmitter,
+  inject,
+  Input,
+  OnInit,
+  Output,
+  signal,
+  ChangeDetectionStrategy,
+} from '@angular/core';
+
 import { MenuMealRepository } from '../repositories/menu-meal.repository';
 import { MenuMeal } from '../models/meal-planning.models';
 import { I18nService } from '../../../core/i18n/i18n.service';
@@ -10,7 +19,8 @@ import { ErrorStateComponent } from '../../../shared/components/error-state.comp
 @Component({
   selector: 'app-favorite-meal-picker',
   standalone: true,
-  imports: [CommonModule, LoadingStateComponent, EmptyStateComponent, ErrorStateComponent],
+  imports: [LoadingStateComponent, EmptyStateComponent, ErrorStateComponent],
+  changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './favorite-meal-picker.component.html',
 })
 export class FavoriteMealPickerComponent implements OnInit {
@@ -43,13 +53,15 @@ export class FavoriteMealPickerComponent implements OnInit {
   }
 
   selectMeal(meal: MenuMeal) {
-    this.repo.copyFavorite({
-      sourceMenuMealId: meal.id,
-      targetMenuDayId: this.targetMenuDayId,
-    }).subscribe({
-      next: () => this.copied.emit(),
-      error: () => this.error.set(true),
-    });
+    this.repo
+      .copyFavorite({
+        sourceMenuMealId: meal.id,
+        targetMenuDayId: this.targetMenuDayId,
+      })
+      .subscribe({
+        next: () => this.copied.emit(),
+        error: () => this.error.set(true),
+      });
   }
 
   close() {

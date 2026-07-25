@@ -1,5 +1,5 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
+
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { forkJoin } from 'rxjs';
@@ -32,7 +32,6 @@ import { MealRecipeDisplayComponent } from './meal-recipe-display.component';
   selector: 'app-weekly-menu-builder',
   standalone: true,
   imports: [
-    CommonModule,
     FormsModule,
     RouterLink,
     LoadingStateComponent,
@@ -44,6 +43,7 @@ import { MealRecipeDisplayComponent } from './meal-recipe-display.component';
     MealRecipeDisplayComponent,
   ],
   templateUrl: './weekly-menu-builder.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './weekly-menu-builder.component.scss',
 })
 export class WeeklyMenuBuilderComponent implements OnInit {
@@ -228,7 +228,11 @@ export class WeeklyMenuBuilderComponent implements OnInit {
 
   saveMeal() {
     if (!this.isMealFormValid()) {
-      this.toast.error(this.i18n.lang() === 'en' ? 'Meal type and content are required' : 'Tipo de comida y contenido son obligatorios');
+      this.toast.error(
+        this.i18n.lang() === 'en'
+          ? 'Meal type and content are required'
+          : 'Tipo de comida y contenido son obligatorios',
+      );
       return;
     }
     const payload = this.mealForm();
@@ -247,10 +251,7 @@ export class WeeklyMenuBuilderComponent implements OnInit {
   }
 
   async deleteMeal(meal: MenuMeal) {
-    const message =
-      this.i18n.lang() === 'en'
-        ? 'Delete this meal?'
-        : '¿Eliminar esta comida?';
+    const message = this.i18n.lang() === 'en' ? 'Delete this meal?' : '¿Eliminar esta comida?';
     const confirmed = await this.confirm.confirm(message, {
       variant: 'danger',
       confirmLabel: this.i18n.t('delete'),
@@ -261,7 +262,8 @@ export class WeeklyMenuBuilderComponent implements OnInit {
         this.toast.success(this.i18n.t('delete'));
         this.reloadMenu();
       },
-      error: () => this.toast.error(this.i18n.lang() === 'en' ? 'Delete failed' : 'Error al eliminar'),
+      error: () =>
+        this.toast.error(this.i18n.lang() === 'en' ? 'Delete failed' : 'Error al eliminar'),
     });
   }
 
@@ -269,7 +271,9 @@ export class WeeklyMenuBuilderComponent implements OnInit {
     this.dayRepo.toggleFavorite(day.id).subscribe({
       next: (updated) => {
         this.patchDayFavorite(updated.id, updated.isFavorite);
-        this.toast.success(updated.isFavorite ? this.i18n.t('markAsFavorite') : this.i18n.t('removeFavorite'));
+        this.toast.success(
+          updated.isFavorite ? this.i18n.t('markAsFavorite') : this.i18n.t('removeFavorite'),
+        );
       },
       error: () => this.toast.error(this.i18n.lang() === 'en' ? 'Action failed' : 'Acción fallida'),
     });
@@ -279,7 +283,9 @@ export class WeeklyMenuBuilderComponent implements OnInit {
     this.mealRepo.toggleFavorite(meal.id).subscribe({
       next: (updated) => {
         this.patchMealFavorite(updated.id, updated.isFavorite);
-        this.toast.success(updated.isFavorite ? this.i18n.t('markAsFavorite') : this.i18n.t('removeFavorite'));
+        this.toast.success(
+          updated.isFavorite ? this.i18n.t('markAsFavorite') : this.i18n.t('removeFavorite'),
+        );
       },
       error: () => this.toast.error(this.i18n.lang() === 'en' ? 'Action failed' : 'Acción fallida'),
     });
@@ -290,7 +296,7 @@ export class WeeklyMenuBuilderComponent implements OnInit {
       if (!menu) return menu;
       return {
         ...menu,
-        days: menu.days.map((day) => day.id === dayId ? { ...day, isFavorite } : day),
+        days: menu.days.map((day) => (day.id === dayId ? { ...day, isFavorite } : day)),
       };
     });
   }
@@ -302,7 +308,7 @@ export class WeeklyMenuBuilderComponent implements OnInit {
         ...menu,
         days: menu.days.map((day) => ({
           ...day,
-          meals: day.meals.map((meal) => meal.id === mealId ? { ...meal, isFavorite } : meal),
+          meals: day.meals.map((meal) => (meal.id === mealId ? { ...meal, isFavorite } : meal)),
         })),
       };
     });

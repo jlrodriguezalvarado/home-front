@@ -1,7 +1,25 @@
-import { Component, OnDestroy, OnInit, computed, inject, input, output, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import {
+  Component,
+  OnDestroy,
+  OnInit,
+  computed,
+  inject,
+  input,
+  output,
+  signal,
+  ChangeDetectionStrategy,
+} from '@angular/core';
+
 import { FormsModule } from '@angular/forms';
-import { Subject, catchError, debounceTime, distinctUntilChanged, of, switchMap, takeUntil } from 'rxjs';
+import {
+  Subject,
+  catchError,
+  debounceTime,
+  distinctUntilChanged,
+  of,
+  switchMap,
+  takeUntil,
+} from 'rxjs';
 import { IngredientRepository } from '../repositories/ingredient.repository';
 import { ProductRepository } from '../../products/product.repository';
 import { CommerceRepository } from '../../commerce/commerce.repository';
@@ -11,13 +29,17 @@ import { Product } from '../../../core/models/shopping.models';
 import { Commerce } from '../../commerce/commerce.models';
 import { I18nService } from '../../../core/i18n/i18n.service';
 import { ToastService } from '../../../shared/services/toast.service';
-import { SearchSelectComponent, SearchSelectOption } from '../../../shared/components/search-select.component';
+import {
+  SearchSelectComponent,
+  SearchSelectOption,
+} from '../../../shared/components/search-select.component';
 import { DialogFormDirective } from '../../../shared/directives/dialog-form.directive';
 
 @Component({
   selector: 'app-ingredient-form-dialog',
   standalone: true,
-  imports: [CommonModule, FormsModule, SearchSelectComponent, DialogFormDirective],
+  imports: [FormsModule, SearchSelectComponent, DialogFormDirective],
+  changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './ingredient-form-dialog.component.html',
 })
 export class IngredientFormDialogComponent implements OnInit, OnDestroy {
@@ -55,32 +77,36 @@ export class IngredientFormDialogComponent implements OnInit, OnDestroy {
   private readonly destroy$ = new Subject<void>();
 
   ngOnInit() {
-    this.productSearchSubject.pipe(
-      debounceTime(400),
-      distinctUntilChanged(),
-      takeUntil(this.destroy$),
-    ).subscribe((query) => {
-      this.productSearchDraft.set(query);
-      if (!this.selectedCommerceId()) return;
-      this.loadDialogProducts();
-    });
-    this.productLoadTrigger.pipe(
-      switchMap(({ commerceId, search }) => {
-        this.productsLoading.set(true);
-        return this.productRepo.list({
-          commerce_id: commerceId,
-          search,
-          page: 1,
-          perPage: 50,
-        }).pipe(
-          catchError(() => of({ count: 0, next: null, previous: null, results: [] as Product[] })),
-        );
-      }),
-      takeUntil(this.destroy$),
-    ).subscribe((res) => {
-      this.dialogProducts.set(res.results);
-      this.productsLoading.set(false);
-    });
+    this.productSearchSubject
+      .pipe(debounceTime(400), distinctUntilChanged(), takeUntil(this.destroy$))
+      .subscribe((query) => {
+        this.productSearchDraft.set(query);
+        if (!this.selectedCommerceId()) return;
+        this.loadDialogProducts();
+      });
+    this.productLoadTrigger
+      .pipe(
+        switchMap(({ commerceId, search }) => {
+          this.productsLoading.set(true);
+          return this.productRepo
+            .list({
+              commerce_id: commerceId,
+              search,
+              page: 1,
+              perPage: 50,
+            })
+            .pipe(
+              catchError(() =>
+                of({ count: 0, next: null, previous: null, results: [] as Product[] }),
+              ),
+            );
+        }),
+        takeUntil(this.destroy$),
+      )
+      .subscribe((res) => {
+        this.dialogProducts.set(res.results);
+        this.productsLoading.set(false);
+      });
     this.initForm(this.ingredient());
     this.commerceRepo.list().subscribe({
       next: (res) => {
@@ -109,9 +135,7 @@ export class IngredientFormDialogComponent implements OnInit, OnDestroy {
       const defaultProduct = ingredient.defaultProduct;
       this.selectedCommerceId.set(defaultProduct?.commerceId ?? null);
       this.selectedProductOption.set(
-        defaultProduct
-          ? { value: defaultProduct.id, label: defaultProduct.name }
-          : null,
+        defaultProduct ? { value: defaultProduct.id, label: defaultProduct.name } : null,
       );
       this.productSearchDraft.set(defaultProduct?.name ?? '');
       if (defaultProduct?.commerceId) {
@@ -147,7 +171,9 @@ export class IngredientFormDialogComponent implements OnInit, OnDestroy {
     this.updateFormField('defaultProductId', productId);
     if (productId) {
       const product = this.dialogProducts().find((p) => p.apiId === productId);
-      this.selectedProductOption.set(product ? { value: product.apiId, label: product.name } : null);
+      this.selectedProductOption.set(
+        product ? { value: product.apiId, label: product.name } : null,
+      );
     } else {
       this.selectedProductOption.set(null);
     }
@@ -190,9 +216,7 @@ export class IngredientFormDialogComponent implements OnInit, OnDestroy {
       return;
     }
     const editingId = this.editingId();
-    const request$ = editingId
-      ? this.repo.update(editingId, payload)
-      : this.repo.create(payload);
+    const request$ = editingId ? this.repo.update(editingId, payload) : this.repo.create(payload);
     request$.subscribe({
       next: (saved) => {
         this.toast.success(this.i18n.t('save'));

@@ -1,5 +1,5 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
+
 import { RouterLink } from '@angular/router';
 import { forkJoin } from 'rxjs';
 import { IncomeAccount } from '../models/finance.models';
@@ -13,7 +13,8 @@ import { ToastService } from '../../../shared/services/toast.service';
 @Component({
   selector: 'app-income-account-list',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [RouterLink],
+  changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './income-account-list.component.html',
 })
 export class IncomeAccountListComponent implements OnInit {

@@ -131,6 +131,7 @@ export const API_ENDPOINTS = {
     monthSummary: '/finance/month-summary/',
     months: '/finance/months/',
     years: '/finance/years/',
+    workspaces: '/finance/workspaces/',
     initialExpenseCategories: '/finance/initial-expense-categories/',
     generalExpenseCategories: '/finance/general-expense-categories/',
     savingsAccountTypes: '/finance/savings-account-types/',

@@ -3,6 +3,7 @@ import { Observable, map, switchMap, of, throwError } from 'rxjs';
 import { ApiService } from '../../core/api/api.service';
 import { API_ENDPOINTS, getFinanceResource } from '../../core/api/endpoints';
 import { IncomeAccount, AppCurrency } from './models/finance.models';
+import { FinanceWorkspaceService } from './services/finance-workspace.service';
 import { IncomeAccountService } from './services/income-account.service';
 import { SavingsAccountTypeService } from './services/savings-account-type.service';
 
@@ -120,32 +121,39 @@ interface FinancialMonthRef {
 })
 export class FinanceRepository {
   private readonly api = inject(ApiService);
+  private readonly workspaceService = inject(FinanceWorkspaceService);
   private readonly incomeAccountService = inject(IncomeAccountService);
   private readonly savingsAccountTypeService = inject(SavingsAccountTypeService);
 
   getMonthlySummary(year: string, month: string, options?: { currency?: string }): Observable<FinanceSummary> {
     const params: Record<string, string> = { year, month };
     if (options?.currency) params['currency'] = options.currency;
-    return this.api
-      .get<Record<string, unknown>>(API_ENDPOINTS.finance.monthSummary, {
-        params,
-      })
-      .pipe(map((res) => this.mapSummary(res, year, month)));
+    return this.withWorkspaceParams(params).pipe(
+      switchMap((query) =>
+        this.api
+          .get<Record<string, unknown>>(API_ENDPOINTS.finance.monthSummary, { params: query })
+          .pipe(map((res) => this.mapSummary(res, year, month))),
+      ),
+    );
   }
 
   listFinancialYears(): Observable<FinancialYear[]> {
-    return this.api
-      .get<FinancialYear[] | { results: FinancialYear[] }>(API_ENDPOINTS.finance.years, {
-        params: FINANCE_PAGE_SIZE,
-      })
-      .pipe(
-        map((res) =>
-          this.decodeList<Record<string, unknown>>(res).map((item) => ({
-            id: String(item['id'] ?? ''),
-            year: Number(item['year']),
-          })),
-        ),
-      );
+    return this.withWorkspaceParams({ ...FINANCE_PAGE_SIZE }).pipe(
+      switchMap((params) =>
+        this.api
+          .get<FinancialYear[] | { results: FinancialYear[] }>(API_ENDPOINTS.finance.years, {
+            params,
+          })
+          .pipe(
+            map((res) =>
+              this.decodeList<Record<string, unknown>>(res).map((item) => ({
+                id: String(item['id'] ?? ''),
+                year: Number(item['year']),
+              })),
+            ),
+          ),
+      ),
+    );
   }
 
   getMonthsForYear(calendarYear: number): Observable<number[]> {
@@ -238,15 +246,26 @@ export class FinanceRepository {
   }
 
   listInitialExpenseCategories(): Observable<FinanceCategory[]> {
-    return this.api
-      .get<unknown>(API_ENDPOINTS.finance.initialExpenseCategories, { params: FINANCE_PAGE_SIZE })
-      .pipe(map((res) => this.decodeList(res).map((item) => this.mapCategory(item))));
+    return this.withWorkspaceParams({ ...FINANCE_PAGE_SIZE }).pipe(
+      switchMap((params) =>
+        this.api
+          .get<unknown>(API_ENDPOINTS.finance.initialExpenseCategories, { params })
+          .pipe(map((res) => this.decodeList(res).map((item) => this.mapCategory(item)))),
+      ),
+    );
   }
 
   createInitialExpenseCategory(name: string): Observable<FinanceCategory> {
-    return this.api
-      .post<Record<string, unknown>>(API_ENDPOINTS.finance.initialExpenseCategories, { name })
-      .pipe(map((res) => this.mapCategory(res)));
+    return this.workspaceService.resolveActiveId().pipe(
+      switchMap((workspace) =>
+        this.api
+          .post<Record<string, unknown>>(API_ENDPOINTS.finance.initialExpenseCategories, {
+            name,
+            workspace,
+          })
+          .pipe(map((res) => this.mapCategory(res))),
+      ),
+    );
   }
 
   updateInitialExpenseCategory(id: string, name: string): Observable<FinanceCategory> {
@@ -260,9 +279,13 @@ export class FinanceRepository {
   }
 
   listGeneralExpenseCategories(): Observable<FinanceCategory[]> {
-    return this.api
-      .get<unknown>(API_ENDPOINTS.finance.generalExpenseCategories, { params: FINANCE_PAGE_SIZE })
-      .pipe(map((res) => this.decodeList(res).map((item) => this.mapCategory(item))));
+    return this.withWorkspaceParams({ ...FINANCE_PAGE_SIZE }).pipe(
+      switchMap((params) =>
+        this.api
+          .get<unknown>(API_ENDPOINTS.finance.generalExpenseCategories, { params })
+          .pipe(map((res) => this.decodeList(res).map((item) => this.mapCategory(item)))),
+      ),
+    );
   }
 
   listSavingsAccountTypes(): Observable<FinanceCategory[]> {
@@ -284,13 +307,18 @@ export class FinanceRepository {
     displayMode?: string;
     notes?: string;
   }): Observable<void> {
-    return this.api.post<void>(API_ENDPOINTS.finance.exchangeCalculatorConfirm, {
-      source_currency: data.sourceCurrency,
-      target_currency: data.targetCurrency,
-      amount: data.amount,
-      display_mode: data.displayMode ?? 'compact',
-      ...(data.notes ? { notes: data.notes } : {}),
-    });
+    return this.workspaceService.resolveActiveId().pipe(
+      switchMap((workspace) =>
+        this.api.post<void>(API_ENDPOINTS.finance.exchangeCalculatorConfirm, {
+          source_currency: data.sourceCurrency,
+          target_currency: data.targetCurrency,
+          amount: data.amount,
+          display_mode: data.displayMode ?? 'compact',
+          workspace,
+          ...(data.notes ? { notes: data.notes } : {}),
+        }),
+      ),
+    );
   }
 
   createEntry(feature: string, year: string, month: string, data: Record<string, unknown>): Observable<FinanceEntry> {
@@ -358,6 +386,12 @@ export class FinanceRepository {
             }),
           );
       }),
+    );
+  }
+
+  private withWorkspaceParams(params: Record<string, string> = {}): Observable<Record<string, string>> {
+    return this.workspaceService.resolveActiveId().pipe(
+      map((workspace) => ({ ...params, workspace })),
     );
   }
 

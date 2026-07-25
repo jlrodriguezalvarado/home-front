@@ -1,11 +1,11 @@
-import { Component, Input, Output, EventEmitter } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, Input, Output, EventEmitter, ChangeDetectionStrategy } from '@angular/core';
 
 @Component({
   selector: 'app-error-state',
   standalone: true,
-  imports: [CommonModule],
+  imports: [],
   templateUrl: './error-state.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './error-state.component.scss',
 })
 export class ErrorStateComponent {

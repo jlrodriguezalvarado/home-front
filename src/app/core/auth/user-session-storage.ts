@@ -3,6 +3,7 @@ const USER_SCOPED_LOCAL_STORAGE_KEYS = [
   'shopping_cart',
   'shopping_cart_filter_commerce_id_v1',
   'home_finance_period_v1',
+  'home_finance_workspace_v1',
   'products_list_filters_v1',
   'chat_recent_emojis'
 ] as const;

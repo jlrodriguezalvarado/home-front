@@ -1,61 +1,84 @@
 <div class="space-y-lg">
-  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-md">
+  <div class="flex flex-col justify-between gap-md sm:flex-row sm:items-center">
     <h1 class="page-title">{{ i18n.t('conversations') }}</h1>
-    <div class="flex flex-col sm:flex-row w-full sm:w-auto gap-sm">
-      <button type="button" (click)="openDialog()" class="btn-primary flex w-full sm:w-auto items-center justify-center gap-2">
+    <div class="flex w-full flex-col gap-sm sm:w-auto sm:flex-row">
+      <button
+        type="button"
+        (click)="openDialog()"
+        class="btn-primary flex w-full items-center justify-center gap-2 sm:w-auto"
+      >
         <span class="material-symbols-outlined text-[20px]">person_add</span>
         {{ i18n.t('newConversation') }}
       </button>
     </div>
   </div>
-  <app-loading-state *ngIf="loading() && conversations().length === 0"></app-loading-state>
-  <app-error-state *ngIf="error()" (retry)="load()"></app-error-state>
-  <app-empty-state
-    *ngIf="!loading() && !error() && conversations().length === 0"
-    icon="chat"
-    [title]="i18n.t('noConversations')">
-  </app-empty-state>
-  <div *ngIf="!loading() && !error() && conversations().length > 0" class="space-y-sm">
-    <button
-      *ngFor="let item of conversations()"
-      type="button"
-      (click)="openConversation(item)"
-      class="card-surface w-full p-lg text-left hover:shadow-card-hover transition-shadow">
-      <div class="flex items-start justify-between gap-md">
-        <div class="min-w-0 flex-1">
-          <div class="flex items-center gap-sm">
-            <span class="material-symbols-outlined text-on-surface-variant text-[20px]">
-              {{ item.isGroup ? 'group' : 'chat' }}
-            </span>
-            <span class="text-headline-md text-on-surface truncate">{{ item.title }}</span>
+  @if (loading() && conversations().length === 0) {
+    <app-loading-state></app-loading-state>
+  }
+  @if (error()) {
+    <app-error-state (retry)="load()"></app-error-state>
+  }
+  @if (!loading() && !error() && conversations().length === 0) {
+    <app-empty-state icon="chat" [title]="i18n.t('noConversations')"> </app-empty-state>
+  }
+  @if (!loading() && !error() && conversations().length > 0) {
+    <div class="space-y-sm">
+      @for (item of conversations(); track item) {
+        <button
+          type="button"
+          (click)="openConversation(item)"
+          class="card-surface w-full p-lg text-left transition-shadow hover:shadow-card-hover"
+        >
+          <div class="flex items-start justify-between gap-md">
+            <div class="min-w-0 flex-1">
+              <div class="flex items-center gap-sm">
+                <span class="material-symbols-outlined text-[20px] text-on-surface-variant">
+                  {{ item.isGroup ? 'group' : 'chat' }}
+                </span>
+                <span class="truncate text-headline-md text-on-surface">{{ item.title }}</span>
+              </div>
+              <div class="mt-xs truncate text-body-md text-on-surface-variant">
+                {{ participantNames(item) }}
+              </div>
+              @if (item.lastMessage) {
+                <div class="mt-sm line-clamp-2 text-body-md text-on-surface-variant">
+                  {{ item.lastMessage.body }}
+                </div>
+              }
+            </div>
+            <div class="flex shrink-0 flex-col items-end gap-xs">
+              @if (item.lastMessageAt) {
+                <span class="text-label-md text-on-surface-variant">
+                  {{ formatDate(item.lastMessageAt) }}
+                </span>
+              }
+              @if (item.unreadCount > 0) {
+                <span
+                  class="min-w-[24px] rounded-full bg-primary px-sm py-xs text-center text-label-md text-on-primary"
+                >
+                  {{ item.unreadCount }}
+                </span>
+              }
+            </div>
           </div>
-          <div class="text-body-md text-on-surface-variant mt-xs truncate">
-            {{ participantNames(item) }}
-          </div>
-          <div *ngIf="item.lastMessage" class="text-body-md text-on-surface-variant mt-sm line-clamp-2">
-            {{ item.lastMessage.body }}
-          </div>
-        </div>
-        <div class="flex flex-col items-end gap-xs shrink-0">
-          <span *ngIf="item.lastMessageAt" class="text-label-md text-on-surface-variant">
-            {{ formatDate(item.lastMessageAt) }}
-          </span>
-          <span
-            *ngIf="item.unreadCount > 0"
-            class="bg-primary text-on-primary text-label-md px-sm py-xs rounded-full min-w-[24px] text-center">
-            {{ item.unreadCount }}
-          </span>
-        </div>
-      </div>
-    </button>
-  </div>
-  <div *ngIf="showDialog()" class="fixed inset-0 bg-black/50 flex items-center justify-center p-md z-50">
-    <div class="bg-surface-container-lowest w-full max-w-md p-xl rounded-[24px] border border-outline-variant shadow-card-hover max-h-[90vh] flex flex-col overflow-hidden">
-      <h2 class="text-title-lg text-on-surface mb-lg shrink-0">{{ i18n.t('newConversation') }}</h2>
-      <app-conversation-form
-        (created)="onConversationCreated($event)"
-        (cancelled)="closeDialog()">
-      </app-conversation-form>
+        </button>
+      }
     </div>
-  </div>
+  }
+  @if (showDialog()) {
+    <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-md">
+      <div
+        class="flex max-h-[90vh] w-full max-w-md flex-col overflow-hidden rounded-[24px] border border-outline-variant bg-surface-container-lowest p-xl shadow-card-hover"
+      >
+        <h2 class="mb-lg shrink-0 text-title-lg text-on-surface">
+          {{ i18n.t('newConversation') }}
+        </h2>
+        <app-conversation-form
+          (created)="onConversationCreated($event)"
+          (cancelled)="closeDialog()"
+        >
+        </app-conversation-form>
+      </div>
+    </div>
+  }
 </div>

@@ -13,61 +13,84 @@
       [ngModel]="searchQuery()"
       (ngModelChange)="onSearchChange($event)"
       [placeholder]="i18n.t('search')"
-      class="input-outlined flex-1 min-w-[200px]">
+      class="input-outlined min-w-[200px] flex-1"
+    />
     <button
       (click)="toggleFavoritesFilter()"
       class="btn-secondary flex items-center gap-2"
-      [class.nav-item-active]="favoritesOnly()">
-      <span class="material-symbols-outlined text-[20px]" [class.material-symbols-filled]="favoritesOnly()" [class.text-error]="favoritesOnly()">favorite</span>
+      [class.nav-item-active]="favoritesOnly()"
+    >
+      <span
+        class="material-symbols-outlined text-[20px]"
+        [class.material-symbols-filled]="favoritesOnly()"
+        [class.text-error]="favoritesOnly()"
+        >favorite</span
+      >
       {{ i18n.t('favorites') }}
     </button>
   </div>
-  <app-loading-state *ngIf="loading() && recipes().length === 0"></app-loading-state>
-  <app-error-state *ngIf="error()" (retry)="load()"></app-error-state>
-  <app-empty-state
-    *ngIf="!loading() && !error() && recipes().length === 0"
-    icon="restaurant"
-    [title]="i18n.t('recipes')">
-  </app-empty-state>
-  <div
-    *ngIf="!loading() && !error() && recipes().length > 0"
-    class="recipe-grid -mx-margin-mobile md:mx-0">
-    <a
-      *ngFor="let recipe of recipes()"
-      [routerLink]="['/meal-planning/recipes', recipe.id, 'edit']"
-      class="recipe-grid__item group">
-      <div class="recipe-grid__media">
-        <img
-          *ngIf="recipe.image"
-          [src]="recipe.image"
-          [alt]="recipe.name"
-          class="recipe-grid__image"
-          loading="lazy">
-        <div *ngIf="!recipe.image" class="recipe-grid__placeholder">
-          <span class="material-symbols-outlined text-[32px]">restaurant</span>
-        </div>
-        <div class="recipe-grid__overlay">
-          <button
-            (click)="toggleFavorite(recipe, $event)"
-            class="recipe-grid__favorite"
-            [attr.aria-label]="recipe.isFavorite ? i18n.t('removeFavorite') : i18n.t('markAsFavorite')">
-            <span
-              class="material-symbols-outlined text-[20px]"
-              [class.material-symbols-filled]="recipe.isFavorite"
-              [class.text-error]="recipe.isFavorite">favorite</span>
-          </button>
-          <button
-            (click)="deleteRecipe(recipe, $event)"
-            class="recipe-grid__delete"
-            [attr.aria-label]="i18n.t('delete')">
-            <span class="material-symbols-outlined text-[18px]">delete</span>
-          </button>
-        </div>
-        <span *ngIf="recipe.video" class="recipe-grid__video-badge">
-          <span class="material-symbols-outlined text-[14px]">play_arrow</span>
-        </span>
-      </div>
-      <p class="recipe-grid__name">{{ recipe.name }}</p>
-    </a>
-  </div>
+  @if (loading() && recipes().length === 0) {
+    <app-loading-state></app-loading-state>
+  }
+  @if (error()) {
+    <app-error-state (retry)="load()"></app-error-state>
+  }
+  @if (!loading() && !error() && recipes().length === 0) {
+    <app-empty-state icon="restaurant" [title]="i18n.t('recipes')"> </app-empty-state>
+  }
+  @if (!loading() && !error() && recipes().length > 0) {
+    <div class="recipe-grid -mx-margin-mobile md:mx-0">
+      @for (recipe of recipes(); track recipe) {
+        <a
+          [routerLink]="['/meal-planning/recipes', recipe.id, 'edit']"
+          class="recipe-grid__item group"
+        >
+          <div class="recipe-grid__media">
+            @if (recipe.image) {
+              <img
+                [src]="recipe.image"
+                [alt]="recipe.name"
+                class="recipe-grid__image"
+                loading="lazy"
+              />
+            }
+            @if (!recipe.image) {
+              <div class="recipe-grid__placeholder">
+                <span class="material-symbols-outlined text-[32px]">restaurant</span>
+              </div>
+            }
+            <div class="recipe-grid__overlay">
+              <button
+                (click)="toggleFavorite(recipe, $event)"
+                class="recipe-grid__favorite"
+                [attr.aria-label]="
+                  recipe.isFavorite ? i18n.t('removeFavorite') : i18n.t('markAsFavorite')
+                "
+              >
+                <span
+                  class="material-symbols-outlined text-[20px]"
+                  [class.material-symbols-filled]="recipe.isFavorite"
+                  [class.text-error]="recipe.isFavorite"
+                  >favorite</span
+                >
+              </button>
+              <button
+                (click)="deleteRecipe(recipe, $event)"
+                class="recipe-grid__delete"
+                [attr.aria-label]="i18n.t('delete')"
+              >
+                <span class="material-symbols-outlined text-[18px]">delete</span>
+              </button>
+            </div>
+            @if (recipe.video) {
+              <span class="recipe-grid__video-badge">
+                <span class="material-symbols-outlined text-[14px]">play_arrow</span>
+              </span>
+            }
+          </div>
+          <p class="recipe-grid__name">{{ recipe.name }}</p>
+        </a>
+      }
+    </div>
+  }
 </div>

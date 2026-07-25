@@ -9,8 +9,9 @@ import {
   inject,
   signal,
   computed,
+  ChangeDetectionStrategy,
 } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { FormsModule } from '@angular/forms';
 import { LoadingStateComponent } from './loading-state.component';
 
@@ -29,8 +30,9 @@ interface PanelStyle {
 @Component({
   selector: 'app-search-select',
   standalone: true,
-  imports: [CommonModule, FormsModule, LoadingStateComponent],
+  imports: [FormsModule, LoadingStateComponent],
   templateUrl: './search-select.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './search-select.component.scss',
 })
 export class SearchSelectComponent implements OnDestroy {
@@ -109,7 +111,9 @@ export class SearchSelectComponent implements OnDestroy {
   }
 
   private updatePanelPosition(): void {
-    const trigger = this.el.nativeElement.querySelector('[data-search-select-trigger]') as HTMLElement | null;
+    const trigger = this.el.nativeElement.querySelector(
+      '[data-search-select-trigger]',
+    ) as HTMLElement | null;
     if (!trigger) return;
     const rect = trigger.getBoundingClientRect();
     const gap = 4;

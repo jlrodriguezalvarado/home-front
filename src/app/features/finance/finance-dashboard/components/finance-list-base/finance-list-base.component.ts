@@ -1,4 +1,13 @@
-import { Component, DestroyRef, effect, inject, Input, OnInit, signal } from '@angular/core';
+import {
+  Component,
+  DestroyRef,
+  effect,
+  inject,
+  Input,
+  OnInit,
+  signal,
+  ChangeDetectionStrategy,
+} from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -33,6 +42,7 @@ export interface ExpenseCategoryGroup {
   standalone: true,
   imports: [CommonModule, FormsModule, RouterLink, DialogFormDirective],
   templateUrl: './finance-list-base.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './finance-list-base.component.scss',
 })
 export class FinanceListBaseComponent implements OnInit {
@@ -98,12 +108,16 @@ export class FinanceListBaseComponent implements OnInit {
     );
   }
 
-  private loadPeriodData(period: FinancePeriod): Observable<{ entries: FinanceEntry[]; categories: FinanceCategory[] }> {
+  private loadPeriodData(
+    period: FinancePeriod,
+  ): Observable<{ entries: FinanceEntry[]; categories: FinanceCategory[] }> {
     if (!this.feature) {
       return of({ entries: [], categories: [] });
     }
     return forkJoin({
-      entries: this.repo.listEntries(this.feature, period.year, period.month).pipe(catchError(() => of([]))),
+      entries: this.repo
+        .listEntries(this.feature, period.year, period.month)
+        .pipe(catchError(() => of([]))),
       categories: this.loadCategories$(period).pipe(catchError(() => of([]))),
     });
   }
@@ -175,8 +189,10 @@ export class FinanceListBaseComponent implements OnInit {
     for (const [categoryId, items] of byCategory) {
       if (!items.length) continue;
       const name = categoryId
-        ? (items[0].categoryName || (this.i18n.lang() === 'en' ? 'Other' : 'Otro'))
-        : (this.i18n.lang() === 'en' ? 'Uncategorized' : 'Sin categoría');
+        ? items[0].categoryName || (this.i18n.lang() === 'en' ? 'Other' : 'Otro')
+        : this.i18n.lang() === 'en'
+          ? 'Uncategorized'
+          : 'Sin categoría';
       groups.push({
         categoryId,
         name,
@@ -227,9 +243,8 @@ export class FinanceListBaseComponent implements OnInit {
     } else {
       this.editingId = null;
       this.form = {
-        description: this.feature === 'savings'
-          ? (this.i18n.lang() === 'en' ? 'Savings' : 'Ahorro')
-          : '',
+        description:
+          this.feature === 'savings' ? (this.i18n.lang() === 'en' ? 'Savings' : 'Ahorro') : '',
         amount: '',
         notes: '',
         isCash: false,
@@ -271,9 +286,13 @@ export class FinanceListBaseComponent implements OnInit {
     };
 
     if (this.editingId) {
-      this.repo.updateEntry(this.feature, this.editingId, data).subscribe({ next: onDone, error: onError });
+      this.repo
+        .updateEntry(this.feature, this.editingId, data)
+        .subscribe({ next: onDone, error: onError });
     } else {
-      this.repo.createEntry(this.feature, this.year, this.month, data).subscribe({ next: onDone, error: onError });
+      this.repo
+        .createEntry(this.feature, this.year, this.month, data)
+        .subscribe({ next: onDone, error: onError });
     }
   }
 
@@ -289,7 +308,8 @@ export class FinanceListBaseComponent implements OnInit {
         this.refresh.notify();
         this.toast.success(this.i18n.lang() === 'en' ? 'Entry deleted' : 'Registro eliminado');
       },
-      error: () => this.toast.error(this.i18n.lang() === 'en' ? 'Error deleting entry' : 'Error al eliminar'),
+      error: () =>
+        this.toast.error(this.i18n.lang() === 'en' ? 'Error deleting entry' : 'Error al eliminar'),
     });
   }
 

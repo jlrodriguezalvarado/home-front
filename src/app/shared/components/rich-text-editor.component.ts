@@ -5,8 +5,9 @@ import {
   ViewChild,
   AfterViewInit,
   Input,
+  ChangeDetectionStrategy,
 } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
 
 type ToolbarAction = 'bold' | 'italic' | 'underline' | 'bulletList' | 'orderedList' | 'link';
@@ -14,9 +15,10 @@ type ToolbarAction = 'bold' | 'italic' | 'underline' | 'bulletList' | 'orderedLi
 @Component({
   selector: 'app-rich-text-editor',
   standalone: true,
-  imports: [CommonModule],
+  imports: [],
   templateUrl: './rich-text-editor.component.html',
   styleUrl: './rich-text-editor.component.scss',
+  changeDetection: ChangeDetectionStrategy.Eager,
   providers: [
     {
       provide: NG_VALUE_ACCESSOR,

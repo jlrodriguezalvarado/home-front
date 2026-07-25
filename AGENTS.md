@@ -1,17 +1,37 @@
 # Angular frontend repository guidance
 
-This repository is the frontend half of the shared workspace. Before any feature work, read `../.agents/WORKFLOW.md`, the approved dated file under `../.plans/`, and `../.agents/policies/angular-frontend.md` when those shared files are available.
+This repository (`home-front`) is the Angular 22 client half of the Home product. All remote application data comes from the Django API in sibling `../home-api` via `environment.apiUrl` / `wsUrl`.
 
-Use the `angular_frontend` custom agent for implementation and the `qa` agent after both layers are integrated. Consume the approved API contract; do not invent an incompatible transport shape.
-If repository-local custom agents are unavailable, trust this project in Codex or reopen the parent `home` workspace; do not silently skip the required ownership and QA gates.
+## Sources of truth (this repo)
 
-Fallback rules when the shared workspace files are unavailable:
+- `.agents/WORKFLOW.md` — lifecycle
+- `.agents/HANDOFF.md` — delegation block
+- `.agents/policies/angular-frontend.md` — engineering rules
+- `.agents/policies/integration.md` — cross-layer contracts
+- `.agents/policies/qa.md` — QA gate
+- `.agents/policies/continuous-improvement.md` — turn repeatable agent failures into kit defenses
+- `.cursor/agents/angular-frontend.md` / `qa.md`
+- Front-only plans under `.plans/`
+- Cross plans under `../home-api/.plans/` (contract owner)
 
-- Keep DTOs, domain models, mappers, repositories, and feature endpoints close to their feature.
-- Keep generated OpenAPI code isolated and current; do not edit generated types manually.
-- Preserve decimals losslessly and use strict types without `any` or false casts.
-- Use `switchMap`, `finalize`, and `takeUntilDestroyed` to prevent stale requests and lifecycle leaks.
-- Share concurrent JWT refreshes and normalize errors centrally.
-- Never cache authenticated API data or mutations without an approved policy; clear user-scoped state on logout.
-- Run TypeScript, generated-type checks, browser specs, and the production build before completion.
-- Keep `src/environments/environment.prod.ts` local and ignored. Do not push, merge, deploy, or force dependency upgrades without explicit authorization.
+## Sibling
+
+| Sibling | Role |
+|---------|------|
+| `../home-api` | Contract owner; OpenAPI at `docs/openapi.yaml` |
+
+Regenerate types with `npm run api:types` / `api:types:check`. Never hand-edit `src/app/core/api/generated/`.
+
+## Parent workspace
+
+Opening parent `home/` loads root `AGENTS.md` plus root `.cursor/agents/` for full-feature orchestration. Detail still lives in this kit and in `home-api`’s kit.
+
+## Safeguards
+
+- Colocate feature DTOs/mappers/repositories; respect feature folder layout.
+- Preserve decimal strings at the HTTP boundary; normalize errors via `AppError`.
+- UI strings only in `src/app/core/i18n/en.json` and `es.json`.
+- Keep `environment.prod.ts` local and ignored.
+- Do not push, merge, deploy, or force dependency upgrades without authorization.
+- Do not skip ownership or QA gates.
+- After a repeatable agent failure, follow `.agents/policies/continuous-improvement.md` (or a parent harness directive) before declaring done.

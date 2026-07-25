@@ -1,5 +1,5 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
+
 import { Router, RouterLink } from '@angular/router';
 import { FinanceRepository, FinancialYear } from '../finance.repository';
 import { writeFinancePeriod } from '../finance-period.storage';
@@ -8,7 +8,8 @@ import { I18nService } from '../../../core/i18n/i18n.service';
 @Component({
   selector: 'app-finance-years',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [RouterLink],
+  changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './finance-years.component.html',
 })
 export class FinanceYearsComponent implements OnInit {
@@ -22,8 +23,18 @@ export class FinanceYearsComponent implements OnInit {
   loading = signal(true);
 
   readonly monthNames = [
-    'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'May',
+    'Jun',
+    'Jul',
+    'Aug',
+    'Sep',
+    'Oct',
+    'Nov',
+    'Dec',
   ];
 
   ngOnInit() {

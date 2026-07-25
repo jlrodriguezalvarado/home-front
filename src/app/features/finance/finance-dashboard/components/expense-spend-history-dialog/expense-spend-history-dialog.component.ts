@@ -1,5 +1,16 @@
-import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges, effect, inject, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import {
+  Component,
+  EventEmitter,
+  Input,
+  OnChanges,
+  Output,
+  SimpleChanges,
+  effect,
+  inject,
+  signal,
+  ChangeDetectionStrategy,
+} from '@angular/core';
+
 import { ExpenseSpendBatch } from '../../../models/finance.models';
 import { ExpenseSpendService } from '../../../services/expense-spend.service';
 import { FinanceRefreshService } from '../../../finance-refresh.service';
@@ -11,8 +22,9 @@ import { ToastService } from '../../../../../shared/services/toast.service';
 @Component({
   selector: 'app-expense-spend-history-dialog',
   standalone: true,
-  imports: [CommonModule],
+  imports: [],
   templateUrl: './expense-spend-history-dialog.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './expense-spend-history-dialog.component.scss',
 })
 export class ExpenseSpendHistoryDialogComponent implements OnChanges {

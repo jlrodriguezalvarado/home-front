@@ -1,12 +1,8 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { forkJoin } from 'rxjs';
-import {
-  enrichPurchaseCommerceNames,
-  Purchase,
-  PurchaseRepository,
-} from './purchase.repository';
+import { enrichPurchaseCommerceNames, Purchase, PurchaseRepository } from './purchase.repository';
 import { CommerceRepository } from '../commerce/commerce.repository';
 import { CartService } from './cart.service';
 import { I18nService } from '../../core/i18n/i18n.service';
@@ -22,6 +18,7 @@ import { ToastService } from '../../shared/services/toast.service';
   standalone: true,
   imports: [CommonModule, LoadingStateComponent, EmptyStateComponent, ErrorStateComponent],
   templateUrl: './purchase-history.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './purchase-history.component.scss',
 })
 export class PurchaseHistoryComponent implements OnInit {

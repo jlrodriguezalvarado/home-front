@@ -1,5 +1,5 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
+
 import { FormsModule } from '@angular/forms';
 import { MealTypeRepository } from '../repositories/meal-type.repository';
 import { MealType, MealTypePayload } from '../models/meal-planning.models';
@@ -16,7 +16,6 @@ import { MealPlanningNavComponent } from '../meal-planning-nav.component';
   selector: 'app-meal-type-list',
   standalone: true,
   imports: [
-    CommonModule,
     FormsModule,
     LoadingStateComponent,
     EmptyStateComponent,
@@ -25,6 +24,7 @@ import { MealPlanningNavComponent } from '../meal-planning-nav.component';
     MealPlanningNavComponent,
   ],
   templateUrl: './meal-type-list.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './meal-type-list.component.scss',
 })
 export class MealTypeListComponent implements OnInit {
@@ -91,13 +91,15 @@ export class MealTypeListComponent implements OnInit {
   save() {
     const payload = this.form();
     if (!payload.name.trim() || !payload.code.trim()) {
-      this.toast.error(this.i18n.lang() === 'en' ? 'Name and code are required' : 'Nombre y código son obligatorios');
+      this.toast.error(
+        this.i18n.lang() === 'en'
+          ? 'Name and code are required'
+          : 'Nombre y código son obligatorios',
+      );
       return;
     }
     const editingId = this.editingId();
-    const request$ = editingId
-      ? this.repo.update(editingId, payload)
-      : this.repo.create(payload);
+    const request$ = editingId ? this.repo.update(editingId, payload) : this.repo.create(payload);
     request$.subscribe({
       next: () => {
         this.toast.success(this.i18n.t('save'));
@@ -123,19 +125,23 @@ export class MealTypeListComponent implements OnInit {
         this.toast.success(this.i18n.t('delete'));
         this.load();
       },
-      error: () => this.toast.error(this.i18n.lang() === 'en' ? 'Delete failed' : 'Error al eliminar'),
+      error: () =>
+        this.toast.error(this.i18n.lang() === 'en' ? 'Delete failed' : 'Error al eliminar'),
     });
   }
 
   toggleActive(mealType: MealType) {
-    this.repo.update(mealType.id, {
-      name: mealType.name,
-      code: mealType.code,
-      sortOrder: mealType.sortOrder,
-      isActive: !mealType.isActive,
-    }).subscribe({
-      next: () => this.load(),
-      error: () => this.toast.error(this.i18n.lang() === 'en' ? 'Update failed' : 'Error al actualizar'),
-    });
+    this.repo
+      .update(mealType.id, {
+        name: mealType.name,
+        code: mealType.code,
+        sortOrder: mealType.sortOrder,
+        isActive: !mealType.isActive,
+      })
+      .subscribe({
+        next: () => this.load(),
+        error: () =>
+          this.toast.error(this.i18n.lang() === 'en' ? 'Update failed' : 'Error al actualizar'),
+      });
   }
 }

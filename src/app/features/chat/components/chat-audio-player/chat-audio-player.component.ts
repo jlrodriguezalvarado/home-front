@@ -1,12 +1,21 @@
-import { Component, Input, OnDestroy, computed, inject, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import {
+  Component,
+  Input,
+  OnDestroy,
+  computed,
+  inject,
+  signal,
+  ChangeDetectionStrategy,
+} from '@angular/core';
+
 import { formatAudioDuration } from '../../utils/chat-media.utils';
 
 @Component({
   selector: 'app-chat-audio-player',
   standalone: true,
-  imports: [CommonModule],
+  imports: [],
   templateUrl: './chat-audio-player.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './chat-audio-player.component.scss',
 })
 export class ChatAudioPlayerComponent implements OnDestroy {
@@ -25,7 +34,8 @@ export class ChatAudioPlayerComponent implements OnDestroy {
   formattedDuration = computed(() => {
     const total = this.duration();
     if (total > 0) return formatAudioDuration(total);
-    if (this.durationHint != null && this.durationHint > 0) return formatAudioDuration(this.durationHint);
+    if (this.durationHint != null && this.durationHint > 0)
+      return formatAudioDuration(this.durationHint);
     return '0:00';
   });
   private audio: HTMLAudioElement | null = null;
@@ -56,7 +66,10 @@ export class ChatAudioPlayerComponent implements OnDestroy {
       this.isPlaying.set(false);
       return;
     }
-    this.audio.play().then(() => this.isPlaying.set(true)).catch(() => this.isPlaying.set(false));
+    this.audio
+      .play()
+      .then(() => this.isPlaying.set(true))
+      .catch(() => this.isPlaying.set(false));
   }
 
   private destroyAudio(): void {

@@ -363,17 +363,14 @@ export class CartService {
   }
 }
 
-export function initCart(
-  cart: CartService,
-  storage: CartStorageService,
-  auth: AuthService,
-): () => Promise<void> {
-  return () => {
-    const items = storage.load();
-    cart.hydrate(items, { skipPersist: true });
-    if (!auth.isAuthenticated()) {
-      return Promise.resolve();
-    }
-    return firstValueFrom(cart.syncFromServer()).then(() => undefined).catch(() => undefined);
-  };
+export function initCart(): Promise<void> {
+  const cart = inject(CartService);
+  const storage = inject(CartStorageService);
+  const auth = inject(AuthService);
+  const items = storage.load();
+  cart.hydrate(items, { skipPersist: true });
+  if (!auth.isAuthenticated()) {
+    return Promise.resolve();
+  }
+  return firstValueFrom(cart.syncFromServer()).then(() => undefined).catch(() => undefined);
 }

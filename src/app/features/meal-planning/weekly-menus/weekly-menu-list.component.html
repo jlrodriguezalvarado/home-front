@@ -10,158 +10,284 @@
   <div class="card-surface overflow-hidden">
     <button
       type="button"
-      class="w-full px-lg py-md bg-surface-container flex items-center justify-between gap-md border-b border-outline-variant text-left"
-      (click)="toggleMenusPanel()">
-      <div class="flex items-center gap-sm min-w-0">
-        <span class="material-symbols-outlined text-[20px] text-on-surface-variant shrink-0">
+      class="flex w-full items-center justify-between gap-md border-b border-outline-variant bg-surface-container px-lg py-md text-left"
+      (click)="toggleMenusPanel()"
+    >
+      <div class="flex min-w-0 items-center gap-sm">
+        <span class="material-symbols-outlined shrink-0 text-[20px] text-on-surface-variant">
           {{ menusPanelCollapsed() ? 'expand_more' : 'expand_less' }}
         </span>
-        <span class="text-title-lg text-on-surface font-medium truncate">{{ i18n.t('weeklyMenus') }}</span>
+        <span class="truncate text-title-lg font-medium text-on-surface">{{
+          i18n.t('weeklyMenus')
+        }}</span>
       </div>
-      <span class="text-label-sm text-on-surface-variant shrink-0">{{ menus().length }}</span>
+      <span class="text-label-sm shrink-0 text-on-surface-variant">{{ menus().length }}</span>
     </button>
-    <div *ngIf="!menusPanelCollapsed()" class="p-lg space-y-md">
-      <div class="flex flex-wrap gap-md">
-        <input
-          type="search"
-          [ngModel]="searchQuery()"
-          (ngModelChange)="onSearchChange($event)"
-          [placeholder]="i18n.t('search')"
-          class="input-outlined flex-1 min-w-[200px]">
-        <button (click)="toggleFavoritesFilter()" class="btn-secondary flex items-center gap-2" [class.nav-item-active]="favoritesOnly()">
-          <span class="material-symbols-outlined text-[20px]" [class.material-symbols-filled]="favoritesOnly()" [class.text-error]="favoritesOnly()">favorite</span>
-          {{ i18n.t('favorites') }}
-        </button>
-        <button (click)="toggleTemplatesFilter()" class="btn-secondary flex items-center gap-2" [class.nav-item-active]="templatesOnly()">
-          <span class="material-symbols-outlined text-[20px]">calendar_month</span>
-          {{ i18n.t('templates') }}
-        </button>
-        <button (click)="toggleCurrentFilter()" class="btn-secondary flex items-center gap-2" [class.nav-item-active]="currentOnly()">
-          <span class="material-symbols-outlined text-[20px]" [class.material-symbols-filled]="currentOnly()" [class.text-primary]="currentOnly()">today</span>
-          {{ i18n.t('currentOnly') }}
-        </button>
-      </div>
-      <app-loading-state *ngIf="loading() && menus().length === 0"></app-loading-state>
-      <app-error-state *ngIf="error()" (retry)="load()"></app-error-state>
-      <app-empty-state
-        *ngIf="!loading() && !error() && menus().length === 0"
-        icon="calendar_month"
-        [title]="i18n.t('weeklyMenus')">
-      </app-empty-state>
-      <div *ngIf="!loading() && !error() && menus().length > 0" class="grid grid-cols-1 md:grid-cols-2 gap-md">
-        <div *ngFor="let menu of menus()" class="card-surface p-lg hover:shadow-card-hover transition-shadow" [class.ring-2]="menu.isCurrent" [class.ring-primary]="menu.isCurrent">
-          <div class="flex justify-between items-start gap-md">
-            <div class="min-w-0">
-              <div class="text-headline-md text-on-surface truncate">{{ menu.name }}</div>
-              <div class="flex flex-wrap gap-sm mt-sm">
-                <span *ngIf="menu.isCurrent" class="text-label-md text-primary flex items-center gap-1">
-                  <span class="material-symbols-outlined text-[16px] material-symbols-filled">today</span>
-                  {{ i18n.t('currentMenu') }}
-                </span>
-                <span *ngIf="menu.isFavorite" class="text-label-md text-error flex items-center gap-1">
-                  <span class="material-symbols-outlined text-[16px] material-symbols-filled">favorite</span>
-                  {{ i18n.t('favorite') }}
-                </span>
-                <span *ngIf="menu.isTemplate" class="text-label-md text-on-surface-variant">{{ i18n.t('isTemplate') }}</span>
-              </div>
-            </div>
-            <div class="flex flex-col gap-sm shrink-0">
-              <a [routerLink]="['/meal-planning/weekly-menus', menu.id, 'edit']" class="text-primary text-label-md hover:underline flex items-center gap-1">
-                <span class="material-symbols-outlined text-[18px]">edit</span>
-                {{ i18n.t('edit') }}
-              </a>
-              <button (click)="openCloneDialog(menu, $event)" class="text-primary text-label-md hover:underline flex items-center gap-1">
-                <span class="material-symbols-outlined text-[18px]">content_copy</span>
-                {{ i18n.t('clone') }}
-              </button>
-              <a [routerLink]="['/meal-planning/weekly-menus', menu.id, 'shopping-list']" class="text-primary text-label-md hover:underline flex items-center gap-1">
-                <span class="material-symbols-outlined text-[18px]">shopping_cart</span>
-                {{ i18n.t('shoppingList') }}
-              </a>
-              <button *ngIf="!menu.isCurrent" (click)="setAsCurrent(menu, $event)" class="text-primary text-label-md hover:underline flex items-center gap-1">
-                <span class="material-symbols-outlined text-[18px]">today</span>
-                {{ i18n.t('markAsCurrent') }}
-              </button>
-              <button (click)="toggleFavorite(menu, $event)" class="text-on-surface-variant hover:text-error transition-colors text-label-md flex items-center gap-1">
-                <span class="material-symbols-outlined text-[18px]" [class.material-symbols-filled]="menu.isFavorite" [class.text-error]="menu.isFavorite">favorite</span>
-              </button>
-              <button (click)="deleteMenu(menu, $event)" class="text-error text-label-md hover:underline flex items-center gap-1">
-                <span class="material-symbols-outlined text-[18px]">delete</span>
-                {{ i18n.t('delete') }}
-              </button>
-            </div>
-          </div>
+    @if (!menusPanelCollapsed()) {
+      <div class="space-y-md p-lg">
+        <div class="flex flex-wrap gap-md">
+          <input
+            type="search"
+            [ngModel]="searchQuery()"
+            (ngModelChange)="onSearchChange($event)"
+            [placeholder]="i18n.t('search')"
+            class="input-outlined min-w-[200px] flex-1"
+          />
+          <button
+            (click)="toggleFavoritesFilter()"
+            class="btn-secondary flex items-center gap-2"
+            [class.nav-item-active]="favoritesOnly()"
+          >
+            <span
+              class="material-symbols-outlined text-[20px]"
+              [class.material-symbols-filled]="favoritesOnly()"
+              [class.text-error]="favoritesOnly()"
+              >favorite</span
+            >
+            {{ i18n.t('favorites') }}
+          </button>
+          <button
+            (click)="toggleTemplatesFilter()"
+            class="btn-secondary flex items-center gap-2"
+            [class.nav-item-active]="templatesOnly()"
+          >
+            <span class="material-symbols-outlined text-[20px]">calendar_month</span>
+            {{ i18n.t('templates') }}
+          </button>
+          <button
+            (click)="toggleCurrentFilter()"
+            class="btn-secondary flex items-center gap-2"
+            [class.nav-item-active]="currentOnly()"
+          >
+            <span
+              class="material-symbols-outlined text-[20px]"
+              [class.material-symbols-filled]="currentOnly()"
+              [class.text-primary]="currentOnly()"
+              >today</span
+            >
+            {{ i18n.t('currentOnly') }}
+          </button>
         </div>
+        @if (loading() && menus().length === 0) {
+          <app-loading-state></app-loading-state>
+        }
+        @if (error()) {
+          <app-error-state (retry)="load()"></app-error-state>
+        }
+        @if (!loading() && !error() && menus().length === 0) {
+          <app-empty-state icon="calendar_month" [title]="i18n.t('weeklyMenus')"> </app-empty-state>
+        }
+        @if (!loading() && !error() && menus().length > 0) {
+          <div class="grid grid-cols-1 gap-md md:grid-cols-2">
+            @for (menu of menus(); track menu) {
+              <div
+                class="card-surface p-lg transition-shadow hover:shadow-card-hover"
+                [class.ring-2]="menu.isCurrent"
+                [class.ring-primary]="menu.isCurrent"
+              >
+                <div class="flex items-start justify-between gap-md">
+                  <div class="min-w-0">
+                    <div class="truncate text-headline-md text-on-surface">{{ menu.name }}</div>
+                    <div class="mt-sm flex flex-wrap gap-sm">
+                      @if (menu.isCurrent) {
+                        <span class="flex items-center gap-1 text-label-md text-primary">
+                          <span
+                            class="material-symbols-outlined material-symbols-filled text-[16px]"
+                            >today</span
+                          >
+                          {{ i18n.t('currentMenu') }}
+                        </span>
+                      }
+                      @if (menu.isFavorite) {
+                        <span class="flex items-center gap-1 text-label-md text-error">
+                          <span
+                            class="material-symbols-outlined material-symbols-filled text-[16px]"
+                            >favorite</span
+                          >
+                          {{ i18n.t('favorite') }}
+                        </span>
+                      }
+                      @if (menu.isTemplate) {
+                        <span class="text-label-md text-on-surface-variant">{{
+                          i18n.t('isTemplate')
+                        }}</span>
+                      }
+                    </div>
+                  </div>
+                  <div class="flex shrink-0 flex-col gap-sm">
+                    <a
+                      [routerLink]="['/meal-planning/weekly-menus', menu.id, 'edit']"
+                      class="flex items-center gap-1 text-label-md text-primary hover:underline"
+                    >
+                      <span class="material-symbols-outlined text-[18px]">edit</span>
+                      {{ i18n.t('edit') }}
+                    </a>
+                    <button
+                      (click)="openCloneDialog(menu, $event)"
+                      class="flex items-center gap-1 text-label-md text-primary hover:underline"
+                    >
+                      <span class="material-symbols-outlined text-[18px]">content_copy</span>
+                      {{ i18n.t('clone') }}
+                    </button>
+                    <a
+                      [routerLink]="['/meal-planning/weekly-menus', menu.id, 'shopping-list']"
+                      class="flex items-center gap-1 text-label-md text-primary hover:underline"
+                    >
+                      <span class="material-symbols-outlined text-[18px]">shopping_cart</span>
+                      {{ i18n.t('shoppingList') }}
+                    </a>
+                    @if (!menu.isCurrent) {
+                      <button
+                        (click)="setAsCurrent(menu, $event)"
+                        class="flex items-center gap-1 text-label-md text-primary hover:underline"
+                      >
+                        <span class="material-symbols-outlined text-[18px]">today</span>
+                        {{ i18n.t('markAsCurrent') }}
+                      </button>
+                    }
+                    <button
+                      (click)="toggleFavorite(menu, $event)"
+                      class="flex items-center gap-1 text-label-md text-on-surface-variant transition-colors hover:text-error"
+                    >
+                      <span
+                        class="material-symbols-outlined text-[18px]"
+                        [class.material-symbols-filled]="menu.isFavorite"
+                        [class.text-error]="menu.isFavorite"
+                        >favorite</span
+                      >
+                    </button>
+                    <button
+                      (click)="deleteMenu(menu, $event)"
+                      class="flex items-center gap-1 text-label-md text-error hover:underline"
+                    >
+                      <span class="material-symbols-outlined text-[18px]">delete</span>
+                      {{ i18n.t('delete') }}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            }
+          </div>
+        }
       </div>
-    </div>
+    }
   </div>
   <section class="space-y-md">
     <div class="flex flex-wrap items-center justify-between gap-md">
-      <h2 class="text-title-lg text-on-surface flex items-center gap-sm">
-        <span class="material-symbols-outlined text-[24px] text-primary material-symbols-filled">today</span>
+      <h2 class="flex items-center gap-sm text-title-lg text-on-surface">
+        <span class="material-symbols-outlined material-symbols-filled text-[24px] text-primary"
+          >today</span
+        >
         {{ i18n.t('currentMenu') }}
       </h2>
-      <a *ngIf="currentMenu()" [routerLink]="['/meal-planning/weekly-menus', currentMenu()!.id, 'edit']" class="text-primary text-label-md hover:underline flex items-center gap-1">
-        <span class="material-symbols-outlined text-[18px]">edit</span>
-        {{ i18n.t('edit') }}
-      </a>
+      @if (currentMenu()) {
+        <a
+          [routerLink]="['/meal-planning/weekly-menus', currentMenu()!.id, 'edit']"
+          class="flex items-center gap-1 text-label-md text-primary hover:underline"
+        >
+          <span class="material-symbols-outlined text-[18px]">edit</span>
+          {{ i18n.t('edit') }}
+        </a>
+      }
     </div>
-    <app-loading-state *ngIf="currentMenuLoading()"></app-loading-state>
-    <app-error-state *ngIf="currentMenuError()" (retry)="loadCurrentMenu()"></app-error-state>
-    <app-empty-state
-      *ngIf="!currentMenuLoading() && !currentMenuError() && !currentMenu()"
-      icon="today"
-      [title]="i18n.t('currentMenu')">
-    </app-empty-state>
-    <div *ngIf="!currentMenuLoading() && !currentMenuError() && currentMenu()" class="card-surface overflow-hidden">
-      <div class="px-lg py-md border-b border-outline-variant bg-surface-container/50">
-        <div class="text-headline-md text-on-surface">{{ currentMenu()!.name }}</div>
-      </div>
-      <div *ngFor="let day of sortedCurrentDays()" class="border-b border-outline-variant last:border-b-0">
-        <button
-          type="button"
-          class="w-full px-lg py-md flex items-center justify-between gap-md text-left hover:bg-surface-container/50 transition-colors"
-          (click)="toggleDay(day.id)">
-          <div class="flex items-center gap-sm min-w-0">
-            <span class="material-symbols-outlined text-[20px] text-on-surface-variant shrink-0">
-              {{ isDayCollapsed(day.id) ? 'expand_more' : 'expand_less' }}
-            </span>
-            <div class="min-w-0">
-              <div class="text-label-lg text-on-surface font-medium">{{ day.dayName }}</div>
-              <div *ngIf="day.name" class="text-body-sm text-on-surface-variant truncate">{{ day.name }}</div>
-            </div>
-          </div>
-          <span class="text-label-sm text-on-surface-variant shrink-0">{{ day.meals.length }}</span>
-        </button>
-        <div *ngIf="!isDayCollapsed(day.id)" class="px-lg pb-md">
-          <div *ngIf="day.meals.length === 0" class="text-body-md text-on-surface-variant py-sm">
-            {{ i18n.lang() === 'en' ? 'No meals' : 'Sin comidas' }}
-          </div>
-          <div *ngIf="day.meals.length > 0" class="grid grid-cols-1 md:grid-cols-2 gap-md">
-            <article *ngFor="let meal of sortedDayMeals(day)" class="card-surface p-md hover:shadow-card-hover transition-shadow">
-              <app-meal-recipe-display [meal]="meal"></app-meal-recipe-display>
-            </article>
-          </div>
+    @if (currentMenuLoading()) {
+      <app-loading-state></app-loading-state>
+    }
+    @if (currentMenuError()) {
+      <app-error-state (retry)="loadCurrentMenu()"></app-error-state>
+    }
+    @if (!currentMenuLoading() && !currentMenuError() && !currentMenu()) {
+      <app-empty-state icon="today" [title]="i18n.t('currentMenu')"> </app-empty-state>
+    }
+    @if (!currentMenuLoading() && !currentMenuError() && currentMenu()) {
+      <div class="card-surface overflow-hidden">
+        <div class="bg-surface-container/50 border-b border-outline-variant px-lg py-md">
+          <div class="text-headline-md text-on-surface">{{ currentMenu()!.name }}</div>
         </div>
+        @for (day of sortedCurrentDays(); track day) {
+          <div class="border-b border-outline-variant last:border-b-0">
+            <button
+              type="button"
+              class="hover:bg-surface-container/50 flex w-full items-center justify-between gap-md px-lg py-md text-left transition-colors"
+              (click)="toggleDay(day.id)"
+            >
+              <div class="flex min-w-0 items-center gap-sm">
+                <span
+                  class="material-symbols-outlined shrink-0 text-[20px] text-on-surface-variant"
+                >
+                  {{ isDayCollapsed(day.id) ? 'expand_more' : 'expand_less' }}
+                </span>
+                <div class="min-w-0">
+                  <div class="text-label-lg font-medium text-on-surface">{{ day.dayName }}</div>
+                  @if (day.name) {
+                    <div class="text-body-sm truncate text-on-surface-variant">{{ day.name }}</div>
+                  }
+                </div>
+              </div>
+              <span class="text-label-sm shrink-0 text-on-surface-variant">{{
+                day.meals.length
+              }}</span>
+            </button>
+            @if (!isDayCollapsed(day.id)) {
+              <div class="px-lg pb-md">
+                @if (day.meals.length === 0) {
+                  <div class="py-sm text-body-md text-on-surface-variant">
+                    {{ i18n.lang() === 'en' ? 'No meals' : 'Sin comidas' }}
+                  </div>
+                }
+                @if (day.meals.length > 0) {
+                  <div class="grid grid-cols-1 gap-md md:grid-cols-2">
+                    @for (meal of sortedDayMeals(day); track meal) {
+                      <article class="card-surface p-md transition-shadow hover:shadow-card-hover">
+                        <app-meal-recipe-display [meal]="meal"></app-meal-recipe-display>
+                      </article>
+                    }
+                  </div>
+                }
+              </div>
+            }
+          </div>
+        }
+        @if (sortedCurrentDays().length === 0) {
+          <div class="px-lg py-md text-body-md text-on-surface-variant">
+            {{ i18n.lang() === 'en' ? 'No days with recipes' : 'Sin días con recetas' }}
+          </div>
+        }
       </div>
-      <div *ngIf="sortedCurrentDays().length === 0" class="px-lg py-md text-body-md text-on-surface-variant">
-        {{ i18n.lang() === 'en' ? 'No days with recipes' : 'Sin días con recetas' }}
-      </div>
-    </div>
+    }
   </section>
-  <div *ngIf="showCloneDialog()" class="fixed inset-0 bg-black/50 flex items-center justify-center p-md z-50">
-    <div class="bg-surface-container-lowest w-full max-w-md p-xl rounded-[24px] border border-outline-variant shadow-card-hover">
-      <h2 class="text-title-lg text-on-surface mb-lg">{{ i18n.t('clone') }}</h2>
-      <div class="space-y-md">
-        <div>
-          <label class="text-label-lg text-on-surface-variant block mb-xs">{{ i18n.t('name') }}</label>
-          <input type="text" [ngModel]="cloneForm().name" (ngModelChange)="updateCloneName($event)" class="input-outlined">
-        </div>
-        <div class="flex gap-md pt-md">
-          <button (click)="closeCloneDialog()" type="button" class="flex-1 py-3 border border-outline-variant rounded-xl text-label-lg">{{ i18n.t('cancel') }}</button>
-          <button (click)="confirmClone()" type="button" class="flex-1 btn-primary py-3">{{ i18n.t('clone') }}</button>
+  @if (showCloneDialog()) {
+    <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-md">
+      <div
+        class="w-full max-w-md rounded-[24px] border border-outline-variant bg-surface-container-lowest p-xl shadow-card-hover"
+      >
+        <h2 class="mb-lg text-title-lg text-on-surface">{{ i18n.t('clone') }}</h2>
+        <div class="space-y-md">
+          <div>
+            <label class="mb-xs block text-label-lg text-on-surface-variant">{{
+              i18n.t('name')
+            }}</label>
+            <input
+              type="text"
+              [ngModel]="cloneForm().name"
+              (ngModelChange)="updateCloneName($event)"
+              class="input-outlined"
+            />
+          </div>
+          <div class="flex gap-md pt-md">
+            <button
+              (click)="closeCloneDialog()"
+              type="button"
+              class="flex-1 rounded-xl border border-outline-variant py-3 text-label-lg"
+            >
+              {{ i18n.t('cancel') }}
+            </button>
+            <button (click)="confirmClone()" type="button" class="btn-primary flex-1 py-3">
+              {{ i18n.t('clone') }}
+            </button>
+          </div>
         </div>
       </div>
     </div>
-  </div>
+  }
 </div>

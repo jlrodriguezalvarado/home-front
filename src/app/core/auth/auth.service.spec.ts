@@ -27,6 +27,7 @@ describe('AuthService', () => {
     sessionStorage.setItem('refresh_token', 'session-refresh');
     localStorage.setItem('shopping_cart_items_v4', '[{"product":1}]');
     localStorage.setItem('home_finance_period_v1', '{"year":2026,"month":7}');
+    localStorage.setItem('home_finance_workspace_v1', '{"id":"ws-1"}');
     localStorage.setItem('products_list_filters_v1', '{"search":"private"}');
     localStorage.setItem('chat_recent_emojis', '["🔒"]');
     localStorage.setItem('app_theme', 'dark');
@@ -42,6 +43,7 @@ describe('AuthService', () => {
     expect(sessionStorage.getItem('refresh_token')).toBeNull();
     expect(localStorage.getItem('shopping_cart_items_v4')).toBeNull();
     expect(localStorage.getItem('home_finance_period_v1')).toBeNull();
+    expect(localStorage.getItem('home_finance_workspace_v1')).toBeNull();
     expect(localStorage.getItem('products_list_filters_v1')).toBeNull();
     expect(localStorage.getItem('chat_recent_emojis')).toBeNull();
     expect(localStorage.getItem('app_theme')).toBe('dark');

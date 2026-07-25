@@ -1,4 +1,11 @@
-import { Component, DestroyRef, inject, OnInit, signal } from '@angular/core';
+import {
+  Component,
+  DestroyRef,
+  inject,
+  OnInit,
+  signal,
+  ChangeDetectionStrategy,
+} from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
@@ -17,6 +24,7 @@ import { ErrorStateComponent } from '../../shared/components/error-state.compone
   standalone: true,
   imports: [CommonModule, RouterModule, LoadingStateComponent, ErrorStateComponent],
   templateUrl: './commerce-detail.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './commerce-detail.component.scss',
 })
 export class CommerceDetailComponent implements OnInit {
@@ -40,11 +48,9 @@ export class CommerceDetailComponent implements OnInit {
       return;
     }
     this.load();
-    this.reprocess.finished$
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe((event) => {
-        if (event.commerce_id === this.commerceId) this.load(true);
-      });
+    this.reprocess.finished$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((event) => {
+      if (event.commerce_id === this.commerceId) this.load(true);
+    });
     this.destroyRef.onDestroy(() => this.stopPolling());
   }
 
@@ -162,8 +168,7 @@ export class CommerceDetailComponent implements OnInit {
   }
 
   private syncPolling(detail: CommerceDetail) {
-    const shouldPoll =
-      detail.urlsProcessing || detail.sourceUrls.some((u) => u.isProcessing);
+    const shouldPoll = detail.urlsProcessing || detail.sourceUrls.some((u) => u.isProcessing);
     if (shouldPoll && !this.pollSub) {
       this.pollSub = interval(5000)
         .pipe(takeUntilDestroyed(this.destroyRef))

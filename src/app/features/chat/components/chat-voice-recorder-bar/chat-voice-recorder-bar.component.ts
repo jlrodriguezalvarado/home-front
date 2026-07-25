@@ -1,13 +1,21 @@
-import { Component, EventEmitter, Output, computed, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import {
+  Component,
+  EventEmitter,
+  Output,
+  computed,
+  inject,
+  ChangeDetectionStrategy,
+} from '@angular/core';
+
 import { I18nService } from '../../../../core/i18n/i18n.service';
 import { ChatVoiceRecorderService } from '../../services/chat-voice-recorder.service';
 
 @Component({
   selector: 'app-chat-voice-recorder-bar',
   standalone: true,
-  imports: [CommonModule],
+  imports: [],
   templateUrl: './chat-voice-recorder-bar.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './chat-voice-recorder-bar.component.scss',
 })
 export class ChatVoiceRecorderBarComponent {

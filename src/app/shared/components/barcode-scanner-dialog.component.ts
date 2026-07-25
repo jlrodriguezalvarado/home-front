@@ -8,25 +8,33 @@ import {
   ViewChild,
   inject,
   signal,
+  ChangeDetectionStrategy,
 } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { Html5Qrcode, Html5QrcodeCameraScanConfig, Html5QrcodeSupportedFormats } from 'html5-qrcode';
+
+import {
+  Html5Qrcode,
+  Html5QrcodeCameraScanConfig,
+  Html5QrcodeSupportedFormats,
+} from 'html5-qrcode';
 import { I18nService } from '../../core/i18n/i18n.service';
 import { MediaPermissionService } from '../services/media-permission.service';
 import { ToastService } from '../services/toast.service';
 
 function isIOSDevice(): boolean {
   if (typeof navigator === 'undefined') return false;
-  return /iPad|iPhone|iPod/i.test(navigator.userAgent)
-    || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  return (
+    /iPad|iPhone|iPod/i.test(navigator.userAgent) ||
+    (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
+  );
 }
 
 @Component({
   selector: 'app-barcode-scanner-dialog',
   standalone: true,
-  imports: [CommonModule],
+  imports: [],
   templateUrl: './barcode-scanner-dialog.component.html',
   styleUrl: './barcode-scanner-dialog.component.scss',
+  changeDetection: ChangeDetectionStrategy.Eager,
   host: {
     '[class.ios-scanner]': 'isIOS',
   },
@@ -133,8 +141,8 @@ export class BarcodeScannerDialogComponent implements OnInit, OnDestroy {
       throw new Error('No camera found');
     }
     const preferred =
-      cameras.find((camera) => /back|rear|environment|trasera/i.test(camera.label))
-      ?? cameras[cameras.length - 1];
+      cameras.find((camera) => /back|rear|environment|trasera/i.test(camera.label)) ??
+      cameras[cameras.length - 1];
     await this.scanner.start(
       preferred.id,
       scanConfig,
@@ -145,8 +153,9 @@ export class BarcodeScannerDialogComponent implements OnInit, OnDestroy {
 
   private showStartError(error: unknown): void {
     const message = error instanceof Error ? error.message : String(error ?? '');
-    const denied = /NotAllowedError|Permission|denied|secure/i.test(message)
-      || this.mediaPermissions.getState('camera') === 'denied';
+    const denied =
+      /NotAllowedError|Permission|denied|secure/i.test(message) ||
+      this.mediaPermissions.getState('camera') === 'denied';
     if (denied) {
       this.toast.error(this.i18n.t('cameraPermissionDeniedHint'));
       return;

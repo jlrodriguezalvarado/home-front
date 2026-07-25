@@ -37,12 +37,13 @@ export class DialogFormDirective implements AfterViewInit, OnDestroy {
   }
 
   @HostListener('keydown.enter', ['$event'])
-  onEnter(event: KeyboardEvent): void {
-    const target = event.target as HTMLElement;
+  onEnter(event: Event): void {
+    const keyboardEvent = event as KeyboardEvent;
+    const target = keyboardEvent.target as HTMLElement;
     const tag = target.tagName;
     if (tag === 'TEXTAREA' || tag === 'BUTTON') return;
     if (this.dialogSubmitDisabled) return;
-    event.preventDefault();
+    keyboardEvent.preventDefault();
     this.dialogSubmit.emit();
   }
 

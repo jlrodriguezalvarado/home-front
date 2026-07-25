@@ -1,9 +1,10 @@
 import { Injectable, inject } from '@angular/core';
-import { Observable, map } from 'rxjs';
+import { Observable, map, switchMap } from 'rxjs';
 import { ApiService } from '../../../core/api/api.service';
 import { API_ENDPOINTS } from '../../../core/api/endpoints';
 import { SavingsAccountType, SavingsAccountTypeWrite } from '../models/finance.models';
 import { decodeApiList, foreignKeyId } from './finance-api.utils';
+import { FinanceWorkspaceService } from './finance-workspace.service';
 
 export interface SavingsAccountTypeListOptions {
   isActive?: boolean;
@@ -16,19 +17,25 @@ export interface SavingsAccountTypeListOptions {
 })
 export class SavingsAccountTypeService {
   private readonly api = inject(ApiService);
+  private readonly workspaceService = inject(FinanceWorkspaceService);
 
   list(options: SavingsAccountTypeListOptions = {}): Observable<SavingsAccountType[]> {
-    const params: Record<string, string | number> = {
-      perPage: options.perPage ?? 200,
-    };
-    if (options.page != null) params['page'] = options.page;
-    return this.api.get<unknown>(API_ENDPOINTS.finance.savingsAccountTypes, { params }).pipe(
-      map((res) => {
-        let items = decodeApiList<Record<string, unknown>>(res).map((item) => this.mapType(item));
-        if (options.isActive != null) {
-          items = items.filter((item) => item.isActive === options.isActive);
-        }
-        return items.sort((a, b) => a.name.localeCompare(b.name));
+    return this.workspaceService.resolveActiveId().pipe(
+      switchMap((workspace) => {
+        const params: Record<string, string | number> = {
+          perPage: options.perPage ?? 200,
+          workspace,
+        };
+        if (options.page != null) params['page'] = options.page;
+        return this.api.get<unknown>(API_ENDPOINTS.finance.savingsAccountTypes, { params }).pipe(
+          map((res) => {
+            let items = decodeApiList<Record<string, unknown>>(res).map((item) => this.mapType(item));
+            if (options.isActive != null) {
+              items = items.filter((item) => item.isActive === options.isActive);
+            }
+            return items.sort((a, b) => a.name.localeCompare(b.name));
+          }),
+        );
       }),
     );
   }
@@ -40,9 +47,16 @@ export class SavingsAccountTypeService {
   }
 
   create(data: SavingsAccountTypeWrite): Observable<SavingsAccountType> {
-    return this.api
-      .post<Record<string, unknown>>(API_ENDPOINTS.finance.savingsAccountTypes, this.toPayload(data))
-      .pipe(map((res) => this.mapType(res)));
+    return this.workspaceService.resolveActiveId().pipe(
+      switchMap((workspace) =>
+        this.api
+          .post<Record<string, unknown>>(API_ENDPOINTS.finance.savingsAccountTypes, {
+            ...this.toPayload(data),
+            workspace,
+          })
+          .pipe(map((res) => this.mapType(res))),
+      ),
+    );
   }
 
   update(id: string, data: SavingsAccountTypeWrite): Observable<SavingsAccountType> {

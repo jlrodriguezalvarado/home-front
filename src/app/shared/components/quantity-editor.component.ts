@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { Component, EventEmitter, Input, Output, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Product } from '../../core/models/shopping.models';
@@ -15,7 +15,8 @@ import {
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './quantity-editor.component.html',
-  styleUrl: './quantity-editor.component.scss'
+  changeDetection: ChangeDetectionStrategy.Eager,
+  styleUrl: './quantity-editor.component.scss',
 })
 export class QuantityEditorComponent {
   @Input({ required: true }) product!: Product;

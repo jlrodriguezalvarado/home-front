@@ -1,5 +1,13 @@
-import { Component, effect, inject, input, output, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import {
+  Component,
+  effect,
+  inject,
+  input,
+  output,
+  signal,
+  ChangeDetectionStrategy,
+} from '@angular/core';
+
 import { FormsModule } from '@angular/forms';
 import { ConversationParticipant, PeerDisplayNameResponse } from '../models/chat.models';
 import { ChatPeerDisplayNameService } from '../services/chat-peer-display-name.service';
@@ -10,7 +18,8 @@ import { DialogFormDirective } from '../../../shared/directives/dialog-form.dire
 @Component({
   selector: 'app-rename-chat-contact-dialog',
   standalone: true,
-  imports: [CommonModule, FormsModule, DialogFormDirective],
+  imports: [FormsModule, DialogFormDirective],
+  changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './rename-chat-contact-dialog.component.html',
 })
 export class RenameChatContactDialogComponent {
@@ -37,21 +46,19 @@ export class RenameChatContactDialogComponent {
     const trimmed = this.displayNameDraft().trim();
     if (!trimmed || trimmed.length > 255 || this.saving()) return;
     this.saving.set(true);
-    this.peerDisplayNames.setDisplayName(
-      this.conversationId(),
-      this.participant().user.id,
-      trimmed,
-    ).subscribe({
-      next: (response) => {
-        this.saving.set(false);
-        this.toast.success(this.i18n.t('renameContactSuccess'));
-        this.aliasChanged.emit(response);
-      },
-      error: () => {
-        this.saving.set(false);
-        this.toast.error(this.i18n.t('renameContactFailed'));
-      },
-    });
+    this.peerDisplayNames
+      .setDisplayName(this.conversationId(), this.participant().user.id, trimmed)
+      .subscribe({
+        next: (response) => {
+          this.saving.set(false);
+          this.toast.success(this.i18n.t('renameContactSuccess'));
+          this.aliasChanged.emit(response);
+        },
+        error: () => {
+          this.saving.set(false);
+          this.toast.error(this.i18n.t('renameContactFailed'));
+        },
+      });
   }
 
   cancel(): void {

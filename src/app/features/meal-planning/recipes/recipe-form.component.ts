@@ -1,6 +1,22 @@
-import { Component, ElementRef, inject, OnDestroy, OnInit, signal, ViewChild } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { FormArray, FormBuilder, ReactiveFormsModule, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
+import {
+  Component,
+  ElementRef,
+  inject,
+  OnDestroy,
+  OnInit,
+  signal,
+  ViewChild,
+  ChangeDetectionStrategy,
+} from '@angular/core';
+
+import {
+  FormArray,
+  FormBuilder,
+  ReactiveFormsModule,
+  Validators,
+  AbstractControl,
+  ValidationErrors,
+} from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { RecipeRepository } from '../repositories/recipe.repository';
 import { IngredientRepository } from '../repositories/ingredient.repository';
@@ -15,7 +31,10 @@ import { ErrorStateComponent } from '../../../shared/components/error-state.comp
 import { RichTextEditorComponent } from '../../../shared/components/rich-text-editor.component';
 import { IngredientManageDialogComponent } from '../ingredients/ingredient-manage-dialog.component';
 import { IngredientFormDialogComponent } from '../ingredients/ingredient-form-dialog.component';
-import { canonicalPresentationUnit, isPresentationUnitKg } from '../../shopping/utils/presentation-unit.utils';
+import {
+  canonicalPresentationUnit,
+  isPresentationUnitKg,
+} from '../../shopping/utils/presentation-unit.utils';
 
 function urlValidator(control: AbstractControl): ValidationErrors | null {
   const value = String(control.value ?? '').trim();
@@ -44,7 +63,6 @@ function quantityValidator(control: AbstractControl): ValidationErrors | null {
   selector: 'app-recipe-form',
   standalone: true,
   imports: [
-    CommonModule,
     ReactiveFormsModule,
     RouterLink,
     LoadingStateComponent,
@@ -54,6 +72,7 @@ function quantityValidator(control: AbstractControl): ValidationErrors | null {
     IngredientFormDialogComponent,
   ],
   templateUrl: './recipe-form.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './recipe-form.component.scss',
 })
 export class RecipeFormComponent implements OnInit, OnDestroy {
@@ -200,14 +219,16 @@ export class RecipeFormComponent implements OnInit, OnDestroy {
         });
         this.ingredientsArray.clear();
         recipe.ingredients.forEach((row) => {
-          this.ingredientsArray.push(this.createIngredientGroup({
-            ingredient: row.ingredient.id,
-            product: row.product?.id ?? null,
-            quantity: row.quantity,
-            unit: row.unit,
-            notes: row.notes,
-            sortOrder: row.sortOrder,
-          }));
+          this.ingredientsArray.push(
+            this.createIngredientGroup({
+              ingredient: row.ingredient.id,
+              product: row.product?.id ?? null,
+              quantity: row.quantity,
+              unit: row.unit,
+              notes: row.notes,
+              sortOrder: row.sortOrder,
+            }),
+          );
         });
         recipe.ingredients.forEach((row, index) => {
           if (row.product?.id) this.ensureProductLoaded(row.product.id, index);
@@ -227,7 +248,7 @@ export class RecipeFormComponent implements OnInit, OnDestroy {
     ingredient?: string;
     product?: string | null;
     quantity?: string;
-      unit?: 'kg' | 'unit' | string;
+    unit?: 'kg' | 'unit' | string;
     notes?: string;
     sortOrder?: number;
   }) {
@@ -370,7 +391,10 @@ export class RecipeFormComponent implements OnInit, OnDestroy {
         this.loadingProductsById.set({ ...this.loadingProductsById(), [productId]: false });
         const group = this.ingredientsArray.at(index);
         if (!group) return;
-        group.patchValue({ unit: canonicalPresentationUnit(product.presentationUnit) }, { emitEvent: false });
+        group.patchValue(
+          { unit: canonicalPresentationUnit(product.presentationUnit) },
+          { emitEvent: false },
+        );
         group.get('quantity')?.updateValueAndValidity({ emitEvent: false });
       },
       error: () => {
@@ -382,7 +406,11 @@ export class RecipeFormComponent implements OnInit, OnDestroy {
   save() {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
-      this.toast.error(this.i18n.lang() === 'en' ? 'Please fix validation errors' : 'Corrige los errores de validación');
+      this.toast.error(
+        this.i18n.lang() === 'en'
+          ? 'Please fix validation errors'
+          : 'Corrige los errores de validación',
+      );
       return;
     }
     const value = this.form.getRawValue();

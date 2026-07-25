@@ -1,5 +1,5 @@
-import { Component, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
+
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService } from '../../core/auth/auth.service';
@@ -12,8 +12,9 @@ import { ThemeService } from '../../core/theme/theme.service';
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [FormsModule],
   templateUrl: './login.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './login.component.scss',
 })
 export class LoginComponent {
@@ -55,7 +56,7 @@ export class LoginComponent {
       error: () => {
         this.error = this.i18n.lang() === 'en' ? 'Invalid credentials' : 'Credenciales inválidas';
         this.loading = false;
-      }
+      },
     });
   }
 }

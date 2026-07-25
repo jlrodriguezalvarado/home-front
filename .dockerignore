@@ -1,0 +1,6 @@
+# Keep the build context minimal: only dist + in-container Nginx config.
+*
+!dist/
+!dist/**
+!deploy/
+!deploy/nginx-spa.conf

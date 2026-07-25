@@ -1,135 +1,270 @@
 <div class="space-y-lg">
   <app-meal-planning-nav></app-meal-planning-nav>
   <div class="flex items-center gap-md">
-    <a routerLink="/meal-planning/weekly-menus" class="text-primary text-label-lg flex items-center gap-1">
+    <a
+      routerLink="/meal-planning/weekly-menus"
+      class="flex items-center gap-1 text-label-lg text-primary"
+    >
       <span class="material-symbols-outlined text-[20px]">arrow_back</span>
       {{ i18n.t('weeklyMenus') }}
     </a>
   </div>
   <div class="flex flex-wrap items-center justify-between gap-md">
     <div class="flex flex-wrap items-center gap-md">
-      <h1 class="page-title">{{ isCreateMode() ? i18n.t('newWeeklyMenu') : i18n.t('editWeeklyMenu') }}</h1>
-      <span *ngIf="menu()?.isCurrent" class="text-label-md text-primary flex items-center gap-1">
-        <span class="material-symbols-outlined text-[18px] material-symbols-filled">today</span>
-        {{ i18n.t('currentMenu') }}
-      </span>
+      <h1 class="page-title">
+        {{ isCreateMode() ? i18n.t('newWeeklyMenu') : i18n.t('editWeeklyMenu') }}
+      </h1>
+      @if (menu()?.isCurrent) {
+        <span class="flex items-center gap-1 text-label-md text-primary">
+          <span class="material-symbols-outlined material-symbols-filled text-[18px]">today</span>
+          {{ i18n.t('currentMenu') }}
+        </span>
+      }
     </div>
     <div class="flex flex-wrap gap-sm">
-      <button *ngIf="menu() && !menu()!.isCurrent" (click)="setAsCurrent()" [disabled]="saving()" class="btn-secondary flex items-center gap-2">
-        <span class="material-symbols-outlined text-[20px]">today</span>
-        {{ i18n.t('markAsCurrent') }}
-      </button>
-      <a *ngIf="menu()" [routerLink]="['/meal-planning/weekly-menus', menu()!.id, 'shopping-list']" class="btn-secondary flex items-center gap-2">
-        <span class="material-symbols-outlined text-[20px]">shopping_cart</span>
-        {{ i18n.t('shoppingList') }}
-      </a>
+      @if (menu() && !menu()!.isCurrent) {
+        <button
+          (click)="setAsCurrent()"
+          [disabled]="saving()"
+          class="btn-secondary flex items-center gap-2"
+        >
+          <span class="material-symbols-outlined text-[20px]">today</span>
+          {{ i18n.t('markAsCurrent') }}
+        </button>
+      }
+      @if (menu()) {
+        <a
+          [routerLink]="['/meal-planning/weekly-menus', menu()!.id, 'shopping-list']"
+          class="btn-secondary flex items-center gap-2"
+        >
+          <span class="material-symbols-outlined text-[20px]">shopping_cart</span>
+          {{ i18n.t('shoppingList') }}
+        </a>
+      }
     </div>
   </div>
-  <app-loading-state *ngIf="loading()"></app-loading-state>
-  <app-error-state *ngIf="error()" (retry)="ngOnInit()"></app-error-state>
-  <div *ngIf="!loading() && !error()" class="space-y-lg">
-    <div class="card-surface p-lg space-y-md max-w-2xl">
-      <div>
-        <label class="text-label-lg text-on-surface-variant block mb-xs">{{ i18n.t('name') }} *</label>
-        <input type="text" [ngModel]="menuForm().name" (ngModelChange)="updateMenuField('name', $event)" class="input-outlined">
-      </div>
-      <label class="flex items-center gap-sm text-body-md text-on-surface">
-        <input type="checkbox" [ngModel]="menuForm().isTemplate" (ngModelChange)="updateMenuField('isTemplate', $event)">
-        {{ i18n.t('isTemplate') }}
-      </label>
-      <div>
-        <label class="text-label-lg text-on-surface-variant block mb-xs">{{ i18n.t('notes') }}</label>
-        <textarea [ngModel]="menuForm().notes" (ngModelChange)="updateMenuField('notes', $event)" class="input-outlined min-h-[80px]"></textarea>
-      </div>
-      <button (click)="saveMenuMeta()" [disabled]="saving()" class="btn-primary">{{ i18n.t('save') }}</button>
-    </div>
-    <div *ngIf="!isCreateMode() && menu()" class="space-y-md">
-      <div *ngFor="let day of sortedDays()" class="card-surface p-lg">
-        <div class="flex flex-wrap items-center justify-between gap-md mb-md">
-          <div>
-            <div class="text-title-lg text-on-surface">{{ day.dayName }}</div>
-            <div *ngIf="day.name" class="text-body-md text-on-surface-variant">{{ day.name }}</div>
-          </div>
-          <div class="flex flex-wrap gap-sm">
-            <button (click)="toggleDayFavorite(day)" class="text-on-surface-variant hover:text-error transition-colors flex items-center gap-1">
-              <span class="material-symbols-outlined text-[18px]" [class.material-symbols-filled]="day.isFavorite" [class.text-error]="day.isFavorite">favorite</span>
-            </button>
-            <button (click)="openFavoriteDayPicker(day)" class="btn-secondary text-label-md">{{ i18n.t('copyFavoriteDay') }}</button>
-            <button (click)="openFavoriteMealPicker(day)" class="btn-secondary text-label-md">{{ i18n.t('copyFavoriteMeal') }}</button>
-            <button (click)="openMealDialog(day)" class="btn-primary flex items-center gap-1">
-              <span class="material-symbols-outlined text-[18px]">add</span>
-              {{ i18n.t('addMeal') }}
-            </button>
-          </div>
+  @if (loading()) {
+    <app-loading-state></app-loading-state>
+  }
+  @if (error()) {
+    <app-error-state (retry)="ngOnInit()"></app-error-state>
+  }
+  @if (!loading() && !error()) {
+    <div class="space-y-lg">
+      <div class="card-surface max-w-2xl space-y-md p-lg">
+        <div>
+          <label class="mb-xs block text-label-lg text-on-surface-variant"
+            >{{ i18n.t('name') }} *</label
+          >
+          <input
+            type="text"
+            [ngModel]="menuForm().name"
+            (ngModelChange)="updateMenuField('name', $event)"
+            class="input-outlined"
+          />
         </div>
-        <div *ngIf="day.meals.length === 0" class="text-body-md text-on-surface-variant">{{ i18n.lang() === 'en' ? 'No meals yet' : 'Sin comidas' }}</div>
-        <div class="space-y-sm">
-          <div *ngFor="let meal of sortedDayMeals(day)" class="card-surface p-md space-y-md">
-            <app-meal-recipe-display [meal]="meal"></app-meal-recipe-display>
-            <div class="flex flex-wrap gap-sm justify-end border-t border-outline-variant pt-sm">
-              <button (click)="toggleMealFavorite(meal)" class="text-on-surface-variant hover:text-error transition-colors">
-                <span class="material-symbols-outlined text-[20px]" [class.material-symbols-filled]="meal.isFavorite" [class.text-error]="meal.isFavorite">favorite</span>
-              </button>
-              <button (click)="openMealDialog(day, meal)" class="text-primary text-label-md flex items-center gap-1">
-                <span class="material-symbols-outlined text-[18px]">edit</span>
-              </button>
-              <button (click)="deleteMeal(meal)" class="text-error text-label-md flex items-center gap-1">
-                <span class="material-symbols-outlined text-[18px]">delete</span>
-              </button>
+        <label class="flex items-center gap-sm text-body-md text-on-surface">
+          <input
+            type="checkbox"
+            [ngModel]="menuForm().isTemplate"
+            (ngModelChange)="updateMenuField('isTemplate', $event)"
+          />
+          {{ i18n.t('isTemplate') }}
+        </label>
+        <div>
+          <label class="mb-xs block text-label-lg text-on-surface-variant">{{
+            i18n.t('notes')
+          }}</label>
+          <textarea
+            [ngModel]="menuForm().notes"
+            (ngModelChange)="updateMenuField('notes', $event)"
+            class="input-outlined min-h-[80px]"
+          ></textarea>
+        </div>
+        <button (click)="saveMenuMeta()" [disabled]="saving()" class="btn-primary">
+          {{ i18n.t('save') }}
+        </button>
+      </div>
+      @if (!isCreateMode() && menu()) {
+        <div class="space-y-md">
+          @for (day of sortedDays(); track day) {
+            <div class="card-surface p-lg">
+              <div class="mb-md flex flex-wrap items-center justify-between gap-md">
+                <div>
+                  <div class="text-title-lg text-on-surface">{{ day.dayName }}</div>
+                  @if (day.name) {
+                    <div class="text-body-md text-on-surface-variant">{{ day.name }}</div>
+                  }
+                </div>
+                <div class="flex flex-wrap gap-sm">
+                  <button
+                    (click)="toggleDayFavorite(day)"
+                    class="flex items-center gap-1 text-on-surface-variant transition-colors hover:text-error"
+                  >
+                    <span
+                      class="material-symbols-outlined text-[18px]"
+                      [class.material-symbols-filled]="day.isFavorite"
+                      [class.text-error]="day.isFavorite"
+                      >favorite</span
+                    >
+                  </button>
+                  <button (click)="openFavoriteDayPicker(day)" class="btn-secondary text-label-md">
+                    {{ i18n.t('copyFavoriteDay') }}
+                  </button>
+                  <button (click)="openFavoriteMealPicker(day)" class="btn-secondary text-label-md">
+                    {{ i18n.t('copyFavoriteMeal') }}
+                  </button>
+                  <button (click)="openMealDialog(day)" class="btn-primary flex items-center gap-1">
+                    <span class="material-symbols-outlined text-[18px]">add</span>
+                    {{ i18n.t('addMeal') }}
+                  </button>
+                </div>
+              </div>
+              @if (day.meals.length === 0) {
+                <div class="text-body-md text-on-surface-variant">
+                  {{ i18n.lang() === 'en' ? 'No meals yet' : 'Sin comidas' }}
+                </div>
+              }
+              <div class="space-y-sm">
+                @for (meal of sortedDayMeals(day); track meal) {
+                  <div class="card-surface space-y-md p-md">
+                    <app-meal-recipe-display [meal]="meal"></app-meal-recipe-display>
+                    <div
+                      class="flex flex-wrap justify-end gap-sm border-t border-outline-variant pt-sm"
+                    >
+                      <button
+                        (click)="toggleMealFavorite(meal)"
+                        class="text-on-surface-variant transition-colors hover:text-error"
+                      >
+                        <span
+                          class="material-symbols-outlined text-[20px]"
+                          [class.material-symbols-filled]="meal.isFavorite"
+                          [class.text-error]="meal.isFavorite"
+                          >favorite</span
+                        >
+                      </button>
+                      <button
+                        (click)="openMealDialog(day, meal)"
+                        class="flex items-center gap-1 text-label-md text-primary"
+                      >
+                        <span class="material-symbols-outlined text-[18px]">edit</span>
+                      </button>
+                      <button
+                        (click)="deleteMeal(meal)"
+                        class="flex items-center gap-1 text-label-md text-error"
+                      >
+                        <span class="material-symbols-outlined text-[18px]">delete</span>
+                      </button>
+                    </div>
+                  </div>
+                }
+              </div>
             </div>
+          }
+        </div>
+      }
+    </div>
+  }
+  @if (showMealDialog()) {
+    <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-md">
+      <div
+        class="w-full max-w-md rounded-[24px] border border-outline-variant bg-surface-container-lowest p-xl shadow-card-hover"
+      >
+        <h2 class="mb-lg text-title-lg text-on-surface">
+          {{ editingMealId() ? i18n.t('editMeal') : i18n.t('addMeal') }}
+        </h2>
+        <div class="space-y-md" appDialogForm (dialogSubmit)="saveMeal()">
+          <div>
+            <label class="mb-xs block text-label-lg text-on-surface-variant"
+              >{{ i18n.t('mealType') }} *</label
+            >
+            <select
+              [ngModel]="mealForm().mealType"
+              (ngModelChange)="updateMealField('mealType', $event)"
+              class="input-outlined"
+            >
+              <option value="">—</option>
+              @for (mt of mealTypes(); track mt) {
+                <option [value]="mt.id">{{ mt.name }}</option>
+              }
+            </select>
+          </div>
+          <div>
+            <label class="mb-xs block text-label-lg text-on-surface-variant">{{
+              i18n.t('recipe')
+            }}</label>
+            <select
+              [ngModel]="mealForm().recipe"
+              (ngModelChange)="updateMealField('recipe', $event || null)"
+              class="input-outlined"
+            >
+              <option [ngValue]="null">—</option>
+              @for (r of recipes(); track r) {
+                <option [ngValue]="r.id">{{ r.name }}</option>
+              }
+            </select>
+          </div>
+          <div>
+            <label class="mb-xs block text-label-lg text-on-surface-variant">{{
+              i18n.t('name')
+            }}</label>
+            <input
+              type="text"
+              [ngModel]="mealForm().name"
+              (ngModelChange)="updateMealField('name', $event)"
+              class="input-outlined"
+            />
+          </div>
+          <div>
+            <label class="mb-xs block text-label-lg text-on-surface-variant">{{
+              i18n.t('notes')
+            }}</label>
+            <textarea
+              [ngModel]="mealForm().notes"
+              (ngModelChange)="updateMealField('notes', $event)"
+              class="input-outlined min-h-[60px]"
+            ></textarea>
+          </div>
+          <div>
+            <label class="mb-xs block text-label-lg text-on-surface-variant">Sort order</label>
+            <input
+              type="number"
+              [ngModel]="mealForm().sortOrder"
+              (ngModelChange)="updateMealField('sortOrder', +$event)"
+              class="input-outlined tabular-nums"
+            />
+          </div>
+          <div class="flex gap-md pt-md">
+            <button
+              (click)="closeMealDialog()"
+              type="button"
+              class="flex-1 rounded-xl border border-outline-variant py-3 text-label-lg"
+            >
+              {{ i18n.t('cancel') }}
+            </button>
+            <button (click)="saveMeal()" type="button" class="btn-primary flex-1 py-3">
+              {{ i18n.t('save') }}
+            </button>
           </div>
         </div>
       </div>
     </div>
-  </div>
-  <div *ngIf="showMealDialog()" class="fixed inset-0 bg-black/50 flex items-center justify-center p-md z-50">
-    <div class="bg-surface-container-lowest w-full max-w-md p-xl rounded-[24px] border border-outline-variant shadow-card-hover">
-      <h2 class="text-title-lg text-on-surface mb-lg">{{ editingMealId() ? i18n.t('editMeal') : i18n.t('addMeal') }}</h2>
-      <div class="space-y-md" appDialogForm (dialogSubmit)="saveMeal()">
-        <div>
-          <label class="text-label-lg text-on-surface-variant block mb-xs">{{ i18n.t('mealType') }} *</label>
-          <select [ngModel]="mealForm().mealType" (ngModelChange)="updateMealField('mealType', $event)" class="input-outlined">
-            <option value="">—</option>
-            <option *ngFor="let mt of mealTypes()" [value]="mt.id">{{ mt.name }}</option>
-          </select>
-        </div>
-        <div>
-          <label class="text-label-lg text-on-surface-variant block mb-xs">{{ i18n.t('recipe') }}</label>
-          <select [ngModel]="mealForm().recipe" (ngModelChange)="updateMealField('recipe', $event || null)" class="input-outlined">
-            <option [ngValue]="null">—</option>
-            <option *ngFor="let r of recipes()" [ngValue]="r.id">{{ r.name }}</option>
-          </select>
-        </div>
-        <div>
-          <label class="text-label-lg text-on-surface-variant block mb-xs">{{ i18n.t('name') }}</label>
-          <input type="text" [ngModel]="mealForm().name" (ngModelChange)="updateMealField('name', $event)" class="input-outlined">
-        </div>
-        <div>
-          <label class="text-label-lg text-on-surface-variant block mb-xs">{{ i18n.t('notes') }}</label>
-          <textarea [ngModel]="mealForm().notes" (ngModelChange)="updateMealField('notes', $event)" class="input-outlined min-h-[60px]"></textarea>
-        </div>
-        <div>
-          <label class="text-label-lg text-on-surface-variant block mb-xs">Sort order</label>
-          <input type="number" [ngModel]="mealForm().sortOrder" (ngModelChange)="updateMealField('sortOrder', +$event)" class="input-outlined tabular-nums">
-        </div>
-        <div class="flex gap-md pt-md">
-          <button (click)="closeMealDialog()" type="button" class="flex-1 py-3 border border-outline-variant rounded-xl text-label-lg">{{ i18n.t('cancel') }}</button>
-          <button (click)="saveMeal()" type="button" class="flex-1 btn-primary py-3">{{ i18n.t('save') }}</button>
-        </div>
-      </div>
-    </div>
-  </div>
-  <app-favorite-day-picker
-    *ngIf="showFavoriteDayPicker() && favoriteDayTarget() && menu()"
-    [targetWeeklyMenuId]="menu()!.id"
-    [targetDayOfWeek]="favoriteDayTarget()!.dayOfWeek"
-    (copied)="onFavoriteDayCopied()"
-    (closed)="closeFavoriteDayPicker()">
-  </app-favorite-day-picker>
-  <app-favorite-meal-picker
-    *ngIf="showFavoriteMealPicker() && favoriteMealTargetDay()"
-    [targetMenuDayId]="favoriteMealTargetDay()!.id"
-    (copied)="onFavoriteMealCopied()"
-    (closed)="closeFavoriteMealPicker()">
-  </app-favorite-meal-picker>
+  }
+  @if (showFavoriteDayPicker() && favoriteDayTarget() && menu()) {
+    <app-favorite-day-picker
+      [targetWeeklyMenuId]="menu()!.id"
+      [targetDayOfWeek]="favoriteDayTarget()!.dayOfWeek"
+      (copied)="onFavoriteDayCopied()"
+      (closed)="closeFavoriteDayPicker()"
+    >
+    </app-favorite-day-picker>
+  }
+  @if (showFavoriteMealPicker() && favoriteMealTargetDay()) {
+    <app-favorite-meal-picker
+      [targetMenuDayId]="favoriteMealTargetDay()!.id"
+      (copied)="onFavoriteMealCopied()"
+      (closed)="closeFavoriteMealPicker()"
+    >
+    </app-favorite-meal-picker>
+  }
 </div>

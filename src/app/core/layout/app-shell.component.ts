@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterOutlet, RouterLink, RouterLinkActive, Router } from '@angular/router';
 import { I18nService, AppStringKey } from '../i18n/i18n.service';
@@ -20,8 +20,17 @@ interface NavItem {
 @Component({
   selector: 'app-app-shell',
   standalone: true,
-  imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive, PullToRefreshDirective, NotificationPanelComponent, UserProfileMenuComponent],
+  imports: [
+    CommonModule,
+    RouterOutlet,
+    RouterLink,
+    RouterLinkActive,
+    PullToRefreshDirective,
+    NotificationPanelComponent,
+    UserProfileMenuComponent,
+  ],
   templateUrl: './app-shell.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './app-shell.component.scss',
 })
 export class AppShellComponent {
@@ -67,7 +76,7 @@ export class AppShellComponent {
   }
 
   toggleDrawer() {
-    this.drawerOpen.update(v => !v);
+    this.drawerOpen.update((v) => !v);
   }
 
   closeDrawer() {

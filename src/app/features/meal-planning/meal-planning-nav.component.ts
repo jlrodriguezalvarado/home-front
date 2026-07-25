@@ -1,5 +1,5 @@
-import { Component, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
+
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { I18nService, AppStringKey } from '../../core/i18n/i18n.service';
 
@@ -11,17 +11,20 @@ interface MealPlanningNavItem {
 @Component({
   selector: 'app-meal-planning-nav',
   standalone: true,
-  imports: [CommonModule, RouterLink, RouterLinkActive],
+  imports: [RouterLink, RouterLinkActive],
+  changeDetection: ChangeDetectionStrategy.Eager,
   template: `
-    <nav class="flex flex-wrap gap-xs mb-lg">
-      <a
-        *ngFor="let item of items"
-        [routerLink]="item.route"
-        routerLinkActive="nav-item-active"
-        [routerLinkActiveOptions]="{ exact: false }"
-        class="nav-item-inactive mx-0 px-sm py-sm rounded-xl text-label-lg">
-        {{ i18n.t(item.labelKey) }}
-      </a>
+    <nav class="mb-lg flex flex-wrap gap-xs">
+      @for (item of items; track item) {
+        <a
+          [routerLink]="item.route"
+          routerLinkActive="nav-item-active"
+          [routerLinkActiveOptions]="{ exact: false }"
+          class="nav-item-inactive mx-0 rounded-xl px-sm py-sm text-label-lg"
+        >
+          {{ i18n.t(item.labelKey) }}
+        </a>
+      }
     </nav>
   `,
 })

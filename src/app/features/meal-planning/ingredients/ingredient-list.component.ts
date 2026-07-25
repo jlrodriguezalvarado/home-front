@@ -1,5 +1,5 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
+
 import { FormsModule } from '@angular/forms';
 import { IngredientRepository } from '../repositories/ingredient.repository';
 import { Ingredient } from '../models/meal-planning.models';
@@ -16,7 +16,6 @@ import { IngredientFormDialogComponent } from './ingredient-form-dialog.componen
   selector: 'app-ingredient-list',
   standalone: true,
   imports: [
-    CommonModule,
     FormsModule,
     LoadingStateComponent,
     EmptyStateComponent,
@@ -25,6 +24,7 @@ import { IngredientFormDialogComponent } from './ingredient-form-dialog.componen
     IngredientFormDialogComponent,
   ],
   templateUrl: './ingredient-list.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './ingredient-list.component.scss',
 })
 export class IngredientListComponent implements OnInit {
@@ -117,7 +117,8 @@ export class IngredientListComponent implements OnInit {
         this.toast.success(this.i18n.t('delete'));
         this.load();
       },
-      error: () => this.toast.error(this.i18n.lang() === 'en' ? 'Delete failed' : 'Error al eliminar'),
+      error: () =>
+        this.toast.error(this.i18n.lang() === 'en' ? 'Delete failed' : 'Error al eliminar'),
     });
   }
 }
