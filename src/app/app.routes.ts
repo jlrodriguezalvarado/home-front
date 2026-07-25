@@ -37,6 +37,13 @@ export const routes: Routes = [
         loadComponent: () => import('./features/shopping/cart.component').then(m => m.CartComponent)
       },
       {
+        path: 'basket-comparisons',
+        loadComponent: () =>
+          import('./features/shopping/basket-comparison/basket-comparison.component').then(
+            (m) => m.BasketComparisonComponent,
+          ),
+      },
+      {
         path: 'purchases',
         loadComponent: () => import('./features/shopping/purchase-history.component').then(m => m.PurchaseHistoryComponent)
       },

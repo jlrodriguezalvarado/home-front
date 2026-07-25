@@ -42,8 +42,9 @@ Do not leave routed screens as sibling loose files next to a feature root. Do no
 ## i18n
 
 - Source of truth for UI strings: `src/app/core/i18n/en.json` and `src/app/core/i18n/es.json` (flat camelCase key → string).
+- After adding/removing keys in `en.json`, run `npm run i18n:keys` so `app-string-key.ts` stays in sync (`AppStringKey` is generated; do not hand-edit).
 - Add every new key to **both** files with the same key. Do not embed EN/ES catalogs in TypeScript.
-- `I18nService` imports those JSON files statically; components use `i18n.t('key')` with keys typed from `en.json`.
+- `I18nService` imports those JSON files statically; components use `i18n.t('key')` with keys typed from `AppStringKey`.
 - Do not introduce ngx-translate, `@angular/localize`, or HTTP-loaded catalogs without an approved plan.
 
 ## PWA and local data
@@ -52,6 +53,12 @@ Do not leave routed screens as sibling loose files next to a feature root. Do no
 - Keep user-scoped storage keys centrally registered and cleared on logout. Preserve device-scoped theme and language preferences.
 - Treat offline data as potentially stale and expose connectivity/update state deliberately.
 - `src/environments/environment.prod.ts` remains local, ignored, and must not be staged.
+
+## Styles (Tailwind + SCSS)
+
+- Do **not** `@apply` Tailwind opacity modifiers on theme color utilities backed by CSS variables (e.g. `bg-error-container/30`, `bg-primary/20`). Sass/Tailwind build fails with “class does not exist”.
+- Prefer full utility classes in the template, or plain CSS with `var(--md-*)` and `color-mix(...)`.
+- After any component `.scss` / style change in a feature, run `npm run build:prod` before claiming the feature build-ready.
 
 ## Verification
 

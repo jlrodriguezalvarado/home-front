@@ -1,4 +1,5 @@
 import { Injectable, signal, computed, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Observable, of, tap, catchError, map, firstValueFrom, finalize } from 'rxjs';
 import { CartItem, Product } from '../../core/models/shopping.models';
 import { AuthService } from '../../core/auth/auth.service';
@@ -57,6 +58,11 @@ export class CartService {
     }
     return map;
   });
+
+  constructor() {
+    this.auth.loggedOut$.pipe(takeUntilDestroyed()).subscribe(() => this.resetLocalState());
+  }
+
   visibleQuantityCountFor(items: CartItem[]): number {
     return items.reduce((sum, item) => sum + contributesToTotalQuantityCount(item), 0);
   }
@@ -230,11 +236,30 @@ export class CartService {
       : this.refreshPricesLocally();
     return source$.pipe(finalize(() => this.pricesRefreshing.set(false)));
   }
+  /** Replace local cart state from a DraftCart already returned by the API. */
+  replaceFromDraft(cart: { items: CartItem[]; filterCommerceId: string | null }): void {
+    this.applyServerCart(cart);
+  }
+
+  /** Drop in-memory cart so a new session cannot reuse the previous user's lines. */
+  resetLocalState(): void {
+    if (this._persistTimer != null) {
+      clearTimeout(this._persistTimer);
+      this._persistTimer = null;
+    }
+    this._loadingFromServer = false;
+    this._syncingToServer = false;
+    this.pricesRefreshing.set(false);
+    this._items.set([]);
+    this._hydrated = true;
+  }
+
   syncFromServer(): Observable<void> {
     if (!this.auth.isAuthenticated()) return of(undefined);
     if (this._loadingFromServer) return of(undefined);
     this._loadingFromServer = true;
-    const localItems = this._hydrated ? this._items() : this.storage.load();
+    // Guest→login migration must come from storage, never from a previous user's memory.
+    const localItems = this.storage.load();
     return this.cartRepo.getCurrent().pipe(
       map((serverCart) => {
         if (serverCart.items.length > 0) {
@@ -248,12 +273,11 @@ export class CartService {
           return undefined;
         }
         this.hydrate([], { skipPersist: true });
+        this.persistLocal();
         return undefined;
       }),
       catchError(() => {
-        if (!this._hydrated) {
-          this.hydrate(localItems, { skipPersist: true });
-        }
+        this.hydrate(localItems, { skipPersist: true });
         return of(undefined);
       }),
       finalize(() => { this._loadingFromServer = false; }),

@@ -58,6 +58,19 @@ export const API_ENDPOINTS = {
       detail: (id: string) => `/price-comparisons/prices/${id}/`,
     },
   },
+  basketComparisons: {
+    current: '/basket-comparisons/current/',
+    fromCart: '/basket-comparisons/from-cart/',
+    list: '/basket-comparisons/',
+    detail: (id: string) => `/basket-comparisons/${id}/`,
+    loadToCart: (id: string) => `/basket-comparisons/${id}/load-to-cart/`,
+    setPrice: (id: string, lineId: string) =>
+      `/basket-comparisons/${id}/lines/${lineId}/prices/`,
+    clearPrice: (id: string, lineId: string, commerceId: string) =>
+      `/basket-comparisons/${id}/lines/${lineId}/prices/${commerceId}/`,
+    suggest: (id: string, lineId: string) =>
+      `/basket-comparisons/${id}/lines/${lineId}/suggest/`,
+  },
   mealPlanning: {
     ingredients: {
       list: '/meal-planning/ingredients/',

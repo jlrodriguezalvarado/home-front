@@ -1,0 +1,10 @@
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+const en = JSON.parse(fs.readFileSync(path.join(root, 'src/app/core/i18n/en.json'), 'utf8'));
+const keys = Object.keys(en);
+const union = keys.map((k) => `  | ${JSON.stringify(k)}`).join('\n');
+const body = `/** Generated from en.json — do not hand-edit. Run: node scripts/generate-i18n-keys.mjs */\nexport type AppStringKey =\n${union};\n`;
+fs.writeFileSync(path.join(root, 'src/app/core/i18n/app-string-key.ts'), body);
+console.log('Wrote AppStringKey with', keys.length, 'keys');

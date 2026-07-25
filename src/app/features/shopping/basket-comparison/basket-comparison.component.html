@@ -1,0 +1,322 @@
+<div class="space-y-lg pb-xxl">
+  <div class="flex flex-col gap-md md:flex-row md:items-start md:justify-between">
+    <div class="min-w-0">
+      <h1 class="page-title">{{ i18n.t('basketCompare') }}</h1>
+      <p class="mt-1 text-body-md text-on-surface-variant">{{ i18n.t('basketCompareSubtitle') }}</p>
+    </div>
+    <div class="flex flex-wrap gap-sm">
+      <button
+        type="button"
+        class="rounded-xl border border-outline-variant bg-surface-container-low px-md py-2 text-label-md"
+        (click)="pickerOpen.set(!pickerOpen())"
+      >
+        {{ i18n.t('basketCompareCommerces') }}
+      </button>
+      <button
+        type="button"
+        class="btn-primary px-md py-2 text-label-md"
+        [disabled]="busy() || comparison()?.status !== 'current'"
+        (click)="saveCurrent()"
+      >
+        {{ i18n.t('basketCompareSave') }}
+      </button>
+      @if (comparison(); as detail) {
+        <button
+          type="button"
+          class="rounded-xl border border-outline-variant px-md py-2 text-label-md"
+          [disabled]="busy()"
+          (click)="loadToCart(detail)"
+        >
+          {{ i18n.t('basketCompareLoadToCart') }}
+        </button>
+      }
+    </div>
+  </div>
+
+  @if (loading()) {
+    <p class="text-body-md text-on-surface-variant">{{ i18n.t('loading') }}</p>
+  } @else if (error()) {
+    <div class="card-surface space-y-sm border border-error bg-error-container/30 p-md">
+      <p class="text-body-md text-error">{{ i18n.t('basketCompareLoadError') }}</p>
+      <button type="button" class="btn-primary px-md py-2 text-label-md" (click)="reload()">
+        {{ i18n.t('retry') }}
+      </button>
+    </div>
+  } @else if (comparison(); as detail) {
+    <div class="grid gap-lg lg:grid-cols-[minmax(0,1fr)_280px]">
+      <div class="space-y-lg min-w-0">
+        @if (pickerOpen()) {
+          <section class="card-surface space-y-sm p-md">
+            <h2 class="text-title-sm text-on-surface">{{ i18n.t('basketCompareSelectCommerces') }}</h2>
+            <p class="text-body-sm text-on-surface-variant">{{ i18n.t('basketCompareSelectCommercesHint') }}</p>
+            <ul class="space-y-xs">
+              @for (commerce of commerces(); track commerce.id) {
+                <li class="flex items-center gap-sm">
+                  <input
+                    type="checkbox"
+                    class="h-4 w-4 accent-primary"
+                    [checked]="isCommerceSelected(commerce.id)"
+                    [disabled]="isBaseCommerce(commerce.id) || saving()"
+                    (change)="toggleCommerce(commerce.id, $any($event.target).checked)"
+                  />
+                  <span class="text-body-md text-on-surface">
+                    {{ commerce.name }}
+                    @if (isBaseCommerce(commerce.id)) {
+                      <span class="text-label-sm text-on-surface-variant">
+                        ({{ i18n.t('basketCompareBaseCommerce') }})
+                      </span>
+                    }
+                  </span>
+                </li>
+              }
+            </ul>
+          </section>
+        }
+
+        <section class="flex gap-sm overflow-x-auto pb-1">
+          @for (total of detail.totalsByCommerce; track total.commerceId) {
+            <div
+              class="card-surface min-w-[160px] shrink-0 p-md"
+              [class.is-missing]="total.missingLineCount > 0"
+            >
+              <div class="text-label-sm text-on-surface-variant">
+                {{ commerceName(total.commerceId) }}
+              </div>
+              <div class="mt-1 text-title-md tabular-nums text-on-surface">
+                {{ formatMoney(total.total, total.commerceId) }}
+              </div>
+              @if (total.missingLineCount > 0) {
+                <div class="mt-1 text-label-sm text-error">
+                  {{ i18n.t('basketCompareMissingCount').replace('{count}', '' + total.missingLineCount) }}
+                </div>
+              }
+            </div>
+          }
+        </section>
+
+        <section class="space-y-sm">
+          <h2 class="text-title-sm text-on-surface">{{ i18n.t('basketCompareLines') }}</h2>
+          @if (detail.lines.length === 0) {
+            <p class="text-body-md text-on-surface-variant">{{ i18n.t('basketCompareEmpty') }}</p>
+          }
+          @for (line of detail.lines; track line.id) {
+            <article
+              class="card-surface space-y-sm p-md"
+              [class.is-missing]="line.hasMissingPrice"
+            >
+              <div class="flex items-start gap-sm">
+                @if (line.baseProduct.imageUrl; as imageUrl) {
+                  <img
+                    [src]="imageUrl"
+                    [alt]="line.baseProduct.name"
+                    class="h-14 w-14 shrink-0 rounded-lg object-cover"
+                  />
+                } @else {
+                  <div
+                    class="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg bg-surface-container"
+                  >
+                    <span class="material-symbols-outlined text-on-surface-variant">image</span>
+                  </div>
+                }
+                <div class="min-w-0 flex-1">
+                  <div class="text-label-md text-on-surface">{{ line.baseProduct.name }}</div>
+                  <div class="text-label-sm text-on-surface-variant">
+                    × {{ formatQty(line.quantity) }}
+                    ·
+                    {{ formatMoney(
+                      cellFor(line, detail.baseCommerceId ?? '')?.effectivePrice ?? null,
+                      detail.baseCommerceId ?? ''
+                    ) }}
+                    ({{ i18n.t('basketCompareBaseCommerce') }})
+                  </div>
+                </div>
+              </div>
+              <div class="grid gap-sm sm:grid-cols-2">
+                @for (commerceId of compareCommerceIds(); track commerceId) {
+                  @let cell = cellFor(line, commerceId);
+                  <div
+                    class="rounded-xl border border-outline-variant p-sm"
+                    [class.is-missing-cell]="!!cell?.missingPrice"
+                  >
+                    <div class="mb-1 text-label-sm text-on-surface-variant">
+                      {{ commerceName(commerceId) }}
+                    </div>
+                    @if (!cell || cell.mode === 'missing') {
+                      <div class="space-y-xs">
+                        <p class="text-label-md">{{ i18n.t('basketCompareMissingPrice') }}</p>
+                        <div class="flex flex-wrap gap-xs">
+                          <button
+                            type="button"
+                            class="rounded-lg bg-surface-container px-sm py-1 text-label-sm"
+                            [disabled]="busy()"
+                            (click)="openLinkDialog(line.id, commerceId)"
+                          >
+                            {{ i18n.t('basketCompareLinkProduct') }}
+                          </button>
+                          <button
+                            type="button"
+                            class="rounded-lg bg-surface-container px-sm py-1 text-label-sm"
+                            [disabled]="busy()"
+                            (click)="startOverride(line.id, commerceId, cell)"
+                          >
+                            {{ i18n.t('basketCompareManualPrice') }}
+                          </button>
+                        </div>
+                        @if (overrideDrafts()[overrideKey(line.id, commerceId)] !== undefined) {
+                          <div class="flex gap-xs">
+                            <input
+                              type="text"
+                              inputmode="decimal"
+                              class="input-outlined min-w-0 flex-1 px-sm py-1 text-body-sm"
+                              [ngModel]="overrideValue(line.id, commerceId, cell)"
+                              (ngModelChange)="onOverrideInput(line.id, commerceId, $event)"
+                            />
+                            <button
+                              type="button"
+                              class="btn-primary px-sm py-1 text-label-sm"
+                              [disabled]="busy()"
+                              (click)="saveOverride(line.id, commerceId)"
+                            >
+                              {{ i18n.t('save') }}
+                            </button>
+                          </div>
+                        }
+                      </div>
+                    } @else if (cell.mode === 'linked') {
+                      <div class="space-y-xs">
+                        <div class="text-label-md tabular-nums text-on-surface">
+                          {{ formatMoney(cell.effectivePrice, commerceId) }}
+                        </div>
+                        @if (cell.linkedProduct; as linked) {
+                          <div class="truncate text-label-sm text-on-surface-variant">
+                            {{ linked.name }}
+                          </div>
+                        }
+                        <div class="flex flex-wrap gap-xs">
+                          <button
+                            type="button"
+                            class="rounded-lg bg-surface-container px-sm py-1 text-label-sm"
+                            [disabled]="busy()"
+                            (click)="openLinkDialog(line.id, commerceId)"
+                          >
+                            {{ i18n.t('basketCompareChangeLink') }}
+                          </button>
+                          <button
+                            type="button"
+                            class="rounded-lg border border-error px-sm py-1 text-label-sm text-error"
+                            [disabled]="busy()"
+                            (click)="clearPrice(line.id, commerceId)"
+                          >
+                            {{ i18n.t('basketCompareClearPrice') }}
+                          </button>
+                        </div>
+                      </div>
+                    } @else if (cell.mode === 'override') {
+                      <div class="space-y-xs">
+                        <div class="flex gap-xs">
+                          <input
+                            type="text"
+                            inputmode="decimal"
+                            class="input-outlined min-w-0 flex-1 px-sm py-1 text-body-sm"
+                            [ngModel]="overrideValue(line.id, commerceId, cell)"
+                            (ngModelChange)="onOverrideInput(line.id, commerceId, $event)"
+                          />
+                          <button
+                            type="button"
+                            class="btn-primary px-sm py-1 text-label-sm"
+                            [disabled]="busy()"
+                            (click)="saveOverride(line.id, commerceId)"
+                          >
+                            {{ i18n.t('save') }}
+                          </button>
+                        </div>
+                        <button
+                          type="button"
+                          class="rounded-lg border border-error px-sm py-1 text-label-sm text-error"
+                          [disabled]="busy()"
+                          (click)="clearPrice(line.id, commerceId)"
+                        >
+                          {{ i18n.t('basketCompareClearPrice') }}
+                        </button>
+                      </div>
+                    } @else {
+                      <div class="text-label-md tabular-nums text-on-surface">
+                        {{ formatMoney(cell.effectivePrice, commerceId) }}
+                      </div>
+                    }
+                  </div>
+                }
+              </div>
+            </article>
+          }
+        </section>
+      </div>
+
+      <aside class="card-surface h-fit space-y-sm p-md">
+        <div class="flex items-center justify-between gap-sm">
+          <h2 class="text-title-sm text-on-surface">{{ i18n.t('basketCompareSavedList') }}</h2>
+          <button
+            type="button"
+            class="text-label-sm text-primary"
+            (click)="openCurrent()"
+          >
+            {{ i18n.t('basketCompareOpenCurrent') }}
+          </button>
+        </div>
+        @if (savedList().length === 0) {
+          <p class="text-body-sm text-on-surface-variant">{{ i18n.t('basketCompareNoSaved') }}</p>
+        }
+        <ul class="space-y-xs">
+          @for (item of savedList(); track item.id) {
+            <li
+              class="rounded-xl border border-outline-variant p-sm"
+              [class.border-primary]="comparison()?.id === item.id"
+            >
+              <button
+                type="button"
+                class="w-full text-left"
+                (click)="openSaved(item)"
+              >
+                <div class="truncate text-label-md text-on-surface">
+                  {{ item.name || i18n.t('basketCompareUntitled') }}
+                </div>
+                <div class="text-label-sm text-on-surface-variant">
+                  {{ item.lineCount }} {{ i18n.t('basketCompareLineCount') }}
+                </div>
+              </button>
+              <div class="mt-xs flex flex-wrap gap-xs">
+                <button
+                  type="button"
+                  class="rounded-lg bg-surface-container px-sm py-1 text-label-sm"
+                  [disabled]="busy()"
+                  (click)="loadToCart(item)"
+                >
+                  {{ i18n.t('basketCompareLoadToCart') }}
+                </button>
+                <button
+                  type="button"
+                  class="rounded-lg border border-error px-sm py-1 text-label-sm text-error"
+                  [disabled]="busy()"
+                  (click)="deleteSaved(item)"
+                >
+                  {{ i18n.t('delete') }}
+                </button>
+              </div>
+            </li>
+          }
+        </ul>
+      </aside>
+    </div>
+  }
+</div>
+
+@if (linkDialog(); as dialog) {
+  <app-product-link-dialog
+    [comparisonId]="comparison()!.id"
+    [lineId]="dialog.lineId"
+    [commerceId]="dialog.commerceId"
+    [commerceName]="commerceName(dialog.commerceId)"
+    (selected)="onProductLinked($event)"
+    (closed)="closeLinkDialog()"
+  />
+}

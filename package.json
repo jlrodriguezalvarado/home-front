@@ -8,6 +8,7 @@
     "build:prod": "cross-env NG_BUILD_MAX_WORKERS=4 ng build --configuration production",
     "api:types": "openapi-typescript ../home-api/docs/openapi.yaml -o src/app/core/api/generated/schema.ts",
     "api:types:check": "openapi-typescript ../home-api/docs/openapi.yaml -o src/app/core/api/generated/schema.ts --check",
+    "i18n:keys": "node scripts/generate-i18n-keys.mjs",
     "watch": "ng build --watch --configuration development",
     "test": "ng test"
   },

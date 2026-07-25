@@ -14,3 +14,4 @@ alwaysApply: false
 - Preserve decimal strings at the HTTP boundary. Normalize errors via `AppError`. Use `switchMap`, `finalize`, and `takeUntilDestroyed` deliberately.
 - UI strings: `src/app/core/i18n/en.json` and `es.json` only. Use `i18n.t('key')`.
 - Prefer delegating substantive frontend work to the `angular-frontend` subagent with a filled `.agents/HANDOFF.md` block.
+- Never `@apply` Tailwind opacity variants on CSS-variable theme colors (e.g. `bg-error-container/30`); use template utilities or `color-mix`/`var(--md-*)`. Re-run `npm run build:prod` after SCSS changes.

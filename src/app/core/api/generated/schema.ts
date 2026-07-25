@@ -76,6 +76,134 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/basket-comparisons/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["basket_comparisons_list"];
+        put?: never;
+        post: operations["basket_comparisons_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/basket-comparisons/{id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["basket_comparisons_retrieve"];
+        put?: never;
+        post?: never;
+        delete: operations["basket_comparisons_destroy"];
+        options?: never;
+        head?: never;
+        patch: operations["basket_comparisons_partial_update"];
+        trace?: never;
+    };
+    "/api/basket-comparisons/{id}/lines/{line_id}/prices/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["basket_comparisons_lines_prices_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/basket-comparisons/{id}/lines/{line_id}/prices/{commerce_id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["basket_comparisons_lines_prices_destroy"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/basket-comparisons/{id}/lines/{line_id}/suggest/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["basket_comparisons_lines_suggest_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/basket-comparisons/{id}/load-to-cart/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["basket_comparisons_load_to_cart_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/basket-comparisons/current/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["basket_comparisons_current_retrieve"];
+        put: operations["basket_comparisons_current_update"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/basket-comparisons/from-cart/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["basket_comparisons_from_cart_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/carts/current/": {
         parameters: {
             query?: never;
@@ -2541,6 +2669,118 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        BasketComparisonCreateRequest: {
+            name: string;
+            /** @default  */
+            description: string;
+            /** @default true */
+            from_current: boolean;
+        };
+        BasketComparisonCurrentSyncRequest: {
+            name?: string;
+            description?: string;
+            commerce_ids?: string[];
+            lines?: components["schemas"]["BasketComparisonLineWriteRequest"][];
+        };
+        BasketComparisonDetail: {
+            /** Format: uuid */
+            id: string;
+            status: string;
+            name: string;
+            description: string;
+            /** Format: uuid */
+            base_commerce_id: string | null;
+            commerce_ids: string[];
+            lines: components["schemas"]["BasketComparisonLineDetail"][];
+            totals_by_commerce: components["schemas"]["BasketComparisonTotal"][];
+            /** Format: date-time */
+            updated_at: string;
+        };
+        BasketComparisonFromCartRequest: {
+            /** Format: uuid */
+            commerce_id?: string | null;
+        };
+        BasketComparisonLineDetail: {
+            /** Format: uuid */
+            id: string;
+            base_product: components["schemas"]["Product"];
+            /** Format: decimal */
+            quantity: string;
+            prices: components["schemas"]["BasketComparisonPriceCell"][];
+            has_missing_price: boolean;
+        };
+        BasketComparisonLineWriteRequest: {
+            /** Format: uuid */
+            base_product: string;
+            /** Format: decimal */
+            quantity: string;
+        };
+        BasketComparisonList: {
+            /** Format: uuid */
+            readonly id: string;
+            status?: components["schemas"]["BasketComparisonListStatusEnum"];
+            name?: string;
+            description?: string;
+            /** Format: uuid */
+            readonly base_commerce_id: string | null;
+            readonly commerce_ids: string[];
+            readonly line_count: number;
+            /** Format: date-time */
+            readonly updated_at: string;
+            /** Format: date-time */
+            readonly created_at: string;
+        };
+        /**
+         * @description * `current` - Current
+         *     * `saved` - Saved
+         * @enum {string}
+         */
+        BasketComparisonListStatusEnum: "current" | "saved";
+        BasketComparisonPriceCell: {
+            /** Format: uuid */
+            commerce_id: string;
+            mode: components["schemas"]["BasketComparisonPriceCellModeEnum"];
+            /** Format: uuid */
+            linked_product_id: string | null;
+            linked_product: components["schemas"]["Product"] | null;
+            /** Format: decimal */
+            override_price: string | null;
+            /** Format: decimal */
+            effective_price: string | null;
+            missing_price: boolean;
+            /** Format: decimal */
+            line_total: string | null;
+        };
+        /**
+         * @description * `base` - base
+         *     * `linked` - linked
+         *     * `override` - override
+         *     * `missing` - missing
+         * @enum {string}
+         */
+        BasketComparisonPriceCellModeEnum: "base" | "linked" | "override" | "missing";
+        /**
+         * @description * `linked` - linked
+         *     * `override` - override
+         * @enum {string}
+         */
+        BasketComparisonSetPriceModeEnum: "linked" | "override";
+        BasketComparisonSetPriceRequest: {
+            /** Format: uuid */
+            commerce_id: string;
+            mode: components["schemas"]["BasketComparisonSetPriceModeEnum"];
+            /** Format: uuid */
+            linked_product_id?: string | null;
+            /** Format: decimal */
+            override_price?: string | null;
+        };
+        BasketComparisonTotal: {
+            /** Format: uuid */
+            commerce_id: string;
+            /** Format: decimal */
+            total: string;
+            missing_line_count: number;
+        };
         /** @enum {unknown} */
         BlankEnum: "";
         Cart: {
@@ -2603,8 +2843,7 @@ export interface components {
             name: string;
             /** Format: uri */
             image?: string | null;
-            /** Format: uri */
-            base_url?: string | null;
+            base_url?: (string) | null;
             is_active?: boolean;
             /** Format: uuid */
             default_currency?: string | null;
@@ -2628,8 +2867,7 @@ export interface components {
             name: string;
             /** Format: uri */
             image?: string | null;
-            /** Format: uri */
-            base_url?: string | null;
+            base_url?: (string) | null;
             is_active?: boolean;
             /** Format: uuid */
             default_currency?: string | null;
@@ -2646,8 +2884,7 @@ export interface components {
             name: string;
             /** Format: uri */
             image?: string | null;
-            /** Format: uri */
-            base_url?: string | null;
+            base_url?: (string) | null;
             is_active?: boolean;
             /** Format: uuid */
             default_currency?: string | null;
@@ -2656,8 +2893,7 @@ export interface components {
             name: string;
             /** Format: binary */
             image?: string | null;
-            /** Format: uri */
-            base_url?: string | null;
+            base_url?: (string) | null;
             is_active?: boolean;
             /** Format: uuid */
             default_currency?: string | null;
@@ -4169,12 +4405,16 @@ export interface components {
             previous?: string | null;
             results: components["schemas"]["WeeklyMenuList"][];
         };
+        PatchedBasketComparisonPatchRequest: {
+            name?: string;
+            description?: string;
+            commerce_ids?: string[];
+        };
         PatchedCommerceRequest: {
             name?: string;
             /** Format: binary */
             image?: string | null;
-            /** Format: uri */
-            base_url?: string | null;
+            base_url?: (string) | null;
             is_active?: boolean;
             /** Format: uuid */
             default_currency?: string | null;
@@ -4418,8 +4658,7 @@ export interface components {
         PatchedRecipeWriteRequest: {
             name?: string;
             description?: string;
-            /** Format: uri */
-            link?: string | null;
+            link?: (string) | null;
             /** Format: binary */
             image?: string | null;
             /** Format: binary */
@@ -4835,8 +5074,7 @@ export interface components {
             readonly owner: string;
             name: string;
             description?: string;
-            /** Format: uri */
-            link?: string | null;
+            link?: (string) | null;
             /** Format: uri */
             image?: string | null;
             /** Format: uri */
@@ -4848,8 +5086,7 @@ export interface components {
         RecipeDetailRequest: {
             name: string;
             description?: string;
-            /** Format: uri */
-            link?: string | null;
+            link?: (string) | null;
             /** Format: binary */
             image?: string | null;
             /** Format: binary */
@@ -4908,8 +5145,7 @@ export interface components {
             readonly owner: string;
             name: string;
             description?: string;
-            /** Format: uri */
-            link?: string | null;
+            link?: (string) | null;
             /** Format: uri */
             image?: string | null;
             /** Format: uri */
@@ -4920,8 +5156,7 @@ export interface components {
         RecipeWrite: {
             name: string;
             description?: string;
-            /** Format: uri */
-            link?: string | null;
+            link?: (string) | null;
             /** Format: uri */
             image?: string | null;
             /** Format: uri */
@@ -4933,8 +5168,7 @@ export interface components {
         RecipeWriteRequest: {
             name: string;
             description?: string;
-            /** Format: uri */
-            link?: string | null;
+            link?: (string) | null;
             /** Format: binary */
             image?: string | null;
             /** Format: binary */
@@ -5381,6 +5615,282 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["TokenRefresh"];
+                };
+            };
+        };
+    };
+    basket_comparisons_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BasketComparisonList"][];
+                };
+            };
+        };
+    };
+    basket_comparisons_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BasketComparisonCreateRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["BasketComparisonCreateRequest"];
+                "multipart/form-data": components["schemas"]["BasketComparisonCreateRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BasketComparisonDetail"];
+                };
+            };
+        };
+    };
+    basket_comparisons_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BasketComparisonDetail"];
+                };
+            };
+        };
+    };
+    basket_comparisons_destroy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    basket_comparisons_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedBasketComparisonPatchRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["PatchedBasketComparisonPatchRequest"];
+                "multipart/form-data": components["schemas"]["PatchedBasketComparisonPatchRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BasketComparisonDetail"];
+                };
+            };
+        };
+    };
+    basket_comparisons_lines_prices_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                line_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BasketComparisonSetPriceRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["BasketComparisonSetPriceRequest"];
+                "multipart/form-data": components["schemas"]["BasketComparisonSetPriceRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BasketComparisonDetail"];
+                };
+            };
+        };
+    };
+    basket_comparisons_lines_prices_destroy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                commerce_id: string;
+                id: string;
+                line_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    basket_comparisons_lines_suggest_list: {
+        parameters: {
+            query: {
+                commerce_id: string;
+            };
+            header?: never;
+            path: {
+                id: string;
+                line_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Product"][];
+                };
+            };
+        };
+    };
+    basket_comparisons_load_to_cart_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Cart"];
+                };
+            };
+        };
+    };
+    basket_comparisons_current_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BasketComparisonDetail"];
+                };
+            };
+        };
+    };
+    basket_comparisons_current_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["BasketComparisonCurrentSyncRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["BasketComparisonCurrentSyncRequest"];
+                "multipart/form-data": components["schemas"]["BasketComparisonCurrentSyncRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BasketComparisonDetail"];
+                };
+            };
+        };
+    };
+    basket_comparisons_from_cart_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["BasketComparisonFromCartRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["BasketComparisonFromCartRequest"];
+                "multipart/form-data": components["schemas"]["BasketComparisonFromCartRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BasketComparisonDetail"];
                 };
             };
         };

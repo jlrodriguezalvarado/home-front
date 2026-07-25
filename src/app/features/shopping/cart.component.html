@@ -15,6 +15,17 @@
       }
     </div>
     <div class="flex w-full shrink-0 items-center justify-between gap-sm md:w-auto md:justify-end">
+      @if (canComparePrices()) {
+        <button
+          type="button"
+          (click)="comparePrices()"
+          [disabled]="comparingPrices()"
+          class="flex items-center justify-center gap-1 rounded-xl border border-primary px-md py-2 text-label-md text-primary transition-colors hover:bg-primary/10 disabled:opacity-60"
+        >
+          <span class="material-symbols-outlined text-[18px]">shoppingmode</span>
+          {{ i18n.t('basketCompareComparePrices') }}
+        </button>
+      }
       @if (cart.items().length > 0) {
         <button
           type="button"

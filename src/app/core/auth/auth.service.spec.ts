@@ -60,6 +60,32 @@ describe('AuthService', () => {
     expect(loggedOut).toHaveBeenCalledTimes(1);
   });
 
+  it('clears previous user-scoped storage when logging in over an existing session', () => {
+    localStorage.setItem('access_token', 'old-access');
+    localStorage.setItem('refresh_token', 'old-refresh');
+    localStorage.setItem('shopping_cart_items_v4', '[{"product":1}]');
+    localStorage.setItem('app_theme', 'dark');
+    api.post.and.returnValue(of({ access: 'new-access', refresh: 'new-refresh' }));
+    const service = TestBed.inject(AuthService);
+
+    service.login({ email: 'b@test.com', password: 'secret' }).subscribe();
+
+    expect(localStorage.getItem('shopping_cart_items_v4')).toBeNull();
+    expect(localStorage.getItem('app_theme')).toBe('dark');
+    expect(localStorage.getItem('access_token')).toBe('new-access');
+  });
+
+  it('keeps guest cart storage when logging in without a prior session', () => {
+    localStorage.setItem('shopping_cart_items_v4', '[{"product":1}]');
+    api.post.and.returnValue(of({ access: 'new-access', refresh: 'new-refresh' }));
+    const service = TestBed.inject(AuthService);
+
+    service.login({ email: 'guest@test.com', password: 'secret' }).subscribe();
+
+    expect(localStorage.getItem('shopping_cart_items_v4')).toBe('[{"product":1}]');
+    expect(localStorage.getItem('access_token')).toBe('new-access');
+  });
+
   it('shares one refresh request across concurrent subscribers', () => {
     localStorage.setItem('refresh_token', 'refresh-1');
     const refreshResponse = new Subject<AuthTokens>();

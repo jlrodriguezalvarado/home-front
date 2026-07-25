@@ -49,6 +49,7 @@ export class AppShellComponent {
     { path: '/', label: 'home', icon: 'home' },
     { path: '/products', label: 'products', icon: 'inventory_2' },
     { path: '/cart', label: 'cart', icon: 'shopping_cart' },
+    { path: '/basket-comparisons', label: 'basketCompare', icon: 'shoppingmode' },
     { path: '/purchases', label: 'orders', icon: 'receipt_long' },
     { path: '/commerces', label: 'stores', icon: 'storefront' },
     { path: '/currencies', label: 'currencies', icon: 'payments' },

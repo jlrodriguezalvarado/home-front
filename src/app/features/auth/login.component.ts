@@ -48,6 +48,8 @@ export class LoginComponent {
       next: () => {
         this.chatSession.start();
         this.notificationsSession.start();
+        // Clear previous-user memory; guest cart (if any) remains in storage for sync.
+        this.cart.resetLocalState();
         this.cart.syncFromServer().subscribe({
           complete: () => void this.router.navigate(['/']),
           error: () => void this.router.navigate(['/']),

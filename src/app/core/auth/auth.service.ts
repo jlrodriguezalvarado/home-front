@@ -50,9 +50,15 @@ export class AuthService {
   }
 
   login(credentials: { email: string; password: string }): Observable<AuthTokens> {
-    return this.api
-      .post<AuthTokens>(API_ENDPOINTS.auth.login, credentials)
-      .pipe(tap((tokens) => this.saveTokens(tokens)));
+    return this.api.post<AuthTokens>(API_ENDPOINTS.auth.login, credentials).pipe(
+      tap((tokens) => {
+        // Switching accounts without logout must not keep the previous user's local data.
+        if (this._accessToken()) {
+          clearUserScopedStorage();
+        }
+        this.saveTokens(tokens);
+      }),
+    );
   }
 
   refreshToken(): Observable<AuthTokens> {

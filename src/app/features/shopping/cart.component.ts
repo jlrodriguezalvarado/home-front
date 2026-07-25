@@ -43,6 +43,7 @@ import { isPresentationUnitKg } from './utils/presentation-unit.utils';
 import { formatCartListMessage } from './utils/cart-list-message.utils';
 import { ToastService } from '../../shared/services/toast.service';
 import { ConfirmService } from '../../shared/services/confirm.service';
+import { BasketComparisonRepository } from './basket-comparison/basket-comparison.repository';
 
 @Component({
   selector: 'app-cart',
@@ -70,12 +71,14 @@ export class CartComponent implements OnInit, OnDestroy {
   router = inject(Router);
   toast = inject(ToastService);
   confirm = inject(ConfirmService);
+  basketComparisonRepo = inject(BasketComparisonRepository);
 
   commerces = signal<Commerce[]>([]);
 
   filterCommerceId = signal<string | null>(null);
   barcodeScannerOpen = signal(false);
   previewImage = signal<{ url: string; alt: string } | null>(null);
+  comparingPrices = signal(false);
 
   commerceIds = computed(() => this.cart.commerceIds());
 
@@ -342,5 +345,27 @@ export class CartComponent implements OnInit, OnDestroy {
     this.filterCommerceId.set(null);
     this.cart.setFilterCommerceId(null);
     this.toast.success(this.i18n.t('cartCleared'));
+  }
+
+  canComparePrices(): boolean {
+    const commerceId = this.filterCommerceId();
+    if (!commerceId) return false;
+    return this.itemsForCommerce(commerceId).length > 0;
+  }
+
+  comparePrices(): void {
+    const commerceId = this.filterCommerceId();
+    if (!commerceId || !this.canComparePrices() || this.comparingPrices()) return;
+    this.comparingPrices.set(true);
+    this.basketComparisonRepo.fromCart({ commerceId }).subscribe({
+      next: () => {
+        this.comparingPrices.set(false);
+        void this.router.navigate(['/basket-comparisons']);
+      },
+      error: () => {
+        this.comparingPrices.set(false);
+        this.toast.error(this.i18n.t('basketCompareFromCartError'));
+      },
+    });
   }
 }

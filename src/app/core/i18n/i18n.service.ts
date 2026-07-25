@@ -1,9 +1,15 @@
 import { Injectable, signal } from '@angular/core';
+import type { AppStringKey } from './app-string-key';
 import en from './en.json';
 import es from './es.json';
 
 export type Lang = 'en' | 'es';
-export type AppStringKey = keyof typeof en;
+export type { AppStringKey } from './app-string-key';
+
+/** Fail compile if en.json keys drift from generated AppStringKey. */
+type AssertSameKeys<A, B> = [A] extends [B] ? ([B] extends [A] ? true : never) : never;
+const _enKeysMatchGenerated: AssertSameKeys<keyof typeof en, AppStringKey> = true;
+void _enKeysMatchGenerated;
 
 const catalogs: Record<Lang, Record<AppStringKey, string>> = {
   en,
