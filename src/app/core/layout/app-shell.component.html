@@ -104,9 +104,9 @@
     </header>
 
     <div
-      class="min-h-0 flex-1 px-margin-mobile md:px-xl"
-      [class.overflow-auto]="!isInChatRoom()"
-      [class.overflow-hidden]="isInChatRoom()"
+      class="min-h-0 min-w-0 flex-1 overflow-x-clip px-margin-mobile md:px-xl"
+      [class.overflow-y-auto]="!isInChatRoom()"
+      [class.overflow-y-hidden]="isInChatRoom()"
       [class.flex]="isInChatRoom()"
       [class.flex-col]="isInChatRoom()"
       [class.py-md]="!isInChatRoom()"
@@ -117,7 +117,7 @@
       [appPullToRefresh]="!isInChatRoom()"
     >
       <div
-        class="mx-auto w-full max-w-[1440px]"
+        class="mx-auto w-full min-w-0 max-w-[1440px]"
         [class.flex-1]="isInChatRoom()"
         [class.min-h-0]="isInChatRoom()"
         [class.flex]="isInChatRoom()"

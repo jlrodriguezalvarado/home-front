@@ -37,7 +37,7 @@
         </p>
       </div>
 
-      <form (submit)="onSubmit()" class="space-y-lg">
+      <form (ngSubmit)="onSubmit()" class="space-y-lg">
         <div class="space-y-xs">
           <label class="ml-1 block text-label-lg text-on-surface-variant">{{ t('email') }}</label>
           <div class="relative">
@@ -46,10 +46,15 @@
               >mail</span
             >
             <input
+              #emailInput
               type="email"
               [(ngModel)]="email"
               name="email"
               required
+              autocomplete="username"
+              autocapitalize="off"
+              autocorrect="off"
+              spellcheck="false"
               placeholder="name@company.com"
               class="input-outlined py-3 pl-12 pr-md"
             />
@@ -69,10 +74,12 @@
               >lock</span
             >
             <input
+              #passwordInput
               [type]="showPassword ? 'text' : 'password'"
               [(ngModel)]="password"
               name="password"
               required
+              autocomplete="current-password"
               placeholder="••••••••"
               class="input-outlined py-3 pl-12 pr-12"
             />

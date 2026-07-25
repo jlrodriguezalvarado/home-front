@@ -1,12 +1,12 @@
-<div class="space-y-lg pb-44 md:pb-32">
-  <div class="flex flex-col items-start justify-between gap-md md:flex-row md:items-center">
+<div class="min-w-0 max-w-full space-y-lg pb-44 md:pb-32">
+  <div class="flex min-w-0 flex-col items-start justify-between gap-md md:flex-row md:items-center">
     <div class="flex w-full min-w-0 flex-1 flex-wrap items-center gap-sm md:w-auto">
       <h1 class="page-title shrink-0">{{ i18n.t('shoppingCart') }}</h1>
       @if (sortedCommerceIds().length > 0) {
         <select
           [ngModel]="filterCommerceId()"
           (ngModelChange)="onFilterCommerceChange($event)"
-          class="input-outlined min-w-0 flex-1 px-md py-2 text-body-md sm:max-w-[220px] sm:flex-none"
+          class="input-outlined !w-0 min-w-0 max-w-full flex-1 basis-32 px-md py-2 text-body-md sm:!w-auto sm:max-w-[220px] sm:flex-none"
         >
           @for (id of sortedCommerceIds(); track id) {
             <option [ngValue]="id">{{ commerceName(id) }}</option>
@@ -14,13 +14,13 @@
         </select>
       }
     </div>
-    <div class="flex w-full shrink-0 items-center justify-between gap-sm md:w-auto md:justify-end">
+    <div class="flex w-full min-w-0 shrink-0 flex-wrap items-center justify-between gap-sm md:w-auto md:justify-end">
       @if (canComparePrices()) {
         <button
           type="button"
           (click)="comparePrices()"
           [disabled]="comparingPrices()"
-          class="flex items-center justify-center gap-1 rounded-xl border border-primary px-md py-2 text-label-md text-primary transition-colors hover:bg-primary/10 disabled:opacity-60"
+          class="flex min-w-0 items-center justify-center gap-1 rounded-xl border border-primary px-md py-2 text-label-md text-primary transition-colors hover:bg-primary/10 disabled:opacity-60"
         >
           <span class="material-symbols-outlined text-[18px]">shoppingmode</span>
           {{ i18n.t('basketCompareComparePrices') }}
@@ -30,7 +30,7 @@
         <button
           type="button"
           (click)="clearCart()"
-          class="flex items-center justify-center gap-1 rounded-xl border border-error px-md py-2 text-label-md text-error transition-colors hover:bg-error-container"
+          class="flex min-w-0 items-center justify-center gap-1 rounded-xl border border-error px-md py-2 text-label-md text-error transition-colors hover:bg-error-container"
         >
           <span class="material-symbols-outlined text-[18px]">delete_sweep</span>
           {{ i18n.t('clearCart') }}
@@ -38,7 +38,7 @@
       }
       <button
         type="button"
-        class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-outline-variant bg-surface-container-low text-on-surface transition-colors hover:bg-surface-container-high"
+        class="ml-auto flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-outline-variant bg-surface-container-low text-on-surface transition-colors hover:bg-surface-container-high"
         (click)="openBarcodeScanner()"
         [attr.aria-label]="i18n.t('scanBarcode')"
       >
@@ -67,8 +67,8 @@
   @if (filterCommerceId(); as commerceId) {
     <div class="space-y-xs md:space-y-sm">
       @for (item of itemsForCommerce(commerceId); track item) {
-        <div class="card-surface flex items-center gap-sm p-sm md:p-md">
-          <div class="flex min-w-0 flex-1 items-center gap-sm">
+        <div class="card-surface flex min-w-0 max-w-full items-center gap-sm p-sm md:p-md">
+          <div class="flex min-w-0 flex-1 items-center gap-sm overflow-hidden">
             @if (item.product.imageUrl; as imageUrl) {
               <button
                 type="button"
@@ -127,31 +127,38 @@
   <!-- Checkout footer -->
   @if (visibleItems().length > 0) {
     <div
-      class="card-surface bg-surface/90 glass safe-bottom fixed bottom-20 left-0 right-0 z-30 flex flex-wrap items-center justify-between gap-sm border-t border-outline-variant p-md md:bottom-0 md:left-64"
+      class="pointer-events-none fixed inset-x-0 bottom-20 z-30 md:bottom-0 md:left-64"
     >
-      <div class="text-body-md text-on-surface-variant">
-        <span class="font-semibold text-on-surface">{{ i18n.t('subtotal') }}</span>
-        ·
-        {{ visibleCount() }} {{ i18n.lang() === 'en' ? 'items' : 'artículos' }}
-        ·
-        <span class="font-semibold tabular-nums text-primary">{{ formatFooterTotal() }}</span>
-      </div>
-      <div class="flex w-full flex-wrap gap-sm md:w-auto">
-        <button
-          (click)="copyMessage()"
-          class="flex-1 rounded-xl bg-surface-container px-md py-2 text-label-lg transition-colors hover:bg-surface-container-high md:flex-none"
-        >
-          {{ i18n.lang() === 'en' ? 'Copy' : 'Copiar' }}
-        </button>
-        <button
-          (click)="sendWhatsApp()"
-          class="flex-1 rounded-xl bg-secondary px-md py-2 text-label-lg text-on-secondary md:flex-none"
-        >
-          WhatsApp
-        </button>
-        <button (click)="confirmPurchase()" class="btn-primary min-w-[140px] flex-1 py-2">
-          {{ i18n.t('confirmPurchase') }}
-        </button>
+      <div
+        class="card-surface bg-surface/90 glass safe-bottom pointer-events-auto mx-auto flex max-w-[1440px] flex-wrap items-center justify-between gap-sm border-t border-outline-variant p-md md:px-xl"
+      >
+        <div class="min-w-0 text-body-md text-on-surface-variant">
+          <span class="font-semibold text-on-surface">{{ i18n.t('subtotal') }}</span>
+          ·
+          {{ visibleCount() }} {{ i18n.lang() === 'en' ? 'items' : 'artículos' }}
+          ·
+          <span class="font-semibold tabular-nums text-primary">{{ formatFooterTotal() }}</span>
+        </div>
+        <div class="flex w-full min-w-0 flex-wrap gap-sm md:w-auto">
+          <button
+            (click)="copyMessage()"
+            class="min-w-0 flex-1 rounded-xl bg-surface-container px-md py-2 text-label-lg transition-colors hover:bg-surface-container-high md:flex-none"
+          >
+            {{ i18n.lang() === 'en' ? 'Copy' : 'Copiar' }}
+          </button>
+          <button
+            (click)="sendWhatsApp()"
+            class="min-w-0 flex-1 rounded-xl bg-secondary px-md py-2 text-label-lg text-on-secondary md:flex-none"
+          >
+            WhatsApp
+          </button>
+          <button
+            (click)="confirmPurchase()"
+            class="btn-primary min-w-0 flex-1 py-2 md:min-w-[140px]"
+          >
+            {{ i18n.t('confirmPurchase') }}
+          </button>
+        </div>
       </div>
     </div>
   }
