@@ -35,6 +35,15 @@
         >
           <span class="material-symbols-outlined">savings</span>
         </a>
+        <button
+          type="button"
+          (click)="withdrawRequested.emit()"
+          class="flex items-center gap-2 rounded-xl border border-outline-variant px-3 py-2 text-label-lg transition-colors hover:bg-surface-container"
+          [title]="i18n.t('withdrawFromSavings')"
+        >
+          <span class="material-symbols-outlined text-[20px]">account_balance_wallet</span>
+          <span class="hidden sm:inline">{{ i18n.t('withdrawFromSavings') }}</span>
+        </button>
       }
       <button (click)="openDialog()" class="btn-primary flex items-center gap-2">
         <span class="material-symbols-outlined text-[20px]">add</span>
@@ -42,72 +51,6 @@
       </button>
     </div>
   </div>
-
-  <ng-template #entryRow let-item="item">
-    <div
-      class="flex items-center justify-between gap-md p-md"
-      [class.cash-entry-row]="item.isCash"
-      [class.pending-entry-row]="showSpendStatus() && !item.isSpent"
-      [class.spent-entry-row]="showSpendStatus() && item.isSpent && item.color"
-      [style.--spent-color]="showSpendStatus() && item.isSpent && item.color ? item.color : null"
-    >
-      <div class="min-w-0 flex-1 cursor-pointer" (click)="openDialog(item)">
-        <div class="flex min-w-0 items-center gap-sm">
-          <span class="truncate text-label-lg text-on-surface">{{ item.description }}</span>
-          @if (item.isRecurring) {
-            <span
-              class="text-label-sm border-primary/40 shrink-0 rounded-full border px-2 py-0.5 text-primary"
-              [title]="i18n.lang() === 'en' ? 'Recurring expense' : 'Gasto recurrente'"
-            >
-              <span class="material-symbols-outlined align-middle text-[14px]">repeat</span>
-            </span>
-          }
-          @if (showSpendStatus() && !item.isSpent) {
-            <span
-              class="text-label-sm shrink-0 rounded-full border border-outline-variant px-2 py-0.5 text-on-surface-variant"
-            >
-              {{ i18n.lang() === 'en' ? 'Pending' : 'Pendiente' }}
-            </span>
-          }
-          @if (showSpendStatus() && item.isSpent && item.color) {
-            <span
-              class="h-3 w-3 shrink-0 rounded-full border border-outline-variant"
-              [style.background-color]="item.color"
-              [title]="i18n.lang() === 'en' ? 'Registered expense' : 'Gasto registrado'"
-            ></span>
-          }
-        </div>
-        @if (entrySubtitle(item)) {
-          <div class="truncate text-body-md text-on-surface-variant">{{ entrySubtitle(item) }}</div>
-        }
-      </div>
-      <div class="flex shrink-0 items-center gap-sm">
-        <div
-          class="text-numeral-md font-semibold tabular-nums"
-          [class.text-error]="isExpense"
-          [class.text-secondary]="!isExpense"
-        >
-          {{ formatMoney(item.amount) }}
-        </div>
-        <button
-          type="button"
-          (click)="openDialog(item)"
-          class="p-1 text-on-surface-variant hover:opacity-80"
-          [title]="i18n.lang() === 'en' ? 'Edit entry' : 'Editar registro'"
-        >
-          <span class="material-symbols-outlined text-[20px]">edit</span>
-        </button>
-        <button
-          type="button"
-          (click)="deleteEntry(item.id)"
-          class="p-1 text-error hover:opacity-80"
-          [title]="i18n.lang() === 'en' ? 'Delete entry' : 'Eliminar registro'"
-        >
-          <span class="material-symbols-outlined text-[20px]">delete</span>
-        </button>
-      </div>
-    </div>
-  </ng-template>
 
   @if (loading()) {
     <div class="py-xl text-center text-body-md text-on-surface-variant">
@@ -118,7 +61,7 @@
   @if (!loading()) {
     @if (showGroupedByCategory()) {
       <div class="space-y-md">
-        @for (group of groupedEntries(); track group) {
+        @for (group of groupedEntries(); track group.categoryId) {
           <div class="card-surface overflow-hidden">
             <div
               class="flex items-center justify-between gap-md border-b border-outline-variant bg-surface-container px-md py-sm"
@@ -129,11 +72,15 @@
               }}</span>
             </div>
             <div class="divide-y divide-outline-variant">
-              @for (item of group.items; track item) {
-                <ng-container
-                  [ngTemplateOutlet]="entryRow"
-                  [ngTemplateOutletContext]="{ item: item }"
-                ></ng-container>
+              @for (item of group.items; track item.id) {
+                <app-finance-entry-row
+                  [item]="item"
+                  [isExpense]="isExpense"
+                  [showSpendStatus]="showSpendStatus()"
+                  [subtitle]="entrySubtitle(item)"
+                  (edit)="openDialog($event)"
+                  (remove)="deleteEntry($event)"
+                />
               }
             </div>
           </div>
@@ -146,11 +93,15 @@
       </div>
     } @else {
       <div class="card-surface divide-y divide-outline-variant overflow-hidden">
-        @for (item of entries(); track item) {
-          <ng-container
-            [ngTemplateOutlet]="entryRow"
-            [ngTemplateOutletContext]="{ item: item }"
-          ></ng-container>
+        @for (item of entries(); track item.id) {
+          <app-finance-entry-row
+            [item]="item"
+            [isExpense]="isExpense"
+            [showSpendStatus]="showSpendStatus()"
+            [subtitle]="entrySubtitle(item)"
+            (edit)="openDialog($event)"
+            (remove)="deleteEntry($event)"
+          />
         }
         @if (entries().length === 0) {
           <div class="p-xl text-center text-body-md text-on-surface-variant">
@@ -162,7 +113,7 @@
   }
 
   @if (showDialog) {
-    <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-md">
+    <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-md" (appDialogEscape)="closeDialog()">
       <div
         class="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-[24px] border border-outline-variant bg-surface-container-lowest p-xl shadow-card-hover"
       >
@@ -199,7 +150,7 @@
                 <option value="">
                   {{ i18n.lang() === 'en' ? 'Select category' : 'Seleccionar categoría' }}
                 </option>
-                @for (cat of categories(); track cat) {
+                @for (cat of categories(); track cat.id) {
                   <option [value]="cat.id">{{ cat.name }}</option>
                 }
               </select>
@@ -222,7 +173,7 @@
                   <option value="">
                     {{ i18n.lang() === 'en' ? 'Select type' : 'Seleccionar tipo' }}
                   </option>
-                  @for (cat of categories(); track cat) {
+                  @for (cat of categories(); track cat.id) {
                     <option [value]="cat.id">{{ cat.name }}</option>
                   }
                 </select>
@@ -266,7 +217,7 @@
                 <option value="">
                   {{ i18n.lang() === 'en' ? 'Select account' : 'Seleccionar cuenta' }}
                 </option>
-                @for (cat of categories(); track cat) {
+                @for (cat of categories(); track cat.id) {
                   <option [value]="cat.id">{{ cat.name }}</option>
                 }
               </select>

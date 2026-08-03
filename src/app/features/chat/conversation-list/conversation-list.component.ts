@@ -9,6 +9,7 @@ import { LoadingStateComponent } from '../../../shared/components/loading-state.
 import { EmptyStateComponent } from '../../../shared/components/empty-state.component';
 import { ErrorStateComponent } from '../../../shared/components/error-state.component';
 import { ConversationFormComponent } from '../conversation-form/conversation-form.component';
+import { DialogEscapeDirective } from '../../../shared/directives/dialog-escape.directive';
 
 @Component({
   selector: 'app-conversation-list',
@@ -18,6 +19,7 @@ import { ConversationFormComponent } from '../conversation-form/conversation-for
     EmptyStateComponent,
     ErrorStateComponent,
     ConversationFormComponent,
+    DialogEscapeDirective,
   ],
   templateUrl: './conversation-list.component.html',
   changeDetection: ChangeDetectionStrategy.Eager,

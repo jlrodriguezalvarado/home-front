@@ -1,6 +1,7 @@
 import {
   Component,
   DestroyRef,
+  computed,
   effect,
   inject,
   OnInit,
@@ -32,22 +33,17 @@ import { ConfirmService } from '../../../shared/services/confirm.service';
 import { I18nService } from '../../../core/i18n/i18n.service';
 import { ToastService } from '../../../shared/services/toast.service';
 import { DialogFormDirective } from '../../../shared/directives/dialog-form.directive';
+import { DialogEscapeDirective } from '../../../shared/directives/dialog-escape.directive';
 import { ExpenseSpendRegisterComponent } from './components/expense-spend-register/expense-spend-register.component';
 import { ExpenseSpendHistoryDialogComponent } from './components/expense-spend-history-dialog/expense-spend-history-dialog.component';
+import {
+  FinanceMetricCardComponent,
+  SummaryMetric,
+} from './components/finance-metric-card/finance-metric-card.component';
 
 type IncomeDialogMode = 'closed' | 'add' | 'manage' | 'edit';
 
-interface SummaryMetric {
-  id: string;
-  labelEn: string;
-  labelEs: string;
-  value: string;
-  colorClass: string;
-  currencySymbol?: string;
-  action?: 'income';
-}
-
-const PRIMARY_METRIC_IDS = new Set(['expense', 'balance', 'total']);
+const PRIMARY_METRIC_IDS = new Set(['initialExpense', 'expense', 'balance', 'availableNext', 'cash']);
 
 @Component({
   selector: 'app-finance-dashboard',
@@ -59,8 +55,10 @@ const PRIMARY_METRIC_IDS = new Set(['expense', 'balance', 'total']);
     RouterLink,
     RouterLinkActive,
     DialogFormDirective,
+    DialogEscapeDirective,
     ExpenseSpendRegisterComponent,
     ExpenseSpendHistoryDialogComponent,
+    FinanceMetricCardComponent,
   ],
   templateUrl: './finance-dashboard.component.html',
   changeDetection: ChangeDetectionStrategy.Eager,
@@ -95,6 +93,12 @@ export class FinanceDashboardComponent implements OnInit {
   summaryDetailsExpanded = signal(false);
   summaryCurrencyId = signal('');
   currencies = signal<AppCurrency[]>([]);
+  manualPreviousMonthExpense = signal('');
+  savingManualPreviousMonthExpense = signal(false);
+  manualPreviousMonthRemainder = signal('');
+  savingManualPreviousMonthRemainder = signal(false);
+  manualPreviousGlobalSavings = signal('');
+  savingManualPreviousGlobalSavings = signal(false);
   savingIncome = false;
   editingIncomeEntryId: string | null = null;
   incomeForm = {
@@ -102,9 +106,7 @@ export class FinanceDashboardComponent implements OnInit {
     notes: '',
     incomeAccountId: '',
   };
-
   formatMoney = formatFinanceMoney;
-
   tabs = [
     { path: 'initial-expenses', labelEn: 'Initial', labelEs: 'Inicial' },
     { path: 'math', labelEn: 'Math', labelEs: 'Math' },
@@ -129,7 +131,7 @@ export class FinanceDashboardComponent implements OnInit {
       )
       .subscribe({
         next: (res) => {
-          this.summary.set(res);
+          this.setSummary(res);
           this.loading.set(false);
         },
         error: () => {
@@ -180,7 +182,7 @@ export class FinanceDashboardComponent implements OnInit {
       )
       .subscribe({
         next: ({ year, month, res }) => {
-          this.summary.set(res);
+          this.setSummary(res);
           this.finishPeriodLoad(year, month);
         },
         error: () => {
@@ -198,6 +200,13 @@ export class FinanceDashboardComponent implements OnInit {
   private loadSummary$(year: string, month: string) {
     const currency = this.summaryCurrencyId();
     return this.repo.getMonthlySummary(year, month, currency ? { currency } : undefined);
+  }
+
+  private setSummary(summary: FinanceSummary) {
+    this.summary.set(summary);
+    this.manualPreviousMonthExpense.set(summary.previousMonthExpense);
+    this.manualPreviousMonthRemainder.set(summary.previousMonthRemainder);
+    this.manualPreviousGlobalSavings.set(summary.previousGlobalSavings);
   }
 
   onSummaryCurrencyChange(currencyId: string) {
@@ -221,7 +230,7 @@ export class FinanceDashboardComponent implements OnInit {
     this.refresh.completePeriodChange(year, month);
   }
 
-  metrics(): SummaryMetric[] {
+  metrics = computed((): SummaryMetric[] => {
     const s = this.summary();
     if (!s) return [];
     const totalCode = s.total.currency.code || 'USD';
@@ -244,10 +253,18 @@ export class FinanceDashboardComponent implements OnInit {
       },
       {
         id: 'initialExpense',
-        labelEn: 'Initial month expense',
-        labelEs: 'Gasto inicial del mes',
+        labelEn: 'Initial expense',
+        labelEs: 'Gasto inicial',
         value: s.initialMonthExpense,
         colorClass: 'text-orange-600',
+      },
+      {
+        id: 'previousExpense',
+        labelEn: 'Previous month expense',
+        labelEs: 'Gasto mes anterior',
+        value: s.previousMonthExpense,
+        colorClass: 'text-on-surface-variant',
+        action: 'previousMonthExpense',
       },
       {
         id: 'currentSavings',
@@ -262,6 +279,7 @@ export class FinanceDashboardComponent implements OnInit {
         labelEs: 'Ahorro global anterior',
         value: s.previousGlobalSavings,
         colorClass: 'text-amber-900',
+        action: 'previousGlobalSavings',
       },
       {
         id: 'totalSavings',
@@ -319,34 +337,129 @@ export class FinanceDashboardComponent implements OnInit {
         labelEs: 'Remanente mes anterior',
         value: s.previousMonthRemainder,
         colorClass: 'text-on-surface-variant',
+        action: 'previousMonthRemainder',
       },
     ];
-  }
+  });
 
-  primaryMetrics(): SummaryMetric[] {
-    return this.metrics().filter((m) => PRIMARY_METRIC_IDS.has(m.id));
-  }
+  primaryMetrics = computed(() => this.metrics().filter((m) => PRIMARY_METRIC_IDS.has(m.id)));
 
-  secondaryMetrics(): SummaryMetric[] {
-    return this.metrics().filter((m) => !PRIMARY_METRIC_IDS.has(m.id));
-  }
+  secondaryMetrics = computed(() => this.metrics().filter((m) => !PRIMARY_METRIC_IDS.has(m.id)));
+
+  previousMonthExpenseEditable = computed(
+    () => this.summary()?.previousMonthExpenseEditable === true,
+  );
+
+  previousMonthRemainderEditable = computed(
+    () => this.summary()?.previousMonthRemainderEditable === true,
+  );
+
+  previousGlobalSavingsEditable = computed(
+    () => this.summary()?.previousGlobalSavingsEditable === true,
+  );
 
   toggleSummaryDetails() {
     this.summaryDetailsExpanded.update((open) => !open);
   }
 
-  metricLabel(m: SummaryMetric): string {
-    return this.i18n.lang() === 'en' ? m.labelEn : m.labelEs;
+  canSaveManualPreviousMonthExpense(): boolean {
+    const amount = this.manualPreviousMonthExpense().trim();
+    return amount === '' || /^\d+(?:\.\d{1,2})?$/.test(amount);
   }
 
-  formatMetricValue(m: SummaryMetric): string {
-    if (m.currencySymbol) {
-      const n = Number(m.value ?? 0);
-      const symbol = m.currencySymbol;
-      if (!Number.isFinite(n)) return `${symbol}0.00`;
-      return `${symbol}${n.toFixed(2)}`;
+  canSaveManualPreviousMonthRemainder(): boolean {
+    const amount = this.manualPreviousMonthRemainder().trim();
+    return amount === '' || /^\d+(?:\.\d{1,2})?$/.test(amount);
+  }
+
+  canSaveManualPreviousGlobalSavings(): boolean {
+    const amount = this.manualPreviousGlobalSavings().trim();
+    return amount === '' || /^\d+(?:\.\d{1,2})?$/.test(amount);
+  }
+
+  saveManualPreviousMonthExpense() {
+    const summary = this.summary();
+    const amount = this.manualPreviousMonthExpense().trim();
+    if (!summary?.financialMonthId || this.savingManualPreviousMonthExpense() || !this.canSaveManualPreviousMonthExpense()) {
+      return;
     }
-    return formatFinanceMoney(m.value);
+    this.savingManualPreviousMonthExpense.set(true);
+    this.repo
+      .updateManualPreviousMonthExpense(summary.financialMonthId, amount || null)
+      .pipe(switchMap(() => this.loadSummary$(this.year(), this.month())))
+      .subscribe({
+        next: (updatedSummary) => {
+          this.setSummary(updatedSummary);
+          this.savingManualPreviousMonthExpense.set(false);
+          this.toast.success(
+            this.i18n.lang() === 'en'
+              ? 'Previous month expense saved'
+              : 'Gasto del mes anterior guardado',
+          );
+        },
+        error: (err) => {
+          this.savingManualPreviousMonthExpense.set(false);
+          this.toast.error(financeApiErrorMessage(err, this.i18n.lang()));
+        },
+      });
+  }
+
+  saveManualPreviousMonthRemainder() {
+    const summary = this.summary();
+    const amount = this.manualPreviousMonthRemainder().trim();
+    if (
+      !summary?.financialMonthId ||
+      this.savingManualPreviousMonthRemainder() ||
+      !this.canSaveManualPreviousMonthRemainder()
+    ) {
+      return;
+    }
+    this.savingManualPreviousMonthRemainder.set(true);
+    this.repo
+      .updateManualPreviousMonthRemainder(summary.financialMonthId, amount || null)
+      .pipe(switchMap(() => this.loadSummary$(this.year(), this.month())))
+      .subscribe({
+        next: (updatedSummary) => {
+          this.setSummary(updatedSummary);
+          this.savingManualPreviousMonthRemainder.set(false);
+          this.toast.success(
+            this.i18n.lang() === 'en'
+              ? 'Previous month remainder saved'
+              : 'Remanente del mes anterior guardado',
+          );
+        },
+        error: (err) => {
+          this.savingManualPreviousMonthRemainder.set(false);
+          this.toast.error(financeApiErrorMessage(err, this.i18n.lang()));
+        },
+      });
+  }
+
+  saveManualPreviousGlobalSavings() {
+    const summary = this.summary();
+    const amount = this.manualPreviousGlobalSavings().trim();
+    if (!summary?.financialMonthId || this.savingManualPreviousGlobalSavings() || !this.canSaveManualPreviousGlobalSavings()) {
+      return;
+    }
+    this.savingManualPreviousGlobalSavings.set(true);
+    this.repo
+      .updateManualPreviousGlobalSavings(summary.financialMonthId, amount || null)
+      .pipe(switchMap(() => this.loadSummary$(this.year(), this.month())))
+      .subscribe({
+        next: (updatedSummary) => {
+          this.setSummary(updatedSummary);
+          this.savingManualPreviousGlobalSavings.set(false);
+          this.toast.success(
+            this.i18n.lang() === 'en'
+              ? 'Previous global savings saved'
+              : 'Ahorro global anterior guardado',
+          );
+        },
+        error: (err) => {
+          this.savingManualPreviousGlobalSavings.set(false);
+          this.toast.error(financeApiErrorMessage(err, this.i18n.lang()));
+        },
+      });
   }
 
   tabLabel(tab: { labelEn: string; labelEs: string }): string {

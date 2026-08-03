@@ -10,6 +10,7 @@ import { LoadingStateComponent } from '../../../shared/components/loading-state.
 import { EmptyStateComponent } from '../../../shared/components/empty-state.component';
 import { ErrorStateComponent } from '../../../shared/components/error-state.component';
 import { DialogFormDirective } from '../../../shared/directives/dialog-form.directive';
+import { DialogEscapeDirective } from '../../../shared/directives/dialog-escape.directive';
 import { MealPlanningNavComponent } from '../meal-planning-nav.component';
 
 @Component({
@@ -21,6 +22,7 @@ import { MealPlanningNavComponent } from '../meal-planning-nav.component';
     EmptyStateComponent,
     ErrorStateComponent,
     DialogFormDirective,
+    DialogEscapeDirective,
     MealPlanningNavComponent,
   ],
   templateUrl: './meal-type-list.component.html',

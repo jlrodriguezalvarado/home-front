@@ -2,7 +2,6 @@ import {
   Component,
   ElementRef,
   EventEmitter,
-  HostListener,
   Input,
   OnDestroy,
   Output,
@@ -14,6 +13,7 @@ import {
 
 import { FormsModule } from '@angular/forms';
 import { LoadingStateComponent } from './loading-state.component';
+import { DialogEscapeDirective } from '../directives/dialog-escape.directive';
 
 export interface SearchSelectOption {
   value: string;
@@ -30,7 +30,7 @@ interface PanelStyle {
 @Component({
   selector: 'app-search-select',
   standalone: true,
-  imports: [FormsModule, LoadingStateComponent],
+  imports: [FormsModule, LoadingStateComponent, DialogEscapeDirective],
   templateUrl: './search-select.component.html',
   changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './search-select.component.scss',
@@ -61,11 +61,6 @@ export class SearchSelectComponent implements OnDestroy {
 
   ngOnDestroy() {
     this.removeViewportListeners();
-  }
-
-  @HostListener('document:keydown.escape')
-  onEscape() {
-    if (this.open()) this.close();
   }
 
   selectedLabel(): string {

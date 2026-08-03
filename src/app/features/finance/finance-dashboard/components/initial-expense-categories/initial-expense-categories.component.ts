@@ -17,11 +17,12 @@ import { ConfirmService } from '../../../../../shared/services/confirm.service';
 import { I18nService } from '../../../../../core/i18n/i18n.service';
 import { ToastService } from '../../../../../shared/services/toast.service';
 import { DialogFormDirective } from '../../../../../shared/directives/dialog-form.directive';
+import { DialogEscapeDirective } from '../../../../../shared/directives/dialog-escape.directive';
 
 @Component({
   selector: 'app-initial-expense-categories',
   standalone: true,
-  imports: [FormsModule, RouterLink, DialogFormDirective],
+  imports: [FormsModule, RouterLink, DialogFormDirective, DialogEscapeDirective],
   changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './initial-expense-categories.component.html',
 })

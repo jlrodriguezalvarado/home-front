@@ -158,6 +158,7 @@ export const API_ENDPOINTS = {
     expenseSpendPending: '/finance/expense-spend/pending/',
     expenseSpendRegister: '/finance/expense-spend/register/',
     expenseSpendHistory: '/finance/expense-spend/history/',
+    savingsWithdraw: '/finance/savings-withdraw/',
     recurringExpensesReplicate: '/finance/recurring-expenses/replicate/',
     resources: {
       'initial-expenses': '/finance/initial-expense-items/',

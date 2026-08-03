@@ -1,6 +1,9 @@
 import {
   Component,
   DestroyRef,
+  EventEmitter,
+  Output,
+  computed,
   effect,
   inject,
   Input,
@@ -29,6 +32,8 @@ import { ConfirmService } from '../../../../../shared/services/confirm.service';
 import { I18nService } from '../../../../../core/i18n/i18n.service';
 import { ToastService } from '../../../../../shared/services/toast.service';
 import { DialogFormDirective } from '../../../../../shared/directives/dialog-form.directive';
+import { DialogEscapeDirective } from '../../../../../shared/directives/dialog-escape.directive';
+import { FinanceEntryRowComponent } from '../finance-entry-row/finance-entry-row.component';
 
 export interface ExpenseCategoryGroup {
   categoryId: string;
@@ -40,7 +45,14 @@ export interface ExpenseCategoryGroup {
 @Component({
   selector: 'app-finance-list-base',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, DialogFormDirective],
+  imports: [
+    CommonModule,
+    FormsModule,
+    RouterLink,
+    DialogFormDirective,
+    DialogEscapeDirective,
+    FinanceEntryRowComponent,
+  ],
   templateUrl: './finance-list-base.component.html',
   changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './finance-list-base.component.scss',
@@ -58,6 +70,7 @@ export class FinanceListBaseComponent implements OnInit {
 
   @Input() feature = '';
   @Input() isExpense = true;
+  @Output() withdrawRequested = new EventEmitter<void>();
 
   entries = signal<FinanceEntry[]>([]);
   categories = signal<FinanceCategory[]>([]);
@@ -81,6 +94,53 @@ export class FinanceListBaseComponent implements OnInit {
 
   formatMoney = formatFinanceMoney;
   isRequired = isFieldRequired;
+
+  listTotal = computed(() => sumEntryAmounts(this.entries().map((e) => e.amount)));
+
+  showGroupedByCategory = computed(() => this.feature === 'initial-expenses');
+
+  groupedEntries = computed((): ExpenseCategoryGroup[] => {
+    const byCategory = new Map<string, FinanceEntry[]>();
+    for (const entry of this.entries()) {
+      const key = entry.categoryId ?? '';
+      const list = byCategory.get(key) ?? [];
+      list.push(entry);
+      byCategory.set(key, list);
+    }
+    const groups: ExpenseCategoryGroup[] = [];
+    const sortedCategories = [...this.categories()].sort((a, b) => {
+      const orderA = a.sortOrder ?? 999;
+      const orderB = b.sortOrder ?? 999;
+      if (orderA !== orderB) return orderA - orderB;
+      return a.name.localeCompare(b.name);
+    });
+    for (const category of sortedCategories) {
+      const items = byCategory.get(category.id);
+      if (!items?.length) continue;
+      groups.push({
+        categoryId: category.id,
+        name: category.name,
+        items,
+        total: sumEntryAmounts(items.map((e) => e.amount)),
+      });
+      byCategory.delete(category.id);
+    }
+    for (const [categoryId, items] of byCategory) {
+      if (!items.length) continue;
+      const name = categoryId
+        ? items[0].categoryName || (this.i18n.lang() === 'en' ? 'Other' : 'Otro')
+        : this.i18n.lang() === 'en'
+          ? 'Uncategorized'
+          : 'Sin categoría';
+      groups.push({
+        categoryId,
+        name,
+        items,
+        total: sumEntryAmounts(items.map((e) => e.amount)),
+      });
+    }
+    return groups;
+  });
 
   constructor() {
     effect(() => {
@@ -150,57 +210,6 @@ export class FinanceListBaseComponent implements OnInit {
         takeUntilDestroyed(this.destroyRef),
       )
       .subscribe((res) => this.entries.set(res));
-  }
-
-  listTotal(): string {
-    return sumEntryAmounts(this.entries().map((e) => e.amount));
-  }
-
-  showGroupedByCategory(): boolean {
-    return this.feature === 'initial-expenses';
-  }
-
-  groupedEntries(): ExpenseCategoryGroup[] {
-    const byCategory = new Map<string, FinanceEntry[]>();
-    for (const entry of this.entries()) {
-      const key = entry.categoryId ?? '';
-      const list = byCategory.get(key) ?? [];
-      list.push(entry);
-      byCategory.set(key, list);
-    }
-    const groups: ExpenseCategoryGroup[] = [];
-    const sortedCategories = [...this.categories()].sort((a, b) => {
-      const orderA = a.sortOrder ?? 999;
-      const orderB = b.sortOrder ?? 999;
-      if (orderA !== orderB) return orderA - orderB;
-      return a.name.localeCompare(b.name);
-    });
-    for (const category of sortedCategories) {
-      const items = byCategory.get(category.id);
-      if (!items?.length) continue;
-      groups.push({
-        categoryId: category.id,
-        name: category.name,
-        items,
-        total: sumEntryAmounts(items.map((e) => e.amount)),
-      });
-      byCategory.delete(category.id);
-    }
-    for (const [categoryId, items] of byCategory) {
-      if (!items.length) continue;
-      const name = categoryId
-        ? items[0].categoryName || (this.i18n.lang() === 'en' ? 'Other' : 'Otro')
-        : this.i18n.lang() === 'en'
-          ? 'Uncategorized'
-          : 'Sin categoría';
-      groups.push({
-        categoryId,
-        name,
-        items,
-        total: sumEntryAmounts(items.map((e) => e.amount)),
-      });
-    }
-    return groups;
   }
 
   showCategoryField(): boolean {

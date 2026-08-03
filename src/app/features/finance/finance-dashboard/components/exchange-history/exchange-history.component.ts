@@ -21,11 +21,12 @@ import { CurrencyRepository } from '../../../../currency/currency.repository';
 import { I18nService } from '../../../../../core/i18n/i18n.service';
 import { ToastService } from '../../../../../shared/services/toast.service';
 import { DialogFormDirective } from '../../../../../shared/directives/dialog-form.directive';
+import { DialogEscapeDirective } from '../../../../../shared/directives/dialog-escape.directive';
 
 @Component({
   selector: 'app-finance-exchange-history',
   standalone: true,
-  imports: [CommonModule, FormsModule, DialogFormDirective],
+  imports: [CommonModule, FormsModule, DialogFormDirective, DialogEscapeDirective],
   templateUrl: './exchange-history.component.html',
   changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './exchange-history.component.scss',

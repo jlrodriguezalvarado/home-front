@@ -1,6 +1,7 @@
 <div
   class="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 p-md"
   (click)="close()"
+  (appDialogEscape)="close()"
 >
   <div
     class="flex max-h-[90vh] w-full max-w-md flex-col overflow-hidden rounded-[24px] border border-outline-variant bg-surface-container-lowest p-xl shadow-card-hover"

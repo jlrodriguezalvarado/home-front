@@ -1,0 +1,63 @@
+<div
+  class="flex items-center justify-between gap-md p-md"
+  [class.cash-entry-row]="item.isCash"
+  [class.pending-entry-row]="showSpendStatus && !item.isSpent"
+  [class.spent-entry-row]="showSpendStatus && item.isSpent && item.color"
+  [style.--spent-color]="showSpendStatus && item.isSpent && item.color ? item.color : null"
+>
+  <div class="min-w-0 flex-1 cursor-pointer" (click)="edit.emit(item)">
+    <div class="flex min-w-0 items-center gap-sm">
+      <span class="truncate text-label-lg text-on-surface">{{ item.description }}</span>
+      @if (item.isRecurring) {
+        <span
+          class="text-label-sm border-primary/40 shrink-0 rounded-full border px-2 py-0.5 text-primary"
+          [title]="i18n.lang() === 'en' ? 'Recurring expense' : 'Gasto recurrente'"
+        >
+          <span class="material-symbols-outlined align-middle text-[14px]">repeat</span>
+        </span>
+      }
+      @if (showSpendStatus && !item.isSpent) {
+        <span
+          class="text-label-sm shrink-0 rounded-full border border-outline-variant px-2 py-0.5 text-on-surface-variant"
+        >
+          {{ i18n.lang() === 'en' ? 'Pending' : 'Pendiente' }}
+        </span>
+      }
+      @if (showSpendStatus && item.isSpent && item.color) {
+        <span
+          class="h-3 w-3 shrink-0 rounded-full border border-outline-variant"
+          [style.background-color]="item.color"
+          [title]="i18n.lang() === 'en' ? 'Registered expense' : 'Gasto registrado'"
+        ></span>
+      }
+    </div>
+    @if (subtitle) {
+      <div class="truncate text-body-md text-on-surface-variant">{{ subtitle }}</div>
+    }
+  </div>
+  <div class="flex shrink-0 items-center gap-sm">
+    <div
+      class="text-numeral-md font-semibold tabular-nums"
+      [class.text-error]="isExpense"
+      [class.text-secondary]="!isExpense"
+    >
+      {{ formatMoney(item.amount) }}
+    </div>
+    <button
+      type="button"
+      (click)="edit.emit(item)"
+      class="p-1 text-on-surface-variant hover:opacity-80"
+      [title]="i18n.lang() === 'en' ? 'Edit entry' : 'Editar registro'"
+    >
+      <span class="material-symbols-outlined text-[20px]">edit</span>
+    </button>
+    <button
+      type="button"
+      (click)="remove.emit(item.id)"
+      class="p-1 text-error hover:opacity-80"
+      [title]="i18n.lang() === 'en' ? 'Delete entry' : 'Eliminar registro'"
+    >
+      <span class="material-symbols-outlined text-[20px]">delete</span>
+    </button>
+  </div>
+</div>

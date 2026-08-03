@@ -23,6 +23,7 @@ import { ToastService } from '../../../shared/services/toast.service';
 import { LoadingStateComponent } from '../../../shared/components/loading-state.component';
 import { ErrorStateComponent } from '../../../shared/components/error-state.component';
 import { DialogFormDirective } from '../../../shared/directives/dialog-form.directive';
+import { DialogEscapeDirective } from '../../../shared/directives/dialog-escape.directive';
 import { FavoriteDayPickerComponent } from './favorite-day-picker.component';
 import { FavoriteMealPickerComponent } from './favorite-meal-picker.component';
 import { MealPlanningNavComponent } from '../meal-planning-nav.component';
@@ -37,6 +38,7 @@ import { MealRecipeDisplayComponent } from './meal-recipe-display.component';
     LoadingStateComponent,
     ErrorStateComponent,
     DialogFormDirective,
+    DialogEscapeDirective,
     FavoriteDayPickerComponent,
     FavoriteMealPickerComponent,
     MealPlanningNavComponent,

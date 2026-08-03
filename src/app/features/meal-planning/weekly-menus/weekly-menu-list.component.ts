@@ -21,6 +21,7 @@ import { EmptyStateComponent } from '../../../shared/components/empty-state.comp
 import { ErrorStateComponent } from '../../../shared/components/error-state.component';
 import { MealPlanningNavComponent } from '../meal-planning-nav.component';
 import { MealRecipeDisplayComponent } from './meal-recipe-display.component';
+import { DialogEscapeDirective } from '../../../shared/directives/dialog-escape.directive';
 
 @Component({
   selector: 'app-weekly-menu-list',
@@ -33,6 +34,7 @@ import { MealRecipeDisplayComponent } from './meal-recipe-display.component';
     ErrorStateComponent,
     MealPlanningNavComponent,
     MealRecipeDisplayComponent,
+    DialogEscapeDirective,
   ],
   templateUrl: './weekly-menu-list.component.html',
   changeDetection: ChangeDetectionStrategy.Eager,

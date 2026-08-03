@@ -127,6 +127,7 @@
   <div
     class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-md"
     (click)="closeLightbox()"
+    (appDialogEscape)="closeLightbox()"
   >
     <img
       [src]="mediaUrl"

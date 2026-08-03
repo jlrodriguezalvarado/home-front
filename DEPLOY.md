@@ -112,6 +112,12 @@ npm ci
 npm run build:prod
 ```
 
+`build:prod` corre **en el host** (no dentro de Docker). En WSL con poca RAM
+(`memory=8GB`) puede tumbar la distro si hay muchos workers o el stack API
+ocupando memoria; el script ya limita workers/heap. Si WSL cae a mitad de
+build, rehaz `build:prod` y empaqueta con `./deploy/build-image.sh` (usa
+`--no-cache` y rechaza `dist`/imagen con archivos vacíos).
+
 Artefacto por defecto:
 
 ```text

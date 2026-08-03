@@ -34,11 +34,12 @@ import {
   SearchSelectOption,
 } from '../../../shared/components/search-select.component';
 import { DialogFormDirective } from '../../../shared/directives/dialog-form.directive';
+import { DialogEscapeDirective } from '../../../shared/directives/dialog-escape.directive';
 
 @Component({
   selector: 'app-ingredient-form-dialog',
   standalone: true,
-  imports: [FormsModule, SearchSelectComponent, DialogFormDirective],
+  imports: [FormsModule, SearchSelectComponent, DialogFormDirective, DialogEscapeDirective],
   changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './ingredient-form-dialog.component.html',
 })

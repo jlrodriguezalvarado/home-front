@@ -19,6 +19,7 @@ import {
 import { I18nService } from '../../core/i18n/i18n.service';
 import { MediaPermissionService } from '../services/media-permission.service';
 import { ToastService } from '../services/toast.service';
+import { DialogEscapeDirective } from '../directives/dialog-escape.directive';
 
 function isIOSDevice(): boolean {
   if (typeof navigator === 'undefined') return false;
@@ -31,7 +32,7 @@ function isIOSDevice(): boolean {
 @Component({
   selector: 'app-barcode-scanner-dialog',
   standalone: true,
-  imports: [],
+  imports: [DialogEscapeDirective],
   templateUrl: './barcode-scanner-dialog.component.html',
   styleUrl: './barcode-scanner-dialog.component.scss',
   changeDetection: ChangeDetectionStrategy.Eager,

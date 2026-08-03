@@ -5,7 +5,7 @@
     "ng": "ng",
     "start": "ng serve --port 4300",
     "build": "ng build",
-    "build:prod": "cross-env NG_BUILD_MAX_WORKERS=4 ng build --configuration production",
+    "build:prod": "cross-env NG_BUILD_MAX_WORKERS=2 NODE_OPTIONS=--max-old-space-size=3072 ng build --configuration production",
     "api:types": "openapi-typescript ../home-api/docs/openapi.yaml -o src/app/core/api/generated/schema.ts",
     "api:types:check": "openapi-typescript ../home-api/docs/openapi.yaml -o src/app/core/api/generated/schema.ts --check",
     "i18n:keys": "node scripts/generate-i18n-keys.mjs",

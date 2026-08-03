@@ -23,7 +23,7 @@
   }
 </div>
 @if (open()) {
-  <div class="fixed inset-0 z-[60]" (click)="close()"></div>
+  <div class="fixed inset-0 z-[60]" (click)="close()" (appDialogEscape)="close()"></div>
 }
 @if (open() && panelStyle(); as panel) {
   <div

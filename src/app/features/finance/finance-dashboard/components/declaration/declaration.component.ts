@@ -21,11 +21,12 @@ import { formatFinanceMoney } from '../../../finance.utils';
 import { I18nService } from '../../../../../core/i18n/i18n.service';
 import { ToastService } from '../../../../../shared/services/toast.service';
 import { DialogFormDirective } from '../../../../../shared/directives/dialog-form.directive';
+import { DialogEscapeDirective } from '../../../../../shared/directives/dialog-escape.directive';
 
 @Component({
   selector: 'app-declaration',
   standalone: true,
-  imports: [FormsModule, DialogFormDirective],
+  imports: [FormsModule, DialogFormDirective, DialogEscapeDirective],
   templateUrl: './declaration.component.html',
   changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './declaration.component.scss',

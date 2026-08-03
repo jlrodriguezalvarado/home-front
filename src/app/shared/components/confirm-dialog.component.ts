@@ -2,11 +2,12 @@ import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
 
 import { ConfirmService } from '../services/confirm.service';
 import { I18nService } from '../../core/i18n/i18n.service';
+import { DialogEscapeDirective } from '../directives/dialog-escape.directive';
 
 @Component({
   selector: 'app-confirm-dialog',
   standalone: true,
-  imports: [],
+  imports: [DialogEscapeDirective],
   changeDetection: ChangeDetectionStrategy.Eager,
   template: `
     @if (confirmService.state(); as dialog) {
@@ -15,6 +16,7 @@ import { I18nService } from '../../core/i18n/i18n.service';
         role="dialog"
         aria-modal="true"
         (click)="confirmService.reject()"
+        (appDialogEscape)="confirmService.reject()"
       >
         <div
           class="w-full max-w-md rounded-[24px] border border-outline-variant bg-surface-container-lowest p-xl shadow-card-hover"

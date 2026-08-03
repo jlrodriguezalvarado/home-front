@@ -9,6 +9,7 @@ import {
   ChangeDetectionStrategy,
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { DialogEscapeDirective } from '../../../../../shared/directives/dialog-escape.directive';
 import { finalize } from 'rxjs';
 import { AppStringKey, I18nService } from '../../../../../core/i18n/i18n.service';
 import { Product } from '../../../../../core/models/shopping.models';
@@ -19,7 +20,7 @@ import { BasketComparisonRepository } from '../../basket-comparison.repository';
 @Component({
   selector: 'app-product-link-dialog',
   standalone: true,
-  imports: [FormsModule],
+  imports: [FormsModule, DialogEscapeDirective],
   templateUrl: './product-link-dialog.component.html',
   styleUrl: './product-link-dialog.component.scss',
   changeDetection: ChangeDetectionStrategy.Eager,

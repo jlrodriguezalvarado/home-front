@@ -23,11 +23,15 @@ export interface FinanceSummary {
   balance: string;
   availableNextMonth: string;
   initialMonthExpense: string;
+  previousMonthExpense: string;
+  previousMonthExpenseEditable: boolean;
   previousMonthRemainder: string;
+  previousMonthRemainderEditable: boolean;
   initialMonthRemainder: string;
   nextMonthExpense: string;
   currentGlobalSavings: string;
   previousGlobalSavings: string;
+  previousGlobalSavingsEditable: boolean;
   totalGlobalSavings: string;
   cash: string;
   total: FinanceSummaryTotal;
@@ -135,6 +139,24 @@ export class FinanceRepository {
           .pipe(map((res) => this.mapSummary(res, year, month))),
       ),
     );
+  }
+
+  updateManualPreviousMonthExpense(financialMonthId: string, amount: string | null): Observable<void> {
+    return this.api.patch<void>(`${API_ENDPOINTS.finance.months}${financialMonthId}/`, {
+      manual_previous_month_expense: amount,
+    });
+  }
+
+  updateManualPreviousMonthRemainder(financialMonthId: string, amount: string | null): Observable<void> {
+    return this.api.patch<void>(`${API_ENDPOINTS.finance.months}${financialMonthId}/`, {
+      manual_previous_month_remainder: amount,
+    });
+  }
+
+  updateManualPreviousGlobalSavings(financialMonthId: string, amount: string | null): Observable<void> {
+    return this.api.patch<void>(`${API_ENDPOINTS.finance.months}${financialMonthId}/`, {
+      manual_previous_global_savings: amount,
+    });
   }
 
   listFinancialYears(): Observable<FinancialYear[]> {
@@ -414,11 +436,15 @@ export class FinanceRepository {
       balance: String(summary['available'] ?? '0'),
       availableNextMonth: String(summary['available_next_month'] ?? '0'),
       initialMonthExpense: String(summary['initial_month_expense'] ?? '0'),
+      previousMonthExpense: String(summary['previous_month_expense'] ?? '0'),
+      previousMonthExpenseEditable: summary['previous_month_expense_editable'] === true,
       previousMonthRemainder: String(summary['previous_month_remainder'] ?? '0'),
+      previousMonthRemainderEditable: summary['previous_month_remainder_editable'] === true,
       initialMonthRemainder: String(summary['initial_month_remainder'] ?? '0'),
       nextMonthExpense: String(summary['next_month_expense'] ?? '0'),
       currentGlobalSavings: String(summary['current_global_savings'] ?? '0'),
       previousGlobalSavings: String(summary['previous_global_savings'] ?? '0'),
+      previousGlobalSavingsEditable: summary['previous_global_savings_editable'] === true,
       totalGlobalSavings: String(summary['total_global_savings'] ?? '0'),
       cash: String(summary['cash'] ?? '0'),
       total: this.mapSummaryTotal(summary['total']),

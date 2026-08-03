@@ -38,6 +38,7 @@ import {
   ChatMediaComposerComponent,
   ChatMediaPreview,
 } from '../components/chat-media-composer/chat-media-composer.component';
+import { DialogEscapeDirective } from '../../../shared/directives/dialog-escape.directive';
 
 const SCROLL_EDGE_THRESHOLD_PX = 80;
 
@@ -51,6 +52,7 @@ const SCROLL_EDGE_THRESHOLD_PX = 80;
     RenameChatContactDialogComponent,
     ChatMessageContentComponent,
     ChatMediaComposerComponent,
+    DialogEscapeDirective,
   ],
   templateUrl: './conversation-room.component.html',
   changeDetection: ChangeDetectionStrategy.Eager,

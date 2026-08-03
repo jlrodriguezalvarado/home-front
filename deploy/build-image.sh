@@ -61,18 +61,42 @@ if [[ ! -f "${FRONT_DIST_PATH}/index.html" ]]; then
   echo "Missing ${FRONT_DIST_PATH}/index.html. Run: npm ci && npm run build:prod" >&2
   exit 1
 fi
+# Guard against a half-written dist (WSL OOM / crash) or a poisoned BuildKit cache of empty stubs.
+INDEX_HOST_BYTES="$(wc -c < "${FRONT_DIST_PATH}/index.html" | tr -d ' ')"
+if [[ "${INDEX_HOST_BYTES}" -lt 100 ]]; then
+  echo "Corrupt ${FRONT_DIST_PATH}/index.html (${INDEX_HOST_BYTES} bytes). Re-run: npm run build:prod" >&2
+  exit 1
+fi
+ZERO_HOST="$(find "${FRONT_DIST_PATH}" -type f -size 0 | wc -l | tr -d ' ')"
+if [[ "${ZERO_HOST}" -gt 0 ]]; then
+  echo "Found ${ZERO_HOST} empty files under ${FRONT_DIST_PATH}. Re-run: npm run build:prod" >&2
+  exit 1
+fi
 
 IMAGE="${REGISTRY_HOST}/${WEB_IMAGE}:${WEB_VERSION}"
 
 echo "==> Building ${IMAGE}"
 echo "    FRONT_DIST_PATH=${FRONT_DIST_PATH}"
-docker build --pull \
+# --no-cache: tiny context (dist + nginx conf). Avoids shipping a cached COPY layer of
+# 0-byte stubs left after a crashed/interrupted previous build on WSL.
+docker build --pull --no-cache \
   --build-arg "FRONT_DIST_PATH=${FRONT_DIST_PATH}" \
   -t "${IMAGE}" \
   .
 
 echo "==> Image contents (expect index.html / assets, no src/)"
 docker run --rm "${IMAGE}" sh -c 'ls -la /usr/share/nginx/html | head -n 20'
+INDEX_IMG_BYTES="$(docker run --rm "${IMAGE}" sh -c 'wc -c < /usr/share/nginx/html/index.html' | tr -d ' ')"
+if [[ "${INDEX_IMG_BYTES}" -lt 100 ]]; then
+  echo "Image has empty index.html (${INDEX_IMG_BYTES} bytes). Try: docker builder prune -af && re-run." >&2
+  exit 1
+fi
+ZERO_IMG="$(docker run --rm "${IMAGE}" sh -c 'find /usr/share/nginx/html -type f -size 0 | wc -l' | tr -d ' ')"
+if [[ "${ZERO_IMG}" -gt 0 ]]; then
+  echo "Image has ${ZERO_IMG} empty files under /usr/share/nginx/html. Aborting." >&2
+  exit 1
+fi
+echo "    index.html=${INDEX_IMG_BYTES} bytes (host ${INDEX_HOST_BYTES}); empty files=0"
 
 if [[ "$PUSH" -eq 1 ]]; then
   echo "==> Pushing ${IMAGE}"

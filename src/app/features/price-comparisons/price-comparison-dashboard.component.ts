@@ -14,6 +14,7 @@ import { EmptyStateComponent } from '../../shared/components/empty-state.compone
 import { ErrorStateComponent } from '../../shared/components/error-state.component';
 import { LoadingStateComponent } from '../../shared/components/loading-state.component';
 import { DialogFormDirective } from '../../shared/directives/dialog-form.directive';
+import { DialogEscapeDirective } from '../../shared/directives/dialog-escape.directive';
 import { ConfirmService } from '../../shared/services/confirm.service';
 import { ToastService } from '../../shared/services/toast.service';
 import {
@@ -176,6 +177,7 @@ type CopyKey = keyof typeof COPY.en;
     EmptyStateComponent,
     ErrorStateComponent,
     DialogFormDirective,
+    DialogEscapeDirective,
   ],
   changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './price-comparison-dashboard.component.html',

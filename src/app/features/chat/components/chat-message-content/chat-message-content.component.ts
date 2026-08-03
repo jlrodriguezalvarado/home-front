@@ -9,6 +9,7 @@ import {
 
 import { ChatMessageItem } from '../../models/chat.models';
 import { ChatAudioPlayerComponent } from '../chat-audio-player/chat-audio-player.component';
+import { DialogEscapeDirective } from '../../../../shared/directives/dialog-escape.directive';
 import { I18nService } from '../../../../core/i18n/i18n.service';
 import { formatFileSize, getFileIconName } from '../../utils/chat-media.utils';
 import {
@@ -20,7 +21,7 @@ import {
 @Component({
   selector: 'app-chat-message-content',
   standalone: true,
-  imports: [ChatAudioPlayerComponent],
+  imports: [ChatAudioPlayerComponent, DialogEscapeDirective],
   templateUrl: './chat-message-content.component.html',
   changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './chat-message-content.component.scss',

@@ -176,6 +176,7 @@
     aria-modal="true"
     [attr.aria-label]="preview.alt"
     (click)="closeImagePreview()"
+    (appDialogEscape)="closeImagePreview()"
   >
     <div class="safe-top flex justify-end p-sm">
       <button

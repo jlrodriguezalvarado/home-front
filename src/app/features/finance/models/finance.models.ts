@@ -140,6 +140,25 @@ export interface ExpenseSpendRegisterPayload {
   notes?: string;
 }
 
+export interface SavingsWithdrawal {
+  id: string;
+  financialMonthId: string;
+  savingsAccountTypeId: string;
+  amount: string;
+  notes?: string;
+  incomeEntryId: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface SavingsWithdrawalCreatePayload {
+  financialMonthId: string;
+  savingsAccountTypeId: string;
+  incomeAccountId: string;
+  amount: string;
+  notes?: string;
+}
+
 export type GeneratedReportStatus = 'pending' | 'processing' | 'completed' | 'failed';
 
 export interface GeneratedReport {

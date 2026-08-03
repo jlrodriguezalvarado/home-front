@@ -15,11 +15,12 @@ import { I18nService } from '../../../core/i18n/i18n.service';
 import { LoadingStateComponent } from '../../../shared/components/loading-state.component';
 import { EmptyStateComponent } from '../../../shared/components/empty-state.component';
 import { ErrorStateComponent } from '../../../shared/components/error-state.component';
+import { DialogEscapeDirective } from '../../../shared/directives/dialog-escape.directive';
 
 @Component({
   selector: 'app-favorite-meal-picker',
   standalone: true,
-  imports: [LoadingStateComponent, EmptyStateComponent, ErrorStateComponent],
+  imports: [LoadingStateComponent, EmptyStateComponent, ErrorStateComponent, DialogEscapeDirective],
   changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './favorite-meal-picker.component.html',
 })

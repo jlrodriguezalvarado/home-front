@@ -1134,7 +1134,8 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        patch?: never;
+        /** @description Filter finance querysets by accessible workspaces. */
+        patch: operations["finance_months_partial_update"];
         trace?: never;
     };
     "/api/finance/recurring-expenses/replicate/": {
@@ -1279,6 +1280,42 @@ export interface paths {
         head?: never;
         /** @description Write FinanceChangeLog on create/update/delete. */
         patch: operations["finance_savings_items_partial_update"];
+        trace?: never;
+    };
+    "/api/finance/savings-withdraw/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Write FinanceChangeLog on create/update/delete. */
+        get: operations["finance_savings_withdraw_list"];
+        put?: never;
+        /** @description Write FinanceChangeLog on create/update/delete. */
+        post: operations["finance_savings_withdraw_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/finance/savings-withdraw/{id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Write FinanceChangeLog on create/update/delete. */
+        get: operations["finance_savings_withdraw_retrieve"];
+        put?: never;
+        post?: never;
+        /** @description Write FinanceChangeLog on create/update/delete. */
+        delete: operations["finance_savings_withdraw_destroy"];
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/finance/workspaces/": {
@@ -3262,12 +3299,18 @@ export interface components {
             /** Format: uuid */
             readonly id: string;
             /** Format: uuid */
-            financial_year: string;
-            month_number: number;
-            auto_initialized?: boolean;
-            manually_customized?: boolean;
+            readonly financial_year: string;
+            readonly month_number: number;
+            readonly auto_initialized: boolean;
+            readonly manually_customized: boolean;
+            /** Format: decimal */
+            manual_previous_month_expense?: string | null;
+            /** Format: decimal */
+            manual_previous_month_remainder?: string | null;
+            /** Format: decimal */
+            manual_previous_global_savings?: string | null;
             /** Format: uuid */
-            propagated_from_month?: string | null;
+            readonly propagated_from_month: string | null;
             /** Format: date-time */
             readonly created_at: string;
             /** Format: date-time */
@@ -3672,12 +3715,49 @@ export interface components {
          * @enum {string}
          */
         MessageTypeEnum: "text" | "image" | "file" | "audio" | "system";
+        MonthSummary: {
+            /** Format: decimal */
+            initial_month_expense: string;
+            /** Format: decimal */
+            month_income: string;
+            /** Format: decimal */
+            month_expense: string;
+            /** Format: decimal */
+            previous_month_expense: string;
+            previous_month_expense_editable: boolean;
+            /** Format: decimal */
+            previous_month_remainder: string;
+            previous_month_remainder_editable: boolean;
+            /** Format: decimal */
+            initial_month_remainder: string;
+            /** Format: decimal */
+            next_month_expense: string;
+            /** Format: decimal */
+            available: string;
+            /** Format: decimal */
+            available_next_month: string;
+            /** Format: decimal */
+            current_global_savings: string;
+            /** Format: decimal */
+            previous_global_savings: string;
+            previous_global_savings_editable: boolean;
+            /** Format: decimal */
+            total_global_savings: string;
+            /** Format: decimal */
+            cash: string;
+            total: components["schemas"]["MonthSummaryTotal"];
+        };
         MonthSummaryResponse: {
             year: number;
             month: number;
             /** Format: uuid */
             financial_month_id: string;
-            summary: unknown;
+            summary: components["schemas"]["MonthSummary"];
+        };
+        MonthSummaryTotal: {
+            /** Format: decimal */
+            amount: string;
+            currency: unknown;
         };
         MonthlyIncomeEntry: {
             /** Format: uuid */
@@ -4315,6 +4395,21 @@ export interface components {
             previous?: string | null;
             results: components["schemas"]["SavingsItem"][];
         };
+        PaginatedSavingsWithdrawalList: {
+            /** @example 123 */
+            count: number;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=4
+             */
+            next?: string | null;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=2
+             */
+            previous?: string | null;
+            results: components["schemas"]["SavingsWithdrawal"][];
+        };
         PaginatedShoppingListItemList: {
             /** @example 123 */
             count: number;
@@ -4495,6 +4590,14 @@ export interface components {
         PatchedFinanceWorkspaceRequest: {
             name?: string;
             kind?: components["schemas"]["KindEnum"];
+        };
+        PatchedFinancialMonthRequest: {
+            /** Format: decimal */
+            manual_previous_month_expense?: string | null;
+            /** Format: decimal */
+            manual_previous_month_remainder?: string | null;
+            /** Format: decimal */
+            manual_previous_global_savings?: string | null;
         };
         PatchedFinancialYearRequest: {
             year?: number;
@@ -5295,6 +5398,34 @@ export interface components {
             /** Format: decimal */
             amount: string;
             is_cash?: boolean;
+            notes?: string | null;
+        };
+        SavingsWithdrawal: {
+            /** Format: uuid */
+            readonly id: string;
+            /** Format: uuid */
+            readonly financial_month: string;
+            /** Format: uuid */
+            readonly savings_account_type: string;
+            /** Format: decimal */
+            readonly amount: string;
+            readonly notes: string | null;
+            /** Format: uuid */
+            readonly income_entry: string;
+            /** Format: date-time */
+            readonly created_at: string;
+            /** Format: date-time */
+            readonly updated_at: string;
+        };
+        SavingsWithdrawalCreateRequest: {
+            /** Format: uuid */
+            financial_month: string;
+            /** Format: uuid */
+            savings_account_type: string;
+            /** Format: uuid */
+            income_account: string;
+            /** Format: decimal */
+            amount: string;
             notes?: string | null;
         };
         ShoppingList: {
@@ -8585,6 +8716,34 @@ export interface operations {
             };
         };
     };
+    finance_months_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A UUID string identifying this financial month. */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedFinancialMonthRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["PatchedFinancialMonthRequest"];
+                "multipart/form-data": components["schemas"]["PatchedFinancialMonthRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FinancialMonth"];
+                };
+            };
+        };
+    };
     finance_recurring_expenses_replicate_create: {
         parameters: {
             query?: never;
@@ -9013,6 +9172,104 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["SavingsItem"];
                 };
+            };
+        };
+    };
+    finance_savings_withdraw_list: {
+        parameters: {
+            query?: {
+                financial_month?: string;
+                /** @description Which field to use when ordering the results. */
+                ordering?: string;
+                /** @description A page number within the paginated result set. */
+                page?: number;
+                /** @description Number of results to return per page. */
+                perPage?: number;
+                savings_account_type?: string;
+                /** @description A search term. */
+                search?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedSavingsWithdrawalList"];
+                };
+            };
+        };
+    };
+    finance_savings_withdraw_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SavingsWithdrawalCreateRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["SavingsWithdrawalCreateRequest"];
+                "multipart/form-data": components["schemas"]["SavingsWithdrawalCreateRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SavingsWithdrawal"];
+                };
+            };
+        };
+    };
+    finance_savings_withdraw_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A UUID string identifying this savings withdrawal. */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SavingsWithdrawal"];
+                };
+            };
+        };
+    };
+    finance_savings_withdraw_destroy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A UUID string identifying this savings withdrawal. */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };

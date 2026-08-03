@@ -164,6 +164,7 @@
   @if (drawerOpen()) {
     <div
       (click)="closeDrawer()"
+      (appDialogEscape)="closeDrawer()"
       class="fixed inset-0 z-[60] bg-black/20 backdrop-blur-sm transition-opacity md:hidden"
     ></div>
   }

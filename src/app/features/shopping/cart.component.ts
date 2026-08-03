@@ -4,7 +4,6 @@ import {
   inject,
   OnInit,
   OnDestroy,
-  HostListener,
   computed,
   signal,
   ChangeDetectionStrategy,
@@ -44,13 +43,14 @@ import { formatCartListMessage } from './utils/cart-list-message.utils';
 import { ToastService } from '../../shared/services/toast.service';
 import { ConfirmService } from '../../shared/services/confirm.service';
 import { BasketComparisonRepository } from './basket-comparison/basket-comparison.repository';
+import { DialogEscapeDirective } from '../../shared/directives/dialog-escape.directive';
 
 @Component({
   selector: 'app-cart',
 
   standalone: true,
 
-  imports: [FormsModule, QuantityEditorComponent, BarcodeScannerDialogComponent],
+  imports: [FormsModule, QuantityEditorComponent, BarcodeScannerDialogComponent, DialogEscapeDirective],
 
   templateUrl: './cart.component.html',
   changeDetection: ChangeDetectionStrategy.Eager,
@@ -124,15 +124,6 @@ export class CartComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     document.body.style.overflow = '';
-  }
-
-  @HostListener('document:keydown.escape')
-  onEscapeKey(): void {
-    if (this.barcodeScannerOpen()) {
-      this.closeBarcodeScanner();
-      return;
-    }
-    this.closeImagePreview();
   }
 
   openBarcodeScanner(): void {

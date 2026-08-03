@@ -47,11 +47,15 @@ describe('FinanceRepository', () => {
         available: '500.00',
         available_next_month: '450.00',
         initial_month_expense: '80.00',
+        previous_month_expense: '250.00',
+        previous_month_expense_editable: true,
         previous_month_remainder: '100.00',
+        previous_month_remainder_editable: true,
         initial_month_remainder: '20.00',
         next_month_expense: '60.00',
         current_global_savings: '150.00',
         previous_global_savings: '50.00',
+        previous_global_savings_editable: true,
         total_global_savings: '200.00',
         cash: '50.00',
         total: {
@@ -72,6 +76,11 @@ describe('FinanceRepository', () => {
       expect(res.totalExpenses).toBe('500.00');
       expect(res.balance).toBe('500.00');
       expect(res.initialMonthExpense).toBe('80.00');
+      expect(res.previousMonthExpense).toBe('250.00');
+      expect(res.previousMonthExpenseEditable).toBeTrue();
+      expect(res.previousMonthRemainderEditable).toBeTrue();
+      expect(res.previousGlobalSavings).toBe('50.00');
+      expect(res.previousGlobalSavingsEditable).toBeTrue();
       expect(res.total.amount).toBe('800.00');
       expect(res.total.currency.code).toBe('CLP');
       expect(res.total.currency.symbol).toBe('$');
@@ -86,6 +95,28 @@ describe('FinanceRepository', () => {
     );
     expect(req.request.method).toBe('GET');
     req.flush(apiResponse);
+  });
+
+  it('should update manual previous month expense', () => {
+    repo.updateManualPreviousMonthExpense('month-1', '250.00').subscribe();
+
+    const req = httpMock.expectOne(
+      (r) => r.url === apiUrl(`${API_ENDPOINTS.finance.months}month-1/`),
+    );
+    expect(req.request.method).toBe('PATCH');
+    expect(req.request.body).toEqual({ manual_previous_month_expense: '250.00' });
+    req.flush({});
+  });
+
+  it('should update manual previous global savings', () => {
+    repo.updateManualPreviousGlobalSavings('month-1', '50.00').subscribe();
+
+    const req = httpMock.expectOne(
+      (r) => r.url === apiUrl(`${API_ENDPOINTS.finance.months}month-1/`),
+    );
+    expect(req.request.method).toBe('PATCH');
+    expect(req.request.body).toEqual({ manual_previous_global_savings: '50.00' });
+    req.flush({});
   });
 
   it('should pass currency query param when requested', () => {

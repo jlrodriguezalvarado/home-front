@@ -268,5 +268,20 @@
   "basketCompareBarcodeMatches": "Barcode matches",
   "basketCompareSearchResults": "Search results",
   "basketCompareNoProducts": "No products found",
-  "basketCompareSearchHint": "Search for a product or pick a barcode match above"
+  "basketCompareSearchHint": "Search for a product or pick a barcode match above",
+  "withdrawFromSavings": "Withdraw from savings",
+  "savingsWithdrawal": "Withdrawal",
+  "savingsWithdrawals": "Withdrawals",
+  "savingsAccountType": "Savings account type",
+  "incomeAccount": "Income account",
+  "amount": "Amount",
+  "notesOptional": "Notes (optional)",
+  "selectSavingsAccountType": "Select savings account type",
+  "selectIncomeAccount": "Select income account",
+  "savingsWithdrawAmountMax": "Maximum: {amount}",
+  "savingsWithdrawInvalidAmount": "Enter an amount greater than zero and up to total global savings",
+  "savingsWithdrawSuccess": "Withdrawal registered",
+  "savingsWithdrawDeleted": "Withdrawal deleted",
+  "noSavingsWithdrawals": "No withdrawals for this month.",
+  "loadingSavingsWithdrawals": "Loading withdrawals..."
 }

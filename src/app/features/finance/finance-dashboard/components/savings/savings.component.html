@@ -1,1 +1,60 @@
-<app-finance-list-base [feature]="'savings'"></app-finance-list-base>
+<div class="space-y-lg">
+  <app-finance-list-base
+    [feature]="'savings'"
+    (withdrawRequested)="openWithdrawDialog()"
+  ></app-finance-list-base>
+
+  <section class="space-y-md">
+    <h3 class="text-title-md text-on-surface">{{ i18n.t('savingsWithdrawals') }}</h3>
+    @if (loadingWithdrawals()) {
+      <div class="py-md text-center text-body-md text-on-surface-variant">
+        {{ i18n.t('loadingSavingsWithdrawals') }}
+      </div>
+    }
+    @if (!loadingWithdrawals()) {
+      @if (withdrawals().length === 0) {
+        <div class="card-surface p-xl text-center text-body-md text-on-surface-variant">
+          {{ i18n.t('noSavingsWithdrawals') }}
+        </div>
+      }
+      @if (withdrawals().length > 0) {
+        <div class="card-surface divide-y divide-outline-variant overflow-hidden">
+          @for (item of withdrawals(); track item.id) {
+            <div class="flex items-center justify-between gap-md p-md">
+              <div class="min-w-0 flex-1">
+                <div class="truncate text-label-lg text-on-surface">
+                  {{ i18n.t('savingsWithdrawal') }}
+                </div>
+                <div class="truncate text-body-md text-on-surface-variant">
+                  {{ withdrawalSubtitle(item) }}
+                </div>
+              </div>
+              <div class="flex shrink-0 items-center gap-sm">
+                <div class="text-numeral-md font-semibold tabular-nums text-error">
+                  −{{ formatMoney(item.amount) }}
+                </div>
+                <button
+                  type="button"
+                  (click)="deleteWithdrawal(item)"
+                  class="p-1 text-error hover:opacity-80"
+                  [title]="i18n.t('delete')"
+                >
+                  <span class="material-symbols-outlined text-[20px]">delete</span>
+                </button>
+              </div>
+            </div>
+          }
+        </div>
+      }
+    }
+  </section>
+
+  @if (withdrawDialogOpen() && financialMonthId(); as monthId) {
+    <app-savings-withdraw
+      [financialMonthId]="monthId"
+      [totalGlobalSavings]="totalGlobalSavings()"
+      (closed)="closeWithdrawDialog()"
+      (withdrawn)="onWithdrawn()"
+    ></app-savings-withdraw>
+  }
+</div>

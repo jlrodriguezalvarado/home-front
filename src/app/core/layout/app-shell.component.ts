@@ -8,6 +8,7 @@ import { ChatSessionService } from '../../features/chat/services/chat-session.se
 import { NotificationsSessionService } from '../notifications/notifications-session.service';
 import { ChatNotificationService } from '../../features/chat/services/chat-notification.service';
 import { PullToRefreshDirective } from '../../shared/directives/pull-to-refresh.directive';
+import { DialogEscapeDirective } from '../../shared/directives/dialog-escape.directive';
 import { NotificationPanelComponent } from '../../shared/components/notification-panel.component';
 import { UserProfileMenuComponent } from '../../shared/components/user-profile-menu.component';
 
@@ -28,6 +29,7 @@ interface NavItem {
     PullToRefreshDirective,
     NotificationPanelComponent,
     UserProfileMenuComponent,
+    DialogEscapeDirective,
   ],
   templateUrl: './app-shell.component.html',
   changeDetection: ChangeDetectionStrategy.Eager,

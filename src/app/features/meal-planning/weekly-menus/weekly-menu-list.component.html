@@ -257,7 +257,7 @@
     }
   </section>
   @if (showCloneDialog()) {
-    <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-md">
+    <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-md" (appDialogEscape)="closeCloneDialog()">
       <div
         class="w-full max-w-md rounded-[24px] border border-outline-variant bg-surface-container-lowest p-xl shadow-card-hover"
       >

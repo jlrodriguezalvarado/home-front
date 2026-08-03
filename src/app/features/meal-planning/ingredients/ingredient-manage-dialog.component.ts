@@ -9,11 +9,12 @@ import { ToastService } from '../../../shared/services/toast.service';
 import { LoadingStateComponent } from '../../../shared/components/loading-state.component';
 import { EmptyStateComponent } from '../../../shared/components/empty-state.component';
 import { IngredientFormDialogComponent } from './ingredient-form-dialog.component';
+import { DialogEscapeDirective } from '../../../shared/directives/dialog-escape.directive';
 
 @Component({
   selector: 'app-ingredient-manage-dialog',
   standalone: true,
-  imports: [FormsModule, LoadingStateComponent, EmptyStateComponent, IngredientFormDialogComponent],
+  imports: [FormsModule, LoadingStateComponent, EmptyStateComponent, IngredientFormDialogComponent, DialogEscapeDirective],
   changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './ingredient-manage-dialog.component.html',
 })

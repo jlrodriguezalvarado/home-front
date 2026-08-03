@@ -3,7 +3,6 @@ import {
   inject,
   OnInit,
   OnDestroy,
-  HostListener,
   signal,
   computed,
   ViewChild,
@@ -38,6 +37,7 @@ import { QuantityEditorComponent } from '../../shared/components/quantity-editor
 import { BarcodeScannerDialogComponent } from '../../shared/components/barcode-scanner-dialog.component';
 
 import { formatUnitPrice } from '../shopping/utils/price.utils';
+import { DialogEscapeDirective } from '../../shared/directives/dialog-escape.directive';
 
 @Component({
   selector: 'app-product-list',
@@ -51,6 +51,7 @@ import { formatUnitPrice } from '../shopping/utils/price.utils';
     ErrorStateComponent,
     QuantityEditorComponent,
     BarcodeScannerDialogComponent,
+    DialogEscapeDirective,
   ],
 
   templateUrl: './product-list.component.html',
@@ -127,15 +128,6 @@ export class ProductListComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
     this.loadMoreObserver?.disconnect();
     document.body.style.overflow = '';
-  }
-
-  @HostListener('document:keydown.escape')
-  onEscapeKey(): void {
-    if (this.barcodeScannerOpen()) {
-      this.closeBarcodeScanner();
-      return;
-    }
-    this.closeImagePreview();
   }
 
   ngOnInit() {

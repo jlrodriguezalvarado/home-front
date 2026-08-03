@@ -6,11 +6,12 @@ import { Currency } from './currency.models';
 import { I18nService } from '../../core/i18n/i18n.service';
 import { ConfirmService } from '../../shared/services/confirm.service';
 import { DialogFormDirective } from '../../shared/directives/dialog-form.directive';
+import { DialogEscapeDirective } from '../../shared/directives/dialog-escape.directive';
 
 @Component({
   selector: 'app-currency-list',
   standalone: true,
-  imports: [FormsModule, DialogFormDirective],
+  imports: [FormsModule, DialogFormDirective, DialogEscapeDirective],
   templateUrl: './currency-list.component.html',
   changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './currency-list.component.scss',

@@ -1,7 +1,8 @@
 <div class="fixed inset-0 z-[80] flex flex-col bg-black"
      role="dialog"
      aria-modal="true"
-     [attr.aria-label]="i18n.t('scanBarcode')">
+     [attr.aria-label]="i18n.t('scanBarcode')"
+  (appDialogEscape)="close()">
   <div class="flex items-center justify-between gap-sm p-sm safe-top">
     <p class="text-title-md text-white truncate">{{ i18n.t('scanBarcode') }}</p>
     <button type="button"

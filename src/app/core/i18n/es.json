@@ -268,5 +268,20 @@
   "basketCompareBarcodeMatches": "Coincidencias por código de barras",
   "basketCompareSearchResults": "Resultados de búsqueda",
   "basketCompareNoProducts": "No se encontraron productos",
-  "basketCompareSearchHint": "Busca un producto o elige una coincidencia por código de barras"
+  "basketCompareSearchHint": "Busca un producto o elige una coincidencia por código de barras",
+  "withdrawFromSavings": "Retirar del ahorro",
+  "savingsWithdrawal": "Retiro",
+  "savingsWithdrawals": "Retiros",
+  "savingsAccountType": "Tipo de cuenta de ahorro",
+  "incomeAccount": "Cuenta de ingreso",
+  "amount": "Monto",
+  "notesOptional": "Notas (opcional)",
+  "selectSavingsAccountType": "Seleccionar tipo de cuenta de ahorro",
+  "selectIncomeAccount": "Seleccionar cuenta de ingreso",
+  "savingsWithdrawAmountMax": "Máximo: {amount}",
+  "savingsWithdrawInvalidAmount": "Ingresa un monto mayor que cero y hasta el ahorro global total",
+  "savingsWithdrawSuccess": "Retiro registrado",
+  "savingsWithdrawDeleted": "Retiro eliminado",
+  "noSavingsWithdrawals": "No hay retiros para este mes.",
+  "loadingSavingsWithdrawals": "Cargando retiros..."
 }

@@ -18,11 +18,12 @@ import { formatFinanceMoney } from '../../../finance.utils';
 import { financeApiErrorMessage } from '../../../services/finance-api.utils';
 import { I18nService } from '../../../../../core/i18n/i18n.service';
 import { ToastService } from '../../../../../shared/services/toast.service';
+import { DialogEscapeDirective } from '../../../../../shared/directives/dialog-escape.directive';
 
 @Component({
   selector: 'app-expense-spend-history-dialog',
   standalone: true,
-  imports: [],
+  imports: [DialogEscapeDirective],
   templateUrl: './expense-spend-history-dialog.component.html',
   changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './expense-spend-history-dialog.component.scss',
