@@ -268,19 +268,21 @@ export class CartComponent implements OnInit, OnDestroy {
     if (!confirmed) return;
 
     const commerceId = this.filterCommerceId()!;
-
+    const currency = this.resolveCurrency(items, commerceId);
+    const total = moneyDecimalString(this.cart.visibleTotal(items));
     const data = {
-      commerce: commerceId,
-
-      items: items.map((i) => ({
-        product: i.product.apiId,
-
+      commerce_id: commerceId,
+      currency: currency || null,
+      subtotal: total,
+      grand_total: total,
+      lines: items.map((i) => ({
+        product_id: i.product.apiId,
         quantity: quantityStringForPurchase(i.quantity, i.product.presentationUnit),
-
-        price: moneyDecimalString(i.product.originalPrice),
+        unit_price_at_purchase: moneyDecimalString(i.product.originalPrice),
+        line_total: moneyDecimalString(lineTotal(i)),
+        presentation_unit: i.product.presentationUnit || undefined,
       })),
     };
-
     this.purchaseRepo.create(data).subscribe({
       next: () => {
         this.cart.removeProducts(items.map((i) => i.product.id));

@@ -110,7 +110,9 @@ export class PurchaseRepository {
     const unit = product['unit'] ?? product['presentation_unit'] ?? line['unit'] ?? 'unit';
     product['unit'] = unit;
     const quantity = parseFloat(String(line['quantity'] ?? '0'));
-    const price = parseFloat(String(line['unit_price'] ?? line['price'] ?? '0'));
+    const price = parseFloat(
+      String(line['unit_price_at_purchase'] ?? line['unit_price'] ?? line['price'] ?? '0'),
+    );
     return {
       id: line['id'] != null ? String(line['id']) : undefined,
       product,
