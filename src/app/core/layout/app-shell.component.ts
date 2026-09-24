@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterOutlet, RouterLink, RouterLinkActive, Router } from '@angular/router';
 import { I18nService, AppStringKey } from '../i18n/i18n.service';
@@ -8,6 +8,7 @@ import { ChatSessionService } from '../../features/chat/services/chat-session.se
 import { NotificationsSessionService } from '../notifications/notifications-session.service';
 import { ChatNotificationService } from '../../features/chat/services/chat-notification.service';
 import { PullToRefreshDirective } from '../../shared/directives/pull-to-refresh.directive';
+import { DialogEscapeDirective } from '../../shared/directives/dialog-escape.directive';
 import { NotificationPanelComponent } from '../../shared/components/notification-panel.component';
 import { UserProfileMenuComponent } from '../../shared/components/user-profile-menu.component';
 
@@ -20,8 +21,18 @@ interface NavItem {
 @Component({
   selector: 'app-app-shell',
   standalone: true,
-  imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive, PullToRefreshDirective, NotificationPanelComponent, UserProfileMenuComponent],
+  imports: [
+    CommonModule,
+    RouterOutlet,
+    RouterLink,
+    RouterLinkActive,
+    PullToRefreshDirective,
+    NotificationPanelComponent,
+    UserProfileMenuComponent,
+    DialogEscapeDirective,
+  ],
   templateUrl: './app-shell.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './app-shell.component.scss',
 })
 export class AppShellComponent {
@@ -40,6 +51,7 @@ export class AppShellComponent {
     { path: '/', label: 'home', icon: 'home' },
     { path: '/products', label: 'products', icon: 'inventory_2' },
     { path: '/cart', label: 'cart', icon: 'shopping_cart' },
+    { path: '/basket-comparisons', label: 'basketCompare', icon: 'shoppingmode' },
     { path: '/purchases', label: 'orders', icon: 'receipt_long' },
     { path: '/commerces', label: 'stores', icon: 'storefront' },
     { path: '/currencies', label: 'currencies', icon: 'payments' },
@@ -67,7 +79,7 @@ export class AppShellComponent {
   }
 
   toggleDrawer() {
-    this.drawerOpen.update(v => !v);
+    this.drawerOpen.update((v) => !v);
   }
 
   closeDrawer() {

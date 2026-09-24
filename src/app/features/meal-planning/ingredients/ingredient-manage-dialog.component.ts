@@ -1,5 +1,5 @@
-import { Component, OnInit, inject, output, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, OnInit, inject, output, signal, ChangeDetectionStrategy } from '@angular/core';
+
 import { FormsModule } from '@angular/forms';
 import { IngredientRepository } from '../repositories/ingredient.repository';
 import { Ingredient } from '../models/meal-planning.models';
@@ -9,17 +9,13 @@ import { ToastService } from '../../../shared/services/toast.service';
 import { LoadingStateComponent } from '../../../shared/components/loading-state.component';
 import { EmptyStateComponent } from '../../../shared/components/empty-state.component';
 import { IngredientFormDialogComponent } from './ingredient-form-dialog.component';
+import { DialogEscapeDirective } from '../../../shared/directives/dialog-escape.directive';
 
 @Component({
   selector: 'app-ingredient-manage-dialog',
   standalone: true,
-  imports: [
-    CommonModule,
-    FormsModule,
-    LoadingStateComponent,
-    EmptyStateComponent,
-    IngredientFormDialogComponent,
-  ],
+  imports: [FormsModule, LoadingStateComponent, EmptyStateComponent, IngredientFormDialogComponent, DialogEscapeDirective],
+  changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './ingredient-manage-dialog.component.html',
 })
 export class IngredientManageDialogComponent implements OnInit {
@@ -54,7 +50,9 @@ export class IngredientManageDialogComponent implements OnInit {
       },
       error: () => {
         this.loading.set(false);
-        this.toast.error(this.i18n.lang() === 'en' ? 'Failed to load ingredients' : 'Error al cargar ingredientes');
+        this.toast.error(
+          this.i18n.lang() === 'en' ? 'Failed to load ingredients' : 'Error al cargar ingredientes',
+        );
       },
     });
   }
@@ -115,7 +113,8 @@ export class IngredientManageDialogComponent implements OnInit {
         this.applyFilter();
         this.changed.emit(this.ingredients().filter((i) => i.isActive));
       },
-      error: () => this.toast.error(this.i18n.lang() === 'en' ? 'Delete failed' : 'Error al eliminar'),
+      error: () =>
+        this.toast.error(this.i18n.lang() === 'en' ? 'Delete failed' : 'Error al eliminar'),
     });
   }
 }

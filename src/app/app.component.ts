@@ -1,4 +1,4 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { PwaUpdateService } from './core/services/pwa-update.service';
 import { ChatSessionService } from './features/chat/services/chat-session.service';
@@ -11,7 +11,8 @@ import { ConfirmDialogComponent } from './shared/components/confirm-dialog.compo
   selector: 'app-root',
   imports: [RouterOutlet, ToastContainerComponent, ConfirmDialogComponent],
   templateUrl: './app.component.html',
-  styleUrl: './app.component.scss'
+  changeDetection: ChangeDetectionStrategy.Eager,
+  styleUrl: './app.component.scss',
 })
 export class AppComponent implements OnInit {
   title = 'home-manager';

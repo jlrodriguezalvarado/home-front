@@ -1,40 +1,51 @@
+@if (loading()) {
+  <app-loading-state></app-loading-state>
+}
+@if (error()) {
+  <app-error-state (retry)="retryLoad()"></app-error-state>
+}
 
-<app-loading-state *ngIf="loading()"></app-loading-state>
-<app-error-state *ngIf="error()" (retry)="retryLoad()"></app-error-state>
-
-<div class="space-y-lg" *ngIf="purchase && !loading() && !error()">
-  <div class="flex items-center gap-sm min-w-0">
-    <button (click)="back()"
-            class="p-2 border border-outline-variant rounded-xl hover:bg-surface-container transition-colors shrink-0 text-on-surface">
-      <span class="material-symbols-outlined">arrow_back</span>
-    </button>
-    <h1 class="page-title truncate">{{ purchase.commerceName }}</h1>
-  </div>
-
-  <div class="card-surface overflow-hidden">
-    <div class="p-lg border-b border-outline-variant flex justify-between items-center gap-md">
-      <div>
-        <div class="text-label-md text-on-surface-variant">Date</div>
-        <div class="text-label-lg text-on-surface">{{ purchase.date | date:'medium' }}</div>
-      </div>
-      <div class="text-right">
-        <div class="text-label-md text-on-surface-variant">Total</div>
-        <div class="text-primary text-numeral-md tabular-nums font-semibold">{{ purchase.total }}</div>
-      </div>
+@if (purchase && !loading() && !error()) {
+  <div class="space-y-lg">
+    <div class="flex min-w-0 items-center gap-sm">
+      <button
+        (click)="back()"
+        class="shrink-0 rounded-xl border border-outline-variant p-2 text-on-surface transition-colors hover:bg-surface-container"
+      >
+        <span class="material-symbols-outlined">arrow_back</span>
+      </button>
+      <h1 class="page-title truncate">
+        {{ purchase.favoriteName?.trim() || purchase.commerceName }}
+      </h1>
     </div>
-
-    <div class="divide-y divide-outline-variant">
-      <div *ngFor="let item of purchase.items" class="p-md md:p-lg flex justify-between items-center gap-md">
-        <div class="min-w-0 flex-1">
-          <div class="text-label-lg text-on-surface truncate">{{ item.product['name'] }}</div>
-          <div class="text-body-md text-on-surface-variant">
-            {{ item.quantity }} {{ item.product['unit'] }} x {{ unitPriceLabel(item.price) }}
+    <div class="card-surface overflow-hidden">
+      <div class="flex items-center justify-between gap-md border-b border-outline-variant p-lg">
+        <div>
+          <div class="text-label-md text-on-surface-variant">Date</div>
+          <div class="text-label-lg text-on-surface">{{ purchase.date | date: 'medium' }}</div>
+        </div>
+        <div class="text-right">
+          <div class="text-label-md text-on-surface-variant">Total</div>
+          <div class="text-numeral-md font-semibold tabular-nums text-primary">
+            {{ purchase.total }}
           </div>
         </div>
-        <div class="text-numeral-md tabular-nums font-semibold text-on-surface shrink-0">
-          {{ lineTotalLabel(item) }}
-        </div>
+      </div>
+      <div class="divide-y divide-outline-variant">
+        @for (item of purchase.items; track item) {
+          <div class="flex items-center justify-between gap-md p-md md:p-lg">
+            <div class="min-w-0 flex-1">
+              <div class="truncate text-label-lg text-on-surface">{{ item.product['name'] }}</div>
+              <div class="text-body-md text-on-surface-variant">
+                {{ item.quantity }} {{ item.product['unit'] }} x {{ unitPriceLabel(item.price) }}
+              </div>
+            </div>
+            <div class="shrink-0 text-numeral-md font-semibold tabular-nums text-on-surface">
+              {{ lineTotalLabel(item) }}
+            </div>
+          </div>
+        }
       </div>
     </div>
   </div>
-</div>
+}

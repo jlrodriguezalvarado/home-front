@@ -1,8 +1,8 @@
 export const API_ENDPOINTS = {
   auth: {
-    login: '/auth/login',
-    refresh: '/auth/refresh',
-    me: '/authme/',
+    login: '/auth/login/',
+    refresh: '/auth/refresh/',
+    me: '/auth/me/',
     changePassword: '/auth/change-password/',
   },
   products: {
@@ -10,7 +10,7 @@ export const API_ENDPOINTS = {
     detail: (id: string) => `/products/${id}/`,
     scrapeByIds: '/products/scrape-by-ids/',
   },
-  productCategories: '/product-categories',
+  productCategories: '/product-categories/',
   commerces: {
     list: '/commerces/',
     detail: (id: string) => `/commerces/${id}/`,
@@ -28,7 +28,7 @@ export const API_ENDPOINTS = {
     refreshPrices: '/carts/current/refresh-prices/',
   },
   currencies: {
-    list: '/currencies',
+    list: '/currencies/',
     detail: (id: string) => `/currencies/${id}/`,
   },
   exchangeRates: {
@@ -57,6 +57,19 @@ export const API_ENDPOINTS = {
       list: '/price-comparisons/prices/',
       detail: (id: string) => `/price-comparisons/prices/${id}/`,
     },
+  },
+  basketComparisons: {
+    current: '/basket-comparisons/current/',
+    fromCart: '/basket-comparisons/from-cart/',
+    list: '/basket-comparisons/',
+    detail: (id: string) => `/basket-comparisons/${id}/`,
+    loadToCart: (id: string) => `/basket-comparisons/${id}/load-to-cart/`,
+    setPrice: (id: string, lineId: string) =>
+      `/basket-comparisons/${id}/lines/${lineId}/prices/`,
+    clearPrice: (id: string, lineId: string, commerceId: string) =>
+      `/basket-comparisons/${id}/lines/${lineId}/prices/${commerceId}/`,
+    suggest: (id: string, lineId: string) =>
+      `/basket-comparisons/${id}/lines/${lineId}/suggest/`,
   },
   mealPlanning: {
     ingredients: {
@@ -131,6 +144,7 @@ export const API_ENDPOINTS = {
     monthSummary: '/finance/month-summary/',
     months: '/finance/months/',
     years: '/finance/years/',
+    workspaces: '/finance/workspaces/',
     initialExpenseCategories: '/finance/initial-expense-categories/',
     generalExpenseCategories: '/finance/general-expense-categories/',
     savingsAccountTypes: '/finance/savings-account-types/',
@@ -144,6 +158,7 @@ export const API_ENDPOINTS = {
     expenseSpendPending: '/finance/expense-spend/pending/',
     expenseSpendRegister: '/finance/expense-spend/register/',
     expenseSpendHistory: '/finance/expense-spend/history/',
+    savingsWithdraw: '/finance/savings-withdraw/',
     recurringExpensesReplicate: '/finance/recurring-expenses/replicate/',
     resources: {
       'initial-expenses': '/finance/initial-expense-items/',

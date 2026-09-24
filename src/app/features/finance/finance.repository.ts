@@ -3,6 +3,7 @@ import { Observable, map, switchMap, of, throwError } from 'rxjs';
 import { ApiService } from '../../core/api/api.service';
 import { API_ENDPOINTS, getFinanceResource } from '../../core/api/endpoints';
 import { IncomeAccount, AppCurrency } from './models/finance.models';
+import { FinanceWorkspaceService } from './services/finance-workspace.service';
 import { IncomeAccountService } from './services/income-account.service';
 import { SavingsAccountTypeService } from './services/savings-account-type.service';
 
@@ -22,11 +23,15 @@ export interface FinanceSummary {
   balance: string;
   availableNextMonth: string;
   initialMonthExpense: string;
+  previousMonthExpense: string;
+  previousMonthExpenseEditable: boolean;
   previousMonthRemainder: string;
+  previousMonthRemainderEditable: boolean;
   initialMonthRemainder: string;
   nextMonthExpense: string;
   currentGlobalSavings: string;
   previousGlobalSavings: string;
+  previousGlobalSavingsEditable: boolean;
   totalGlobalSavings: string;
   cash: string;
   total: FinanceSummaryTotal;
@@ -120,32 +125,57 @@ interface FinancialMonthRef {
 })
 export class FinanceRepository {
   private readonly api = inject(ApiService);
+  private readonly workspaceService = inject(FinanceWorkspaceService);
   private readonly incomeAccountService = inject(IncomeAccountService);
   private readonly savingsAccountTypeService = inject(SavingsAccountTypeService);
 
   getMonthlySummary(year: string, month: string, options?: { currency?: string }): Observable<FinanceSummary> {
     const params: Record<string, string> = { year, month };
     if (options?.currency) params['currency'] = options.currency;
-    return this.api
-      .get<Record<string, unknown>>(API_ENDPOINTS.finance.monthSummary, {
-        params,
-      })
-      .pipe(map((res) => this.mapSummary(res, year, month)));
+    return this.withWorkspaceParams(params).pipe(
+      switchMap((query) =>
+        this.api
+          .get<Record<string, unknown>>(API_ENDPOINTS.finance.monthSummary, { params: query })
+          .pipe(map((res) => this.mapSummary(res, year, month))),
+      ),
+    );
+  }
+
+  updateManualPreviousMonthExpense(financialMonthId: string, amount: string | null): Observable<void> {
+    return this.api.patch<void>(`${API_ENDPOINTS.finance.months}${financialMonthId}/`, {
+      manual_previous_month_expense: amount,
+    });
+  }
+
+  updateManualPreviousMonthRemainder(financialMonthId: string, amount: string | null): Observable<void> {
+    return this.api.patch<void>(`${API_ENDPOINTS.finance.months}${financialMonthId}/`, {
+      manual_previous_month_remainder: amount,
+    });
+  }
+
+  updateManualPreviousGlobalSavings(financialMonthId: string, amount: string | null): Observable<void> {
+    return this.api.patch<void>(`${API_ENDPOINTS.finance.months}${financialMonthId}/`, {
+      manual_previous_global_savings: amount,
+    });
   }
 
   listFinancialYears(): Observable<FinancialYear[]> {
-    return this.api
-      .get<FinancialYear[] | { results: FinancialYear[] }>(API_ENDPOINTS.finance.years, {
-        params: FINANCE_PAGE_SIZE,
-      })
-      .pipe(
-        map((res) =>
-          this.decodeList<Record<string, unknown>>(res).map((item) => ({
-            id: String(item['id'] ?? ''),
-            year: Number(item['year']),
-          })),
-        ),
-      );
+    return this.withWorkspaceParams({ ...FINANCE_PAGE_SIZE }).pipe(
+      switchMap((params) =>
+        this.api
+          .get<FinancialYear[] | { results: FinancialYear[] }>(API_ENDPOINTS.finance.years, {
+            params,
+          })
+          .pipe(
+            map((res) =>
+              this.decodeList<Record<string, unknown>>(res).map((item) => ({
+                id: String(item['id'] ?? ''),
+                year: Number(item['year']),
+              })),
+            ),
+          ),
+      ),
+    );
   }
 
   getMonthsForYear(calendarYear: number): Observable<number[]> {
@@ -238,15 +268,26 @@ export class FinanceRepository {
   }
 
   listInitialExpenseCategories(): Observable<FinanceCategory[]> {
-    return this.api
-      .get<unknown>(API_ENDPOINTS.finance.initialExpenseCategories, { params: FINANCE_PAGE_SIZE })
-      .pipe(map((res) => this.decodeList(res).map((item) => this.mapCategory(item))));
+    return this.withWorkspaceParams({ ...FINANCE_PAGE_SIZE }).pipe(
+      switchMap((params) =>
+        this.api
+          .get<unknown>(API_ENDPOINTS.finance.initialExpenseCategories, { params })
+          .pipe(map((res) => this.decodeList(res).map((item) => this.mapCategory(item)))),
+      ),
+    );
   }
 
   createInitialExpenseCategory(name: string): Observable<FinanceCategory> {
-    return this.api
-      .post<Record<string, unknown>>(API_ENDPOINTS.finance.initialExpenseCategories, { name })
-      .pipe(map((res) => this.mapCategory(res)));
+    return this.workspaceService.resolveActiveId().pipe(
+      switchMap((workspace) =>
+        this.api
+          .post<Record<string, unknown>>(API_ENDPOINTS.finance.initialExpenseCategories, {
+            name,
+            workspace,
+          })
+          .pipe(map((res) => this.mapCategory(res))),
+      ),
+    );
   }
 
   updateInitialExpenseCategory(id: string, name: string): Observable<FinanceCategory> {
@@ -260,9 +301,13 @@ export class FinanceRepository {
   }
 
   listGeneralExpenseCategories(): Observable<FinanceCategory[]> {
-    return this.api
-      .get<unknown>(API_ENDPOINTS.finance.generalExpenseCategories, { params: FINANCE_PAGE_SIZE })
-      .pipe(map((res) => this.decodeList(res).map((item) => this.mapCategory(item))));
+    return this.withWorkspaceParams({ ...FINANCE_PAGE_SIZE }).pipe(
+      switchMap((params) =>
+        this.api
+          .get<unknown>(API_ENDPOINTS.finance.generalExpenseCategories, { params })
+          .pipe(map((res) => this.decodeList(res).map((item) => this.mapCategory(item)))),
+      ),
+    );
   }
 
   listSavingsAccountTypes(): Observable<FinanceCategory[]> {
@@ -284,13 +329,18 @@ export class FinanceRepository {
     displayMode?: string;
     notes?: string;
   }): Observable<void> {
-    return this.api.post<void>(API_ENDPOINTS.finance.exchangeCalculatorConfirm, {
-      source_currency: data.sourceCurrency,
-      target_currency: data.targetCurrency,
-      amount: data.amount,
-      display_mode: data.displayMode ?? 'compact',
-      ...(data.notes ? { notes: data.notes } : {}),
-    });
+    return this.workspaceService.resolveActiveId().pipe(
+      switchMap((workspace) =>
+        this.api.post<void>(API_ENDPOINTS.finance.exchangeCalculatorConfirm, {
+          source_currency: data.sourceCurrency,
+          target_currency: data.targetCurrency,
+          amount: data.amount,
+          display_mode: data.displayMode ?? 'compact',
+          workspace,
+          ...(data.notes ? { notes: data.notes } : {}),
+        }),
+      ),
+    );
   }
 
   createEntry(feature: string, year: string, month: string, data: Record<string, unknown>): Observable<FinanceEntry> {
@@ -361,6 +411,12 @@ export class FinanceRepository {
     );
   }
 
+  private withWorkspaceParams(params: Record<string, string> = {}): Observable<Record<string, string>> {
+    return this.workspaceService.resolveActiveId().pipe(
+      map((workspace) => ({ ...params, workspace })),
+    );
+  }
+
   private decodeList<T extends Record<string, unknown>>(data: unknown): T[] {
     if (Array.isArray(data)) return data as T[];
     if (data && typeof data === 'object' && Array.isArray((data as { results?: unknown[] }).results)) {
@@ -380,11 +436,15 @@ export class FinanceRepository {
       balance: String(summary['available'] ?? '0'),
       availableNextMonth: String(summary['available_next_month'] ?? '0'),
       initialMonthExpense: String(summary['initial_month_expense'] ?? '0'),
+      previousMonthExpense: String(summary['previous_month_expense'] ?? '0'),
+      previousMonthExpenseEditable: summary['previous_month_expense_editable'] === true,
       previousMonthRemainder: String(summary['previous_month_remainder'] ?? '0'),
+      previousMonthRemainderEditable: summary['previous_month_remainder_editable'] === true,
       initialMonthRemainder: String(summary['initial_month_remainder'] ?? '0'),
       nextMonthExpense: String(summary['next_month_expense'] ?? '0'),
       currentGlobalSavings: String(summary['current_global_savings'] ?? '0'),
       previousGlobalSavings: String(summary['previous_global_savings'] ?? '0'),
+      previousGlobalSavingsEditable: summary['previous_global_savings_editable'] === true,
       totalGlobalSavings: String(summary['total_global_savings'] ?? '0'),
       cash: String(summary['cash'] ?? '0'),
       total: this.mapSummaryTotal(summary['total']),

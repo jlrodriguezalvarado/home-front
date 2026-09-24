@@ -4,179 +4,703 @@
       <h1 class="page-title">{{ tr('title') }}</h1>
       <p class="mt-xs text-body-md text-on-surface-variant">{{ tr('subtitle') }}</p>
     </div>
-    <button type="button" class="btn-primary flex items-center gap-sm" (click)="openEditor('comparison')">
+    <button
+      type="button"
+      class="btn-primary flex items-center gap-sm"
+      (click)="openEditor('comparison')"
+    >
       <span class="material-symbols-outlined" aria-hidden="true">add</span>
       {{ tr('newComparison') }}
     </button>
   </header>
-  <app-loading-state *ngIf="loadingComparisons() && comparisons().length === 0" [message]="tr('loading')"></app-loading-state>
-  <app-error-state *ngIf="listError()" [title]="tr('loadingError')" (retry)="loadComparisons()"></app-error-state>
-  <app-empty-state *ngIf="!loadingComparisons() && !listError() && comparisons().length === 0" icon="compare_arrows" [title]="tr('noComparisons')" [message]="tr('noComparisonsHint')"></app-empty-state>
-  <div *ngIf="comparisons().length > 0" class="grid gap-lg lg:grid-cols-[280px_minmax(0,1fr)]">
-    <aside class="card-surface h-fit overflow-hidden lg:sticky lg:top-0">
-      <h2 class="border-b border-outline-variant px-md py-sm text-title-md text-on-surface">{{ tr('selectComparison') }}</h2>
-      <div class="max-h-72 overflow-y-auto lg:max-h-[calc(100dvh-15rem)]">
-        <button *ngFor="let comparison of comparisons()" type="button" class="w-full border-b border-outline-variant px-md py-md text-left transition-colors last:border-0 hover:bg-surface-container-low" [class.bg-primary-container]="selected()?.id === comparison.id" [class.text-on-primary-container]="selected()?.id === comparison.id" (click)="selectComparison(comparison)">
-          <span class="block text-label-lg">{{ comparison.name }}</span>
-          <span *ngIf="comparison.description" class="mt-xs line-clamp-2 block text-body-sm opacity-80">{{ comparison.description }}</span>
-        </button>
-      </div>
-    </aside>
-    <main class="min-w-0">
-      <app-empty-state *ngIf="!selected()" icon="touch_app" [title]="tr('selectComparison')" [message]="tr('subtitle')"></app-empty-state>
-      <div *ngIf="selected() as comparison" class="space-y-lg">
-        <section class="card-surface p-md md:p-lg">
-          <div class="flex flex-wrap items-start justify-between gap-md">
-            <div class="min-w-0">
-              <h2 class="break-words text-headline-md text-on-surface">{{ comparison.name }}</h2>
-              <p *ngIf="comparison.description" class="mt-xs text-body-md text-on-surface-variant">{{ comparison.description }}</p>
-            </div>
-            <div class="flex gap-xs">
-              <button type="button" class="rounded-lg p-sm text-primary hover:bg-surface-container" [attr.aria-label]="tr('editComparison')" [title]="tr('editComparison')" (click)="openEditor('comparison', comparison)">
-                <span class="material-symbols-outlined" aria-hidden="true">edit</span>
-              </button>
-              <button type="button" class="rounded-lg p-sm text-error hover:bg-error-container" [attr.aria-label]="tr('deleteComparison')" [title]="tr('deleteComparison')" (click)="deleteEntity('comparison', comparison)">
-                <span class="material-symbols-outlined" aria-hidden="true">delete</span>
-              </button>
-            </div>
-          </div>
-          <nav class="mt-lg flex gap-xs overflow-x-auto border-b border-outline-variant" [attr.aria-label]="tr('title')">
-            <button *ngFor="let tab of [{id: 'setup', label: tr('setup'), icon: 'tune'}, {id: 'prices', label: tr('prices'), icon: 'price_change'}, {id: 'report', label: tr('report'), icon: 'analytics'}]" type="button" class="flex shrink-0 items-center gap-xs border-b-2 px-md py-sm text-label-lg" [class.border-primary]="section() === tab.id" [class.text-primary]="section() === tab.id" [class.border-transparent]="section() !== tab.id" [class.text-on-surface-variant]="section() !== tab.id" (click)="changeSection($any(tab.id))">
-              <span class="material-symbols-outlined text-[20px]" aria-hidden="true">{{ tab.icon }}</span>
-              {{ tab.label }}
+  @if (loadingComparisons() && comparisons().length === 0) {
+    <app-loading-state [message]="tr('loading')"></app-loading-state>
+  }
+  @if (listError()) {
+    <app-error-state [title]="tr('loadingError')" (retry)="loadComparisons()"></app-error-state>
+  }
+  @if (!loadingComparisons() && !listError() && comparisons().length === 0) {
+    <app-empty-state
+      icon="compare_arrows"
+      [title]="tr('noComparisons')"
+      [message]="tr('noComparisonsHint')"
+    ></app-empty-state>
+  }
+  @if (comparisons().length > 0) {
+    <div class="grid gap-lg lg:grid-cols-[280px_minmax(0,1fr)]">
+      <aside class="card-surface h-fit overflow-hidden lg:sticky lg:top-0">
+        <h2 class="text-title-md border-b border-outline-variant px-md py-sm text-on-surface">
+          {{ tr('selectComparison') }}
+        </h2>
+        <div class="max-h-72 overflow-y-auto lg:max-h-[calc(100dvh-15rem)]">
+          @for (comparison of comparisons(); track comparison) {
+            <button
+              type="button"
+              class="w-full border-b border-outline-variant px-md py-md text-left transition-colors last:border-0 hover:bg-surface-container-low"
+              [class.bg-primary-container]="selected()?.id === comparison.id"
+              [class.text-on-primary-container]="selected()?.id === comparison.id"
+              (click)="selectComparison(comparison)"
+            >
+              <span class="block text-label-lg">{{ comparison.name }}</span>
+              @if (comparison.description) {
+                <span class="text-body-sm mt-xs line-clamp-2 block opacity-80">{{
+                  comparison.description
+                }}</span>
+              }
             </button>
-          </nav>
-        </section>
-        <app-loading-state *ngIf="loadingDetails()" [message]="tr('loading')"></app-loading-state>
-        <app-error-state *ngIf="detailsError()" [title]="tr('loadingError')" (retry)="loadDetails()"></app-error-state>
-        <ng-container *ngIf="!loadingDetails() && !detailsError()">
-          <div *ngIf="section() === 'setup'" class="grid gap-lg xl:grid-cols-3">
-            <section class="card-surface overflow-hidden">
-              <div class="flex items-center justify-between border-b border-outline-variant p-md">
-                <h3 class="text-title-lg">{{ tr('stores') }}</h3>
-                <button type="button" class="rounded-lg p-sm text-primary hover:bg-surface-container" [attr.aria-label]="tr('addStore')" [title]="tr('addStore')" (click)="openEditor('store')"><span class="material-symbols-outlined" aria-hidden="true">add</span></button>
-              </div>
-              <p *ngIf="stores().length === 0" class="p-lg text-body-md text-on-surface-variant">{{ tr('noStores') }}</p>
-              <ul *ngIf="stores().length > 0" class="divide-y divide-outline-variant">
-                <li *ngFor="let store of stores()" class="flex items-start justify-between gap-sm p-md">
-                  <div class="min-w-0"><p class="break-words text-label-lg">{{ store.name }}</p><p *ngIf="store.description" class="mt-xs break-words text-body-sm text-on-surface-variant">{{ store.description }}</p></div>
-                  <div class="flex shrink-0"><button type="button" class="p-xs text-primary" [attr.aria-label]="tr('edit')" (click)="openEditor('store', store)"><span class="material-symbols-outlined text-[20px]" aria-hidden="true">edit</span></button><button type="button" class="p-xs text-error" [attr.aria-label]="tr('delete')" (click)="deleteEntity('store', store)"><span class="material-symbols-outlined text-[20px]" aria-hidden="true">delete</span></button></div>
-                </li>
-              </ul>
-            </section>
-            <section class="card-surface overflow-hidden">
-              <div class="flex items-center justify-between border-b border-outline-variant p-md">
-                <h3 class="text-title-lg">{{ tr('categories') }}</h3>
-                <button type="button" class="rounded-lg p-sm text-primary hover:bg-surface-container" [attr.aria-label]="tr('addCategory')" [title]="tr('addCategory')" (click)="openEditor('category')"><span class="material-symbols-outlined" aria-hidden="true">add</span></button>
-              </div>
-              <p *ngIf="categories().length === 0" class="p-lg text-body-md text-on-surface-variant">{{ tr('noCategories') }}</p>
-              <ul *ngIf="categories().length > 0" class="divide-y divide-outline-variant">
-                <li *ngFor="let category of categories()" class="flex items-center justify-between gap-sm p-md">
-                  <p class="min-w-0 break-words text-label-lg">{{ category.name }}</p>
-                  <div class="flex shrink-0"><button type="button" class="p-xs text-primary" [attr.aria-label]="tr('edit')" (click)="openEditor('category', category)"><span class="material-symbols-outlined text-[20px]" aria-hidden="true">edit</span></button><button type="button" class="p-xs text-error" [attr.aria-label]="tr('delete')" (click)="deleteEntity('category', category)"><span class="material-symbols-outlined text-[20px]" aria-hidden="true">delete</span></button></div>
-                </li>
-              </ul>
-            </section>
-            <section class="card-surface overflow-hidden">
-              <div class="flex items-center justify-between border-b border-outline-variant p-md">
-                <h3 class="text-title-lg">{{ tr('products') }}</h3>
-                <button type="button" class="rounded-lg p-sm text-primary hover:bg-surface-container" [attr.aria-label]="tr('addProduct')" [title]="tr('addProduct')" (click)="openEditor('product')"><span class="material-symbols-outlined" aria-hidden="true">add</span></button>
-              </div>
-              <p *ngIf="products().length === 0" class="p-lg text-body-md text-on-surface-variant">{{ tr('noProducts') }}</p>
-              <ul *ngIf="products().length > 0" class="divide-y divide-outline-variant">
-                <li *ngFor="let product of products()" class="flex items-start justify-between gap-sm p-md">
-                  <div class="min-w-0"><p class="break-words text-label-lg">{{ product.name }}</p><p *ngIf="categoryNames(product)" class="mt-xs break-words text-body-sm text-on-surface-variant">{{ categoryNames(product) }}</p></div>
-                  <div class="flex shrink-0"><button type="button" class="p-xs text-primary" [attr.aria-label]="tr('edit')" (click)="openEditor('product', product)"><span class="material-symbols-outlined text-[20px]" aria-hidden="true">edit</span></button><button type="button" class="p-xs text-error" [attr.aria-label]="tr('delete')" (click)="deleteEntity('product', product)"><span class="material-symbols-outlined text-[20px]" aria-hidden="true">delete</span></button></div>
-                </li>
-              </ul>
-            </section>
-          </div>
-          <section *ngIf="section() === 'prices'" class="card-surface overflow-hidden">
-            <div class="border-b border-outline-variant p-md md:p-lg">
-              <h3 class="text-title-lg">{{ tr('prices') }}</h3>
-              <p class="mt-xs text-body-sm text-on-surface-variant">{{ tr('priceHint') }}</p>
-            </div>
-            <p *ngIf="stores().length === 0 || products().length === 0" class="p-xl text-center text-body-md text-on-surface-variant">{{ tr('noMatrix') }}</p>
-            <div *ngIf="stores().length > 0 && products().length > 0" class="overflow-x-auto">
-              <table class="w-full min-w-[700px] border-collapse">
-                <thead><tr class="bg-surface-container-low"><th scope="col" class="sticky left-0 z-10 min-w-48 border-b border-r border-outline-variant bg-surface-container-low p-md text-left text-label-lg">{{ tr('products') }}</th><th *ngFor="let store of stores()" scope="col" class="min-w-56 border-b border-outline-variant p-md text-left text-label-lg">{{ store.name }}</th></tr></thead>
-                <tbody>
-                  <tr *ngFor="let product of products()" class="border-b border-outline-variant last:border-0">
-                    <th scope="row" class="sticky left-0 z-10 border-r border-outline-variant bg-surface-container-lowest p-md text-left align-top"><span class="block text-label-lg">{{ product.name }}</span><span *ngIf="categoryNames(product)" class="mt-xs block text-body-sm font-normal text-on-surface-variant">{{ categoryNames(product) }}</span></th>
-                    <td *ngFor="let store of stores()" class="p-sm align-top">
-                      <label class="sr-only" [for]="'price-' + store.id + '-' + product.id">{{ store.name }} - {{ product.name }}</label>
-                      <div class="flex items-center gap-xs">
-                        <input [id]="'price-' + store.id + '-' + product.id" type="number" min="0" step="0.01" inputmode="decimal" class="input-outlined min-w-0 px-sm" [ngModel]="priceDrafts()[store.id + ':' + product.id] || ''" (ngModelChange)="updateDraft(store.id, product.id, $event)" (keyup.enter)="savePrice(store.id, product.id)">
-                        <button type="button" class="shrink-0 rounded-lg p-sm text-primary hover:bg-primary-container disabled:opacity-50" [disabled]="isCellSaving(store.id, product.id)" [attr.aria-label]="tr('savePrice')" [title]="tr('savePrice')" (click)="savePrice(store.id, product.id)"><span class="material-symbols-outlined text-[20px]" aria-hidden="true">save</span></button>
-                        <button *ngIf="priceFor(store.id, product.id)" type="button" class="shrink-0 rounded-lg p-sm text-error hover:bg-error-container disabled:opacity-50" [disabled]="isCellSaving(store.id, product.id)" [attr.aria-label]="tr('deletePrice')" [title]="tr('deletePrice')" (click)="deleteCellPrice(store.id, product.id)"><span class="material-symbols-outlined text-[20px]" aria-hidden="true">delete</span></button>
-                      </div>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </section>
-          <section *ngIf="section() === 'report'" class="space-y-lg">
-            <div class="flex justify-end"><button type="button" class="btn-secondary flex items-center gap-xs" [disabled]="loadingReport()" (click)="loadReport()"><span class="material-symbols-outlined" aria-hidden="true">refresh</span>{{ tr('refreshReport') }}</button></div>
-            <app-loading-state *ngIf="loadingReport()" [message]="tr('loading')"></app-loading-state>
-            <app-error-state *ngIf="reportError()" [title]="tr('loadingError')" (retry)="loadReport()"></app-error-state>
-            <ng-container *ngIf="!loadingReport() && !reportError() && report() as currentReport">
-              <div class="grid gap-md sm:grid-cols-3">
-                <div class="card-surface p-lg"><p class="text-body-sm text-on-surface-variant">{{ tr('products') }}</p><p class="mt-xs text-headline-md">{{ currentReport.summary.productCount }}</p></div>
-                <div class="card-surface p-lg"><p class="text-body-sm text-on-surface-variant">{{ tr('stores') }}</p><p class="mt-xs text-headline-md">{{ currentReport.summary.storeCount }}</p></div>
-                <div class="card-surface p-lg"><p class="text-body-sm text-on-surface-variant">{{ tr('priced') }}</p><p class="mt-xs text-headline-md">{{ currentReport.summary.pricedProductCount }}</p></div>
-              </div>
-              <div *ngIf="currentReport.products.length === 0" class="card-surface p-xl text-center text-on-surface-variant">{{ tr('reportEmpty') }}</div>
-              <section *ngIf="currentReport.products.length > 0" class="card-surface overflow-hidden">
-                <div class="border-b border-outline-variant p-md md:p-lg"><h3 class="text-title-lg">{{ tr('productsByMinimum') }}</h3><p class="mt-xs text-body-sm text-on-surface-variant">{{ tr('reportBackend') }}</p></div>
-                <div class="divide-y divide-outline-variant">
-                  <article *ngFor="let product of currentReport.products" class="p-md md:p-lg">
-                    <div class="flex flex-wrap items-start justify-between gap-md">
-                      <div><h4 class="text-title-md">{{ product.name }}</h4><p *ngIf="product.categories.length" class="mt-xs text-body-sm text-on-surface-variant">{{ categoryList(product.categories) }}</p></div>
-                      <div class="grid grid-cols-3 gap-md text-right">
-                        <div><span class="block text-body-sm text-on-surface-variant">{{ tr('minPrice') }}</span><strong class="tabular-nums">{{ formatPrice(product.minPrice) }}</strong></div>
-                        <div><span class="block text-body-sm text-on-surface-variant">{{ tr('maxPrice') }}</span><strong class="tabular-nums">{{ formatPrice(product.maxPrice) }}</strong></div>
-                        <div><span class="block text-body-sm text-on-surface-variant">{{ tr('range') }}</span><strong class="tabular-nums">{{ formatPrice(product.priceRange) }}</strong></div>
-                      </div>
-                    </div>
-                    <div class="mt-md rounded-xl bg-primary-container p-md text-on-primary-container">
-                      <p class="text-label-md">{{ tr('cheapestOffers') }}</p>
-                      <p *ngIf="product.cheapestOffers.length === 0" class="mt-xs text-body-md">{{ tr('noPrice') }}</p>
-                      <div *ngIf="product.cheapestOffers.length > 0" class="mt-xs flex flex-wrap gap-sm"><span *ngFor="let offer of product.cheapestOffers" class="rounded-full bg-surface-container-lowest px-sm py-xs text-label-md text-on-surface">{{ offer.storeName || offer.storeId }} · {{ formatPrice(offer.price) }}</span></div>
-                    </div>
-                  </article>
+          }
+        </div>
+      </aside>
+      <main class="min-w-0">
+        @if (!selected()) {
+          <app-empty-state
+            icon="touch_app"
+            [title]="tr('selectComparison')"
+            [message]="tr('subtitle')"
+          ></app-empty-state>
+        }
+        @if (selected(); as comparison) {
+          <div class="space-y-lg">
+            <section class="card-surface p-md md:p-lg">
+              <div class="flex flex-wrap items-start justify-between gap-md">
+                <div class="min-w-0">
+                  <h2 class="break-words text-headline-md text-on-surface">
+                    {{ comparison.name }}
+                  </h2>
+                  @if (comparison.description) {
+                    <p class="mt-xs text-body-md text-on-surface-variant">
+                      {{ comparison.description }}
+                    </p>
+                  }
                 </div>
-              </section>
-              <section class="card-surface overflow-hidden">
-                <div class="border-b border-outline-variant p-md md:p-lg"><h3 class="text-title-lg">{{ tr('storeRanking') }}</h3></div>
-                <p *ngIf="currentReport.summary.storeRankings.length === 0" class="p-lg text-on-surface-variant">{{ tr('noCompleteBasket') }}</p>
-                <ol class="divide-y divide-outline-variant">
-                  <li *ngFor="let ranking of currentReport.summary.storeRankings; let index = index" class="flex flex-wrap items-center justify-between gap-md p-md md:p-lg">
-                    <div class="flex items-center gap-md"><span class="flex h-9 w-9 items-center justify-center rounded-full bg-surface-container text-label-lg">{{ index + 1 }}</span><div><p class="text-label-lg">{{ ranking.storeName || ranking.storeId }}</p><p class="text-body-sm text-on-surface-variant">{{ ranking.pricedProducts }} {{ tr('priced') }} · {{ ranking.missingProducts }} {{ tr('missing') }}</p></div></div>
-                    <div class="text-right"><p class="tabular-nums text-title-md">{{ formatPrice(ranking.total) }}</p><span class="rounded-full px-sm py-xs text-label-sm" [class.bg-secondary-container]="ranking.isComplete" [class.text-on-secondary-container]="ranking.isComplete" [class.bg-error-container]="!ranking.isComplete" [class.text-on-error-container]="!ranking.isComplete">{{ ranking.isComplete ? tr('complete') : tr('incomplete') }}</span></div>
-                  </li>
-                </ol>
-              </section>
-              <section class="card-surface border-2 border-primary p-md md:p-lg">
-                <h3 class="text-title-lg text-primary">{{ tr('bestComplete') }}</h3>
-                <p *ngIf="currentReport.summary.bestCompleteBasketStores.length === 0" class="mt-sm text-on-surface-variant">{{ tr('noCompleteBasket') }}</p>
-                <div *ngIf="currentReport.summary.bestCompleteBasketStores.length > 0" class="mt-md flex flex-wrap gap-sm"><span *ngFor="let ranking of currentReport.summary.bestCompleteBasketStores" class="rounded-xl bg-primary-container px-md py-sm text-label-lg text-on-primary-container">{{ ranking.storeName || ranking.storeId }} · {{ formatPrice(ranking.total) }}</span></div>
-              </section>
-            </ng-container>
-          </section>
-        </ng-container>
-      </div>
-    </main>
-  </div>
-</div>
-<div *ngIf="editor() as editorType" class="fixed inset-0 z-[80] flex items-center justify-center bg-black/50 p-md" role="presentation">
-  <section class="max-h-[90dvh] w-full max-w-lg overflow-y-auto rounded-[24px] border border-outline-variant bg-surface-container-lowest p-lg shadow-card-hover md:p-xl" role="dialog" aria-modal="true" [attr.aria-labelledby]="'price-comparison-dialog-title'">
-    <h2 id="price-comparison-dialog-title" class="text-title-lg">{{ tr(editingId() ? 'editItem' : 'addItem', { item: tr(editorType) }) }}</h2>
-    <div class="mt-lg space-y-md" appDialogForm (dialogSubmit)="saveEntity()">
-      <div><label for="entity-name" class="mb-xs block text-label-lg text-on-surface-variant">{{ tr('name') }}</label><input id="entity-name" type="text" required maxlength="200" class="input-outlined" [(ngModel)]="form.name"></div>
-      <div *ngIf="editorType === 'comparison' || editorType === 'store' || editorType === 'product'"><label for="entity-description" class="mb-xs block text-label-lg text-on-surface-variant">{{ tr('description') }} ({{ tr('optional') }})</label><textarea id="entity-description" rows="3" class="input-outlined resize-y" [(ngModel)]="form.description"></textarea></div>
-      <fieldset *ngIf="editorType === 'product'"><legend class="mb-sm text-label-lg text-on-surface-variant">{{ tr('productCategories') }} (0..N)</legend><p *ngIf="categories().length === 0" class="text-body-sm text-on-surface-variant">{{ tr('noCategories') }}</p><div *ngIf="categories().length > 0" class="grid gap-sm sm:grid-cols-2"><label *ngFor="let category of categories()" class="flex min-h-11 cursor-pointer items-center gap-sm rounded-xl border border-outline-variant p-sm"><input type="checkbox" [checked]="form.categoryIds.includes(category.id)" (change)="toggleCategory(category.id, $any($event.target).checked)"><span>{{ category.name }}</span></label></div></fieldset>
-      <div class="flex gap-md pt-md"><button type="button" class="flex-1 rounded-xl border border-outline-variant px-md py-3 text-label-lg" [disabled]="saving()" (click)="closeEditor()">{{ tr('cancel') }}</button><button type="button" class="btn-primary flex-1 disabled:opacity-50" [disabled]="saving()" (click)="saveEntity()">{{ saving() ? tr('loading') : tr('save') }}</button></div>
+                <div class="flex gap-xs">
+                  <button
+                    type="button"
+                    class="rounded-lg p-sm text-primary hover:bg-surface-container"
+                    [attr.aria-label]="tr('editComparison')"
+                    [title]="tr('editComparison')"
+                    (click)="openEditor('comparison', comparison)"
+                  >
+                    <span class="material-symbols-outlined" aria-hidden="true">edit</span>
+                  </button>
+                  <button
+                    type="button"
+                    class="rounded-lg p-sm text-error hover:bg-error-container"
+                    [attr.aria-label]="tr('deleteComparison')"
+                    [title]="tr('deleteComparison')"
+                    (click)="deleteEntity('comparison', comparison)"
+                  >
+                    <span class="material-symbols-outlined" aria-hidden="true">delete</span>
+                  </button>
+                </div>
+              </div>
+              <nav
+                class="mt-lg flex gap-xs overflow-x-auto border-b border-outline-variant"
+                [attr.aria-label]="tr('title')"
+              >
+                @for (
+                  tab of [
+                    { id: 'setup', label: tr('setup'), icon: 'tune' },
+                    { id: 'prices', label: tr('prices'), icon: 'price_change' },
+                    { id: 'report', label: tr('report'), icon: 'analytics' },
+                  ];
+                  track tab
+                ) {
+                  <button
+                    type="button"
+                    class="flex shrink-0 items-center gap-xs border-b-2 px-md py-sm text-label-lg"
+                    [class.border-primary]="section() === tab.id"
+                    [class.text-primary]="section() === tab.id"
+                    [class.border-transparent]="section() !== tab.id"
+                    [class.text-on-surface-variant]="section() !== tab.id"
+                    (click)="changeSection($any(tab.id))"
+                  >
+                    <span class="material-symbols-outlined text-[20px]" aria-hidden="true">{{
+                      tab.icon
+                    }}</span>
+                    {{ tab.label }}
+                  </button>
+                }
+              </nav>
+            </section>
+            @if (loadingDetails()) {
+              <app-loading-state [message]="tr('loading')"></app-loading-state>
+            }
+            @if (detailsError()) {
+              <app-error-state
+                [title]="tr('loadingError')"
+                (retry)="loadDetails()"
+              ></app-error-state>
+            }
+            @if (!loadingDetails() && !detailsError()) {
+              @if (section() === 'setup') {
+                <div class="grid gap-lg xl:grid-cols-3">
+                  <section class="card-surface overflow-hidden">
+                    <div
+                      class="flex items-center justify-between border-b border-outline-variant p-md"
+                    >
+                      <h3 class="text-title-lg">{{ tr('stores') }}</h3>
+                      <button
+                        type="button"
+                        class="rounded-lg p-sm text-primary hover:bg-surface-container"
+                        [attr.aria-label]="tr('addStore')"
+                        [title]="tr('addStore')"
+                        (click)="openEditor('store')"
+                      >
+                        <span class="material-symbols-outlined" aria-hidden="true">add</span>
+                      </button>
+                    </div>
+                    @if (stores().length === 0) {
+                      <p class="p-lg text-body-md text-on-surface-variant">{{ tr('noStores') }}</p>
+                    }
+                    @if (stores().length > 0) {
+                      <ul class="divide-y divide-outline-variant">
+                        @for (store of stores(); track store) {
+                          <li class="flex items-start justify-between gap-sm p-md">
+                            <div class="min-w-0">
+                              <p class="break-words text-label-lg">{{ store.name }}</p>
+                              @if (store.description) {
+                                <p class="text-body-sm mt-xs break-words text-on-surface-variant">
+                                  {{ store.description }}
+                                </p>
+                              }
+                            </div>
+                            <div class="flex shrink-0">
+                              <button
+                                type="button"
+                                class="p-xs text-primary"
+                                [attr.aria-label]="tr('edit')"
+                                (click)="openEditor('store', store)"
+                              >
+                                <span
+                                  class="material-symbols-outlined text-[20px]"
+                                  aria-hidden="true"
+                                  >edit</span
+                                ></button
+                              ><button
+                                type="button"
+                                class="p-xs text-error"
+                                [attr.aria-label]="tr('delete')"
+                                (click)="deleteEntity('store', store)"
+                              >
+                                <span
+                                  class="material-symbols-outlined text-[20px]"
+                                  aria-hidden="true"
+                                  >delete</span
+                                >
+                              </button>
+                            </div>
+                          </li>
+                        }
+                      </ul>
+                    }
+                  </section>
+                  <section class="card-surface overflow-hidden">
+                    <div
+                      class="flex items-center justify-between border-b border-outline-variant p-md"
+                    >
+                      <h3 class="text-title-lg">{{ tr('categories') }}</h3>
+                      <button
+                        type="button"
+                        class="rounded-lg p-sm text-primary hover:bg-surface-container"
+                        [attr.aria-label]="tr('addCategory')"
+                        [title]="tr('addCategory')"
+                        (click)="openEditor('category')"
+                      >
+                        <span class="material-symbols-outlined" aria-hidden="true">add</span>
+                      </button>
+                    </div>
+                    @if (categories().length === 0) {
+                      <p class="p-lg text-body-md text-on-surface-variant">
+                        {{ tr('noCategories') }}
+                      </p>
+                    }
+                    @if (categories().length > 0) {
+                      <ul class="divide-y divide-outline-variant">
+                        @for (category of categories(); track category) {
+                          <li class="flex items-center justify-between gap-sm p-md">
+                            <p class="min-w-0 break-words text-label-lg">{{ category.name }}</p>
+                            <div class="flex shrink-0">
+                              <button
+                                type="button"
+                                class="p-xs text-primary"
+                                [attr.aria-label]="tr('edit')"
+                                (click)="openEditor('category', category)"
+                              >
+                                <span
+                                  class="material-symbols-outlined text-[20px]"
+                                  aria-hidden="true"
+                                  >edit</span
+                                ></button
+                              ><button
+                                type="button"
+                                class="p-xs text-error"
+                                [attr.aria-label]="tr('delete')"
+                                (click)="deleteEntity('category', category)"
+                              >
+                                <span
+                                  class="material-symbols-outlined text-[20px]"
+                                  aria-hidden="true"
+                                  >delete</span
+                                >
+                              </button>
+                            </div>
+                          </li>
+                        }
+                      </ul>
+                    }
+                  </section>
+                  <section class="card-surface overflow-hidden">
+                    <div
+                      class="flex items-center justify-between border-b border-outline-variant p-md"
+                    >
+                      <h3 class="text-title-lg">{{ tr('products') }}</h3>
+                      <button
+                        type="button"
+                        class="rounded-lg p-sm text-primary hover:bg-surface-container"
+                        [attr.aria-label]="tr('addProduct')"
+                        [title]="tr('addProduct')"
+                        (click)="openEditor('product')"
+                      >
+                        <span class="material-symbols-outlined" aria-hidden="true">add</span>
+                      </button>
+                    </div>
+                    @if (products().length === 0) {
+                      <p class="p-lg text-body-md text-on-surface-variant">
+                        {{ tr('noProducts') }}
+                      </p>
+                    }
+                    @if (products().length > 0) {
+                      <ul class="divide-y divide-outline-variant">
+                        @for (product of products(); track product) {
+                          <li class="flex items-start justify-between gap-sm p-md">
+                            <div class="min-w-0">
+                              <p class="break-words text-label-lg">{{ product.name }}</p>
+                              @if (categoryNames(product)) {
+                                <p class="text-body-sm mt-xs break-words text-on-surface-variant">
+                                  {{ categoryNames(product) }}
+                                </p>
+                              }
+                            </div>
+                            <div class="flex shrink-0">
+                              <button
+                                type="button"
+                                class="p-xs text-primary"
+                                [attr.aria-label]="tr('edit')"
+                                (click)="openEditor('product', product)"
+                              >
+                                <span
+                                  class="material-symbols-outlined text-[20px]"
+                                  aria-hidden="true"
+                                  >edit</span
+                                ></button
+                              ><button
+                                type="button"
+                                class="p-xs text-error"
+                                [attr.aria-label]="tr('delete')"
+                                (click)="deleteEntity('product', product)"
+                              >
+                                <span
+                                  class="material-symbols-outlined text-[20px]"
+                                  aria-hidden="true"
+                                  >delete</span
+                                >
+                              </button>
+                            </div>
+                          </li>
+                        }
+                      </ul>
+                    }
+                  </section>
+                </div>
+              }
+              @if (section() === 'prices') {
+                <section class="card-surface overflow-hidden">
+                  <div class="border-b border-outline-variant p-md md:p-lg">
+                    <h3 class="text-title-lg">{{ tr('prices') }}</h3>
+                    <p class="text-body-sm mt-xs text-on-surface-variant">{{ tr('priceHint') }}</p>
+                  </div>
+                  @if (stores().length === 0 || products().length === 0) {
+                    <p class="p-xl text-center text-body-md text-on-surface-variant">
+                      {{ tr('noMatrix') }}
+                    </p>
+                  }
+                  @if (stores().length > 0 && products().length > 0) {
+                    <div class="overflow-x-auto">
+                      <table class="w-full min-w-[700px] border-collapse">
+                        <thead>
+                          <tr class="bg-surface-container-low">
+                            <th
+                              scope="col"
+                              class="sticky left-0 z-10 min-w-48 border-b border-r border-outline-variant bg-surface-container-low p-md text-left text-label-lg"
+                            >
+                              {{ tr('products') }}
+                            </th>
+                            @for (store of stores(); track store) {
+                              <th
+                                scope="col"
+                                class="min-w-56 border-b border-outline-variant p-md text-left text-label-lg"
+                              >
+                                {{ store.name }}
+                              </th>
+                            }
+                          </tr>
+                        </thead>
+                        <tbody>
+                          @for (product of products(); track product) {
+                            <tr class="border-b border-outline-variant last:border-0">
+                              <th
+                                scope="row"
+                                class="sticky left-0 z-10 border-r border-outline-variant bg-surface-container-lowest p-md text-left align-top"
+                              >
+                                <span class="block text-label-lg">{{ product.name }}</span>
+                                @if (categoryNames(product)) {
+                                  <span
+                                    class="text-body-sm mt-xs block font-normal text-on-surface-variant"
+                                    >{{ categoryNames(product) }}</span
+                                  >
+                                }
+                              </th>
+                              @for (store of stores(); track store) {
+                                <td class="p-sm align-top">
+                                  <label
+                                    class="sr-only"
+                                    [for]="'price-' + store.id + '-' + product.id"
+                                    >{{ store.name }} - {{ product.name }}</label
+                                  >
+                                  <div class="flex items-center gap-xs">
+                                    <input
+                                      [id]="'price-' + store.id + '-' + product.id"
+                                      type="number"
+                                      min="0"
+                                      step="0.01"
+                                      inputmode="decimal"
+                                      class="input-outlined min-w-0 px-sm"
+                                      [ngModel]="priceDrafts()[store.id + ':' + product.id] || ''"
+                                      (ngModelChange)="updateDraft(store.id, product.id, $event)"
+                                      (keyup.enter)="savePrice(store.id, product.id)"
+                                    />
+                                    <button
+                                      type="button"
+                                      class="shrink-0 rounded-lg p-sm text-primary hover:bg-primary-container disabled:opacity-50"
+                                      [disabled]="isCellSaving(store.id, product.id)"
+                                      [attr.aria-label]="tr('savePrice')"
+                                      [title]="tr('savePrice')"
+                                      (click)="savePrice(store.id, product.id)"
+                                    >
+                                      <span
+                                        class="material-symbols-outlined text-[20px]"
+                                        aria-hidden="true"
+                                        >save</span
+                                      >
+                                    </button>
+                                    @if (priceFor(store.id, product.id)) {
+                                      <button
+                                        type="button"
+                                        class="shrink-0 rounded-lg p-sm text-error hover:bg-error-container disabled:opacity-50"
+                                        [disabled]="isCellSaving(store.id, product.id)"
+                                        [attr.aria-label]="tr('deletePrice')"
+                                        [title]="tr('deletePrice')"
+                                        (click)="deleteCellPrice(store.id, product.id)"
+                                      >
+                                        <span
+                                          class="material-symbols-outlined text-[20px]"
+                                          aria-hidden="true"
+                                          >delete</span
+                                        >
+                                      </button>
+                                    }
+                                  </div>
+                                </td>
+                              }
+                            </tr>
+                          }
+                        </tbody>
+                      </table>
+                    </div>
+                  }
+                </section>
+              }
+              @if (section() === 'report') {
+                <section class="space-y-lg">
+                  <div class="flex justify-end">
+                    <button
+                      type="button"
+                      class="btn-secondary flex items-center gap-xs"
+                      [disabled]="loadingReport()"
+                      (click)="loadReport()"
+                    >
+                      <span class="material-symbols-outlined" aria-hidden="true">refresh</span
+                      >{{ tr('refreshReport') }}
+                    </button>
+                  </div>
+                  @if (loadingReport()) {
+                    <app-loading-state [message]="tr('loading')"></app-loading-state>
+                  }
+                  @if (reportError()) {
+                    <app-error-state
+                      [title]="tr('loadingError')"
+                      (retry)="loadReport()"
+                    ></app-error-state>
+                  }
+                  @if (!loadingReport() && !reportError() && report(); as currentReport) {
+                    <div class="grid gap-md sm:grid-cols-3">
+                      <div class="card-surface p-lg">
+                        <p class="text-body-sm text-on-surface-variant">{{ tr('products') }}</p>
+                        <p class="mt-xs text-headline-md">
+                          {{ currentReport.summary.productCount }}
+                        </p>
+                      </div>
+                      <div class="card-surface p-lg">
+                        <p class="text-body-sm text-on-surface-variant">{{ tr('stores') }}</p>
+                        <p class="mt-xs text-headline-md">{{ currentReport.summary.storeCount }}</p>
+                      </div>
+                      <div class="card-surface p-lg">
+                        <p class="text-body-sm text-on-surface-variant">{{ tr('priced') }}</p>
+                        <p class="mt-xs text-headline-md">
+                          {{ currentReport.summary.pricedProductCount }}
+                        </p>
+                      </div>
+                    </div>
+                    @if (currentReport.products.length === 0) {
+                      <div class="card-surface p-xl text-center text-on-surface-variant">
+                        {{ tr('reportEmpty') }}
+                      </div>
+                    }
+                    @if (currentReport.products.length > 0) {
+                      <section class="card-surface overflow-hidden">
+                        <div class="border-b border-outline-variant p-md md:p-lg">
+                          <h3 class="text-title-lg">{{ tr('productsByMinimum') }}</h3>
+                          <p class="text-body-sm mt-xs text-on-surface-variant">
+                            {{ tr('reportBackend') }}
+                          </p>
+                        </div>
+                        <div class="divide-y divide-outline-variant">
+                          @for (product of currentReport.products; track product) {
+                            <article class="p-md md:p-lg">
+                              <div class="flex flex-wrap items-start justify-between gap-md">
+                                <div>
+                                  <h4 class="text-title-md">{{ product.name }}</h4>
+                                  @if (product.categories.length) {
+                                    <p class="text-body-sm mt-xs text-on-surface-variant">
+                                      {{ categoryList(product.categories) }}
+                                    </p>
+                                  }
+                                </div>
+                                <div class="grid grid-cols-3 gap-md text-right">
+                                  <div>
+                                    <span class="text-body-sm block text-on-surface-variant">{{
+                                      tr('minPrice')
+                                    }}</span
+                                    ><strong class="tabular-nums">{{
+                                      formatPrice(product.minPrice)
+                                    }}</strong>
+                                  </div>
+                                  <div>
+                                    <span class="text-body-sm block text-on-surface-variant">{{
+                                      tr('maxPrice')
+                                    }}</span
+                                    ><strong class="tabular-nums">{{
+                                      formatPrice(product.maxPrice)
+                                    }}</strong>
+                                  </div>
+                                  <div>
+                                    <span class="text-body-sm block text-on-surface-variant">{{
+                                      tr('range')
+                                    }}</span
+                                    ><strong class="tabular-nums">{{
+                                      formatPrice(product.priceRange)
+                                    }}</strong>
+                                  </div>
+                                </div>
+                              </div>
+                              <div
+                                class="mt-md rounded-xl bg-primary-container p-md text-on-primary-container"
+                              >
+                                <p class="text-label-md">{{ tr('cheapestOffers') }}</p>
+                                @if (product.cheapestOffers.length === 0) {
+                                  <p class="mt-xs text-body-md">{{ tr('noPrice') }}</p>
+                                }
+                                @if (product.cheapestOffers.length > 0) {
+                                  <div class="mt-xs flex flex-wrap gap-sm">
+                                    @for (offer of product.cheapestOffers; track offer) {
+                                      <span
+                                        class="rounded-full bg-surface-container-lowest px-sm py-xs text-label-md text-on-surface"
+                                        >{{ offer.storeName || offer.storeId }} ·
+                                        {{ formatPrice(offer.price) }}</span
+                                      >
+                                    }
+                                  </div>
+                                }
+                              </div>
+                            </article>
+                          }
+                        </div>
+                      </section>
+                    }
+                    <section class="card-surface overflow-hidden">
+                      <div class="border-b border-outline-variant p-md md:p-lg">
+                        <h3 class="text-title-lg">{{ tr('storeRanking') }}</h3>
+                      </div>
+                      @if (currentReport.summary.storeRankings.length === 0) {
+                        <p class="p-lg text-on-surface-variant">{{ tr('noCompleteBasket') }}</p>
+                      }
+                      <ol class="divide-y divide-outline-variant">
+                        @for (
+                          ranking of currentReport.summary.storeRankings;
+                          track ranking;
+                          let index = $index
+                        ) {
+                          <li
+                            class="flex flex-wrap items-center justify-between gap-md p-md md:p-lg"
+                          >
+                            <div class="flex items-center gap-md">
+                              <span
+                                class="flex h-9 w-9 items-center justify-center rounded-full bg-surface-container text-label-lg"
+                                >{{ index + 1 }}</span
+                              >
+                              <div>
+                                <p class="text-label-lg">
+                                  {{ ranking.storeName || ranking.storeId }}
+                                </p>
+                                <p class="text-body-sm text-on-surface-variant">
+                                  {{ ranking.pricedProducts }} {{ tr('priced') }} ·
+                                  {{ ranking.missingProducts }} {{ tr('missing') }}
+                                </p>
+                              </div>
+                            </div>
+                            <div class="text-right">
+                              <p class="text-title-md tabular-nums">
+                                {{ formatPrice(ranking.total) }}
+                              </p>
+                              <span
+                                class="text-label-sm rounded-full px-sm py-xs"
+                                [class.bg-secondary-container]="ranking.isComplete"
+                                [class.text-on-secondary-container]="ranking.isComplete"
+                                [class.bg-error-container]="!ranking.isComplete"
+                                [class.text-on-error-container]="!ranking.isComplete"
+                                >{{ ranking.isComplete ? tr('complete') : tr('incomplete') }}</span
+                              >
+                            </div>
+                          </li>
+                        }
+                      </ol>
+                    </section>
+                    <section class="card-surface border-2 border-primary p-md md:p-lg">
+                      <h3 class="text-title-lg text-primary">{{ tr('bestComplete') }}</h3>
+                      @if (currentReport.summary.bestCompleteBasketStores.length === 0) {
+                        <p class="mt-sm text-on-surface-variant">{{ tr('noCompleteBasket') }}</p>
+                      }
+                      @if (currentReport.summary.bestCompleteBasketStores.length > 0) {
+                        <div class="mt-md flex flex-wrap gap-sm">
+                          @for (
+                            ranking of currentReport.summary.bestCompleteBasketStores;
+                            track ranking
+                          ) {
+                            <span
+                              class="rounded-xl bg-primary-container px-md py-sm text-label-lg text-on-primary-container"
+                              >{{ ranking.storeName || ranking.storeId }} ·
+                              {{ formatPrice(ranking.total) }}</span
+                            >
+                          }
+                        </div>
+                      }
+                    </section>
+                  }
+                </section>
+              }
+            }
+          </div>
+        }
+      </main>
     </div>
-  </section>
+  }
 </div>
+@if (editor(); as editorType) {
+  <div
+    class="fixed inset-0 z-[80] flex items-center justify-center bg-black/50 p-md"
+    role="presentation"
+    (appDialogEscape)="closeEditor()"
+  >
+    <section
+      class="max-h-[90dvh] w-full max-w-lg overflow-y-auto rounded-[24px] border border-outline-variant bg-surface-container-lowest p-lg shadow-card-hover md:p-xl"
+      role="dialog"
+      aria-modal="true"
+      [attr.aria-labelledby]="'price-comparison-dialog-title'"
+    >
+      <h2 id="price-comparison-dialog-title" class="text-title-lg">
+        {{ tr(editingId() ? 'editItem' : 'addItem', { item: tr(editorType) }) }}
+      </h2>
+      <div class="mt-lg space-y-md" appDialogForm (dialogSubmit)="saveEntity()">
+        <div>
+          <label for="entity-name" class="mb-xs block text-label-lg text-on-surface-variant">{{
+            tr('name')
+          }}</label
+          ><input
+            id="entity-name"
+            type="text"
+            required
+            maxlength="200"
+            class="input-outlined"
+            [(ngModel)]="form.name"
+          />
+        </div>
+        @if (editorType === 'comparison' || editorType === 'store' || editorType === 'product') {
+          <div>
+            <label
+              for="entity-description"
+              class="mb-xs block text-label-lg text-on-surface-variant"
+              >{{ tr('description') }} ({{ tr('optional') }})</label
+            ><textarea
+              id="entity-description"
+              rows="3"
+              class="input-outlined resize-y"
+              [(ngModel)]="form.description"
+            ></textarea>
+          </div>
+        }
+        @if (editorType === 'product') {
+          <fieldset>
+            <legend class="mb-sm text-label-lg text-on-surface-variant">
+              {{ tr('productCategories') }} (0..N)
+            </legend>
+            @if (categories().length === 0) {
+              <p class="text-body-sm text-on-surface-variant">{{ tr('noCategories') }}</p>
+            }
+            @if (categories().length > 0) {
+              <div class="grid gap-sm sm:grid-cols-2">
+                @for (category of categories(); track category) {
+                  <label
+                    class="flex min-h-11 cursor-pointer items-center gap-sm rounded-xl border border-outline-variant p-sm"
+                    ><input
+                      type="checkbox"
+                      [checked]="form.categoryIds.includes(category.id)"
+                      (change)="toggleCategory(category.id, $any($event.target).checked)"
+                    /><span>{{ category.name }}</span></label
+                  >
+                }
+              </div>
+            }
+          </fieldset>
+        }
+        <div class="flex gap-md pt-md">
+          <button
+            type="button"
+            class="flex-1 rounded-xl border border-outline-variant px-md py-3 text-label-lg"
+            [disabled]="saving()"
+            (click)="closeEditor()"
+          >
+            {{ tr('cancel') }}</button
+          ><button
+            type="button"
+            class="btn-primary flex-1 disabled:opacity-50"
+            [disabled]="saving()"
+            (click)="saveEntity()"
+          >
+            {{ saving() ? tr('loading') : tr('save') }}
+          </button>
+        </div>
+      </div>
+    </section>
+  </div>
+}

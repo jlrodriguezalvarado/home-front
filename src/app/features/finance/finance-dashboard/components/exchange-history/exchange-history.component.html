@@ -1,94 +1,134 @@
-
 <div class="space-y-lg">
   <div class="flex items-center justify-between gap-md">
     <div>
       <h2 class="text-title-lg text-on-surface">
         {{ i18n.lang() === 'en' ? 'Exchange history' : 'Historial de cambio' }}
       </h2>
-      <p class="text-body-md text-on-surface-variant tabular-nums">
+      <p class="text-body-md tabular-nums text-on-surface-variant">
         {{ i18n.lang() === 'en' ? 'Source total' : 'Total origen' }}: {{ formatMoney(listTotal()) }}
       </p>
     </div>
-    <button (click)="openDialog()" class="btn-primary flex items-center gap-2 shrink-0">
+    <button (click)="openDialog()" class="btn-primary flex shrink-0 items-center gap-2">
       <span class="material-symbols-outlined text-[20px]">currency_exchange</span>
       {{ i18n.lang() === 'en' ? 'Calculator' : 'Calculadora' }}
     </button>
   </div>
 
-  <div *ngIf="loading()" class="text-center py-xl text-on-surface-variant text-body-md">
-    {{ i18n.lang() === 'en' ? 'Loading exchange history...' : 'Cargando historial de cambio...' }}
-  </div>
-
-  <div *ngIf="!loading()" class="card-surface divide-y divide-outline-variant overflow-hidden">
-    <div *ngFor="let item of entries()" class="p-md flex justify-between items-center gap-md">
-      <div>
-        <div class="text-label-lg text-on-surface">
-          {{ item.sourceCurrency }} → {{ item.targetCurrency }}
-        </div>
-        <div class="text-body-md text-on-surface-variant">
-          {{ item.transactionDate | date }}
-          <span *ngIf="item.amount"> · {{ formatMoney(item.amount) }}</span>
-        </div>
-        <div *ngIf="item.notes" class="text-body-sm text-on-surface-variant">{{ item.notes }}</div>
-      </div>
-      <div class="text-right shrink-0">
-        <div class="text-numeral-md tabular-nums font-semibold text-primary">
-          {{ item.appliedRate }}
-        </div>
-        <div *ngIf="item.convertedAmount" class="text-body-sm text-on-surface-variant tabular-nums">
-          → {{ formatMoney(item.convertedAmount) }}
-        </div>
-      </div>
+  @if (loading()) {
+    <div class="py-xl text-center text-body-md text-on-surface-variant">
+      {{ i18n.lang() === 'en' ? 'Loading exchange history...' : 'Cargando historial de cambio...' }}
     </div>
-    <div *ngIf="entries().length === 0" class="p-xl text-center text-on-surface-variant text-body-md">
-      {{ i18n.lang() === 'en' ? 'No entries' : 'Sin registros' }}
-    </div>
-  </div>
+  }
 
-  <div *ngIf="showDialog" class="fixed inset-0 bg-black/50 flex items-center justify-center p-md z-50">
-    <div class="bg-surface-container-lowest w-full max-w-md p-xl rounded-[24px] border border-outline-variant shadow-card-hover">
-      <h2 class="text-title-lg text-on-surface mb-lg">
-        {{ i18n.lang() === 'en' ? 'Exchange calculator' : 'Calculadora de cambio' }}
-      </h2>
-      <div class="space-y-md"
-           appDialogForm
-           [dialogSubmitDisabled]="saving || !canConfirm()"
-           (dialogSubmit)="confirmExchange()">
-        <div class="grid grid-cols-2 gap-md">
+  @if (!loading()) {
+    <div class="card-surface divide-y divide-outline-variant overflow-hidden">
+      @for (item of entries(); track item) {
+        <div class="flex items-center justify-between gap-md p-md">
           <div>
-            <label class="text-label-lg text-on-surface-variant block mb-xs">{{ i18n.lang() === 'en' ? 'From' : 'Desde' }}</label>
-            <select [(ngModel)]="form.sourceCurrency" class="input-outlined w-full">
-              <option *ngFor="let c of currencies()" [value]="c">{{ c }}</option>
-            </select>
+            <div class="text-label-lg text-on-surface">
+              {{ item.sourceCurrency }} → {{ item.targetCurrency }}
+            </div>
+            <div class="text-body-md text-on-surface-variant">
+              {{ item.transactionDate | date }}
+              @if (item.amount) {
+                <span> · {{ formatMoney(item.amount) }}</span>
+              }
+            </div>
+            @if (item.notes) {
+              <div class="text-body-sm text-on-surface-variant">{{ item.notes }}</div>
+            }
           </div>
-          <div>
-            <label class="text-label-lg text-on-surface-variant block mb-xs">{{ i18n.lang() === 'en' ? 'To' : 'Hacia' }}</label>
-            <select [(ngModel)]="form.targetCurrency" class="input-outlined w-full">
-              <option *ngFor="let c of currencies()" [value]="c">{{ c }}</option>
-            </select>
+          <div class="shrink-0 text-right">
+            <div class="text-numeral-md font-semibold tabular-nums text-primary">
+              {{ item.appliedRate }}
+            </div>
+            @if (item.convertedAmount) {
+              <div class="text-body-sm tabular-nums text-on-surface-variant">
+                → {{ formatMoney(item.convertedAmount) }}
+              </div>
+            }
           </div>
         </div>
-        <div>
-          <label class="text-label-lg text-on-surface-variant block mb-xs">
-            {{ i18n.lang() === 'en' ? 'Amount' : 'Monto' }}<span class="text-error"> *</span>
-          </label>
-          <input type="text" inputmode="decimal" [(ngModel)]="form.amount" class="input-outlined w-full" required>
+      }
+      @if (entries().length === 0) {
+        <div class="p-xl text-center text-body-md text-on-surface-variant">
+          {{ i18n.lang() === 'en' ? 'No entries' : 'Sin registros' }}
         </div>
-        <div>
-          <label class="text-label-lg text-on-surface-variant block mb-xs">
-            {{ i18n.lang() === 'en' ? 'Notes (optional)' : 'Notas (opcional)' }}
-          </label>
-          <input type="text" [(ngModel)]="form.notes" class="input-outlined w-full">
-        </div>
-        <div class="flex gap-md pt-md">
-          <button (click)="closeDialog()" class="flex-1 py-3 border border-outline-variant rounded-xl text-label-lg">
-            {{ i18n.t('cancel') }}
-          </button>
-          <button (click)="confirmExchange()" [disabled]="saving || !canConfirm()" class="flex-1 btn-primary py-3 disabled:opacity-50">
-            {{ i18n.lang() === 'en' ? 'Confirm' : 'Confirmar' }}
-          </button>
+      }
+    </div>
+  }
+
+  @if (showDialog) {
+    <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-md" (appDialogEscape)="closeDialog()">
+      <div
+        class="w-full max-w-md rounded-[24px] border border-outline-variant bg-surface-container-lowest p-xl shadow-card-hover"
+      >
+        <h2 class="mb-lg text-title-lg text-on-surface">
+          {{ i18n.lang() === 'en' ? 'Exchange calculator' : 'Calculadora de cambio' }}
+        </h2>
+        <div
+          class="space-y-md"
+          appDialogForm
+          [dialogSubmitDisabled]="saving || !canConfirm()"
+          (dialogSubmit)="confirmExchange()"
+        >
+          <div class="grid grid-cols-2 gap-md">
+            <div>
+              <label class="mb-xs block text-label-lg text-on-surface-variant">{{
+                i18n.lang() === 'en' ? 'From' : 'Desde'
+              }}</label>
+              <select [(ngModel)]="form.sourceCurrency" class="input-outlined w-full">
+                @for (c of currencies(); track c) {
+                  <option [value]="c">{{ c }}</option>
+                }
+              </select>
+            </div>
+            <div>
+              <label class="mb-xs block text-label-lg text-on-surface-variant">{{
+                i18n.lang() === 'en' ? 'To' : 'Hacia'
+              }}</label>
+              <select [(ngModel)]="form.targetCurrency" class="input-outlined w-full">
+                @for (c of currencies(); track c) {
+                  <option [value]="c">{{ c }}</option>
+                }
+              </select>
+            </div>
+          </div>
+          <div>
+            <label class="mb-xs block text-label-lg text-on-surface-variant">
+              {{ i18n.lang() === 'en' ? 'Amount' : 'Monto' }}<span class="text-error"> *</span>
+            </label>
+            <input
+              type="text"
+              inputmode="decimal"
+              [(ngModel)]="form.amount"
+              class="input-outlined w-full"
+              required
+            />
+          </div>
+          <div>
+            <label class="mb-xs block text-label-lg text-on-surface-variant">
+              {{ i18n.lang() === 'en' ? 'Notes (optional)' : 'Notas (opcional)' }}
+            </label>
+            <input type="text" [(ngModel)]="form.notes" class="input-outlined w-full" />
+          </div>
+          <div class="flex gap-md pt-md">
+            <button
+              (click)="closeDialog()"
+              class="flex-1 rounded-xl border border-outline-variant py-3 text-label-lg"
+            >
+              {{ i18n.t('cancel') }}
+            </button>
+            <button
+              (click)="confirmExchange()"
+              [disabled]="saving || !canConfirm()"
+              class="btn-primary flex-1 py-3 disabled:opacity-50"
+            >
+              {{ i18n.lang() === 'en' ? 'Confirm' : 'Confirmar' }}
+            </button>
+          </div>
         </div>
       </div>
     </div>
-  </div>
+  }
 </div>

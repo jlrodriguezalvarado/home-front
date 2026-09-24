@@ -1,5 +1,14 @@
-import { Component, inject, OnDestroy, OnInit, signal, computed, output } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import {
+  Component,
+  inject,
+  OnDestroy,
+  OnInit,
+  signal,
+  computed,
+  output,
+  ChangeDetectionStrategy,
+} from '@angular/core';
+
 import { FormsModule } from '@angular/forms';
 import { Subject, debounceTime, distinctUntilChanged, takeUntil } from 'rxjs';
 import { ChatRepository } from '../repositories/chat.repository';
@@ -7,19 +16,18 @@ import { ChatUserSummary, Conversation, ConversationPayload } from '../models/ch
 import { AuthService } from '../../../core/auth/auth.service';
 import { I18nService } from '../../../core/i18n/i18n.service';
 import { ToastService } from '../../../shared/services/toast.service';
-import { SearchSelectComponent, SearchSelectOption } from '../../../shared/components/search-select.component';
+import {
+  SearchSelectComponent,
+  SearchSelectOption,
+} from '../../../shared/components/search-select.component';
 import { LoadingStateComponent } from '../../../shared/components/loading-state.component';
 
 @Component({
   selector: 'app-conversation-form',
   standalone: true,
-  imports: [
-    CommonModule,
-    FormsModule,
-    SearchSelectComponent,
-    LoadingStateComponent,
-  ],
+  imports: [FormsModule, SearchSelectComponent, LoadingStateComponent],
   templateUrl: './conversation-form.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './conversation-form.component.scss',
 })
 export class ConversationFormComponent implements OnInit, OnDestroy {
@@ -55,14 +63,12 @@ export class ConversationFormComponent implements OnInit, OnDestroy {
       next: (user) => this.currentUserId.set(user.id),
       error: () => this.currentUserId.set(null),
     });
-    this.userSearchSubject.pipe(
-      debounceTime(400),
-      distinctUntilChanged(),
-      takeUntil(this.destroy$),
-    ).subscribe((query) => {
-      this.userSearchDraft.set(query);
-      this.loadUsers();
-    });
+    this.userSearchSubject
+      .pipe(debounceTime(400), distinctUntilChanged(), takeUntil(this.destroy$))
+      .subscribe((query) => {
+        this.userSearchDraft.set(query);
+        this.loadUsers();
+      });
     this.loadUsers();
   }
 

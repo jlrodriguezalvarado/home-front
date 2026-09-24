@@ -1,5 +1,5 @@
-import { Component, HostListener, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, HostListener, inject, ChangeDetectionStrategy } from '@angular/core';
+
 import { I18nService, AppStringKey } from '../../core/i18n/i18n.service';
 import { NotificationsService } from '../../core/notifications/notifications.service';
 import { AppNotification } from '../../core/notifications/notifications.models';
@@ -7,8 +7,9 @@ import { AppNotification } from '../../core/notifications/notifications.models';
 @Component({
   selector: 'app-notification-panel',
   standalone: true,
-  imports: [CommonModule],
+  imports: [],
   templateUrl: './notification-panel.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './notification-panel.component.scss',
 })
 export class NotificationPanelComponent {

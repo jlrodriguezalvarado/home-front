@@ -1,8 +1,9 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable, map } from 'rxjs';
-import { Currency, PaginatedResponse } from '../../core/api/models';
+import { Currency } from './currency.models';
 import { ApiService } from '../../core/api/api.service';
 import { API_ENDPOINTS } from '../../core/api/endpoints';
+import { ApiListResponse, apiListResults } from '../../core/api/api-page';
 
 @Injectable({
   providedIn: 'root',
@@ -11,9 +12,9 @@ export class CurrencyRepository {
   private readonly api = inject(ApiService);
 
   list(): Observable<Currency[]> {
-    return this.api.get<Currency[] | PaginatedResponse<Currency>>(API_ENDPOINTS.currencies.list).pipe(
-      map((res) => (Array.isArray(res) ? res : (res.results ?? []))),
-    );
+    return this.api
+      .get<ApiListResponse<Currency>>(API_ENDPOINTS.currencies.list)
+      .pipe(map(apiListResults));
   }
 
   create(data: Omit<Currency, 'id'>): Observable<Currency> {

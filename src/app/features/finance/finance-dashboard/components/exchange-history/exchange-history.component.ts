@@ -1,4 +1,12 @@
-import { Component, DestroyRef, effect, inject, OnInit, signal } from '@angular/core';
+import {
+  Component,
+  DestroyRef,
+  effect,
+  inject,
+  OnInit,
+  signal,
+  ChangeDetectionStrategy,
+} from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -13,12 +21,14 @@ import { CurrencyRepository } from '../../../../currency/currency.repository';
 import { I18nService } from '../../../../../core/i18n/i18n.service';
 import { ToastService } from '../../../../../shared/services/toast.service';
 import { DialogFormDirective } from '../../../../../shared/directives/dialog-form.directive';
+import { DialogEscapeDirective } from '../../../../../shared/directives/dialog-escape.directive';
 
 @Component({
   selector: 'app-finance-exchange-history',
   standalone: true,
-  imports: [CommonModule, FormsModule, DialogFormDirective],
+  imports: [CommonModule, FormsModule, DialogFormDirective, DialogEscapeDirective],
   templateUrl: './exchange-history.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './exchange-history.component.scss',
 })
 export class FinanceExchangeHistoryComponent implements OnInit {
@@ -147,11 +157,15 @@ export class FinanceExchangeHistoryComponent implements OnInit {
           this.refresh.notify();
           this.closeDialog();
           this.form.notes = '';
-          this.toast.success(this.i18n.lang() === 'en' ? 'Exchange confirmed' : 'Cambio confirmado');
+          this.toast.success(
+            this.i18n.lang() === 'en' ? 'Exchange confirmed' : 'Cambio confirmado',
+          );
         },
         error: () => {
           this.saving = false;
-          this.toast.error(this.i18n.lang() === 'en' ? 'Error confirming exchange' : 'Error al confirmar cambio');
+          this.toast.error(
+            this.i18n.lang() === 'en' ? 'Error confirming exchange' : 'Error al confirmar cambio',
+          );
         },
       });
   }

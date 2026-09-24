@@ -1,13 +1,21 @@
-import { Component, inject, signal, ViewChild, ElementRef } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import {
+  Component,
+  inject,
+  signal,
+  ViewChild,
+  ElementRef,
+  ChangeDetectionStrategy,
+} from '@angular/core';
+
 import { I18nService } from '../../core/i18n/i18n.service';
 import JSZip from 'jszip';
 
 @Component({
   selector: 'app-mosaic',
   standalone: true,
-  imports: [CommonModule],
+  imports: [],
   templateUrl: './mosaic.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './mosaic.component.scss',
 })
 export class MosaicComponent {
@@ -84,9 +92,21 @@ export class MosaicComponent {
     for (let r = 0; r < this.rows(); r++) {
       for (let c = 0; c < this.cols(); c++) {
         ctx.clearRect(0, 0, tileWidth, tileHeight);
-        ctx.drawImage(img, c * tileWidth, r * tileHeight, tileWidth, tileHeight, 0, 0, tileWidth, tileHeight);
+        ctx.drawImage(
+          img,
+          c * tileWidth,
+          r * tileHeight,
+          tileWidth,
+          tileHeight,
+          0,
+          0,
+          tileWidth,
+          tileHeight,
+        );
 
-        const blob = await new Promise<Blob | null>(resolve => canvas.toBlob(resolve, 'image/png'));
+        const blob = await new Promise<Blob | null>((resolve) =>
+          canvas.toBlob(resolve, 'image/png'),
+        );
         if (blob) {
           zip.file(`tile_${r}_${c}.png`, blob);
         }

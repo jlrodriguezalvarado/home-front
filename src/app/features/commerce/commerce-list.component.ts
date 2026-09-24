@@ -1,6 +1,13 @@
-import { Component, DestroyRef, inject, OnInit, signal } from '@angular/core';
+import {
+  Component,
+  DestroyRef,
+  inject,
+  OnInit,
+  signal,
+  ChangeDetectionStrategy,
+} from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { CommonModule } from '@angular/common';
+
 import { Router, RouterModule } from '@angular/router';
 import { interval, Subscription } from 'rxjs';
 import { CommerceRepository } from './commerce.repository';
@@ -14,8 +21,9 @@ import { ErrorStateComponent } from '../../shared/components/error-state.compone
 @Component({
   selector: 'app-commerce-list',
   standalone: true,
-  imports: [CommonModule, RouterModule, LoadingStateComponent, EmptyStateComponent, ErrorStateComponent],
+  imports: [RouterModule, LoadingStateComponent, EmptyStateComponent, ErrorStateComponent],
   templateUrl: './commerce-list.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './commerce-list.component.scss',
 })
 export class CommerceListComponent implements OnInit {

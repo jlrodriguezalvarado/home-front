@@ -1,4 +1,10 @@
-import { Commerce } from '../../core/api/models';
+export interface Commerce {
+  id: string;
+  name: string;
+  logo: string | null;
+  currencyCode: string;
+  currencySymbol: string;
+}
 
 export type ProcessingJobStatus =
   | 'pending'

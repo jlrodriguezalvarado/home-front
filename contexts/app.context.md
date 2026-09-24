@@ -6,7 +6,7 @@ Frontend web de **Home Manager** (`home-manager`), réplica del app Flutter. Ges
 
 ## Stack
 
-- **Angular 19+**: standalone components, lazy routes, signals, `inject()`, functional guards/interceptors
+- **Angular 22**: standalone components, lazy routes, signals, `inject()`, functional guards/interceptors
 - **RxJS 7** para HTTP/async
 - **Tailwind CSS 3** + tokens Material Design 3 vía CSS variables (`--md-*`)
 - **decimal.js** para precisión financiera
@@ -25,7 +25,7 @@ src/app/
 ├── core/
 │   ├── api/               # ApiService, endpoints, auth.interceptor, api-url, models compartidos
 │   ├── auth/              # AuthService (JWT access/refresh en localStorage)
-│   ├── i18n/              # I18nService (en/es, APP_STRINGS)
+│   ├── i18n/              # I18nService + en.json / es.json (source of truth)
 │   ├── layout/            # AppShellComponent (sidebar, topbar, bottom nav mobile)
 │   ├── models/            # shopping.models.ts (Product, CartItem)
 │   └── theme/             # ThemeService (dark mode class en <html>)
@@ -142,8 +142,9 @@ Rutas públicas: `/login` (publicGuard), `/splash`.
 
 ### 6. i18n
 
-- `I18nService` con `lang()` signal (`en` | `es`), `t(key)`, `setLang()`
-- Agregar keys en `APP_STRINGS` + traducciones EN/ES en `i18n.service.ts`
+- Fuente de verdad: `src/app/core/i18n/en.json` y `es.json` (mismas keys camelCase en ambos)
+- `I18nService` importa esos JSON; `lang()` signal (`en` | `es`), `t(key)`, `setLang()`
+- Agregar keys nuevas en ambos JSON; no embeber catálogos EN/ES en TypeScript
 - Patrón: `t(key: AppStringKey)` en componentes
 
 ### 7. UI / estilos
@@ -224,7 +225,7 @@ En `core/api/models.ts`:
 4. Crear `<x>-list.component.ts/html/scss` (signals + loading/error/empty)
 5. Registrar ruta lazy en `app.routes.ts`
 6. Agregar nav item en `AppShellComponent.navItems` si aplica
-7. Agregar strings i18n en `i18n.service.ts`
+7. Agregar strings i18n en `en.json` y `es.json`
 8. Usar Tailwind tokens existentes, no colores hardcodeados
 
 ## Backend asumido
@@ -242,6 +243,7 @@ En `core/api/models.ts`:
 
 ## Deploy
 
-- `ng build --configuration production`
-- Nginx config en `deploy/nginx/home-manager.conf`
-- Docs: `docs/DEPLOY.md`
+- Local: `npm` / Node only (no Docker for day-to-day front work)
+- Production image: `npm run build:prod` then `./deploy/build-image.sh` (dist + Nginx in-container; Traefik publishes)
+- Dist path: `FRONT_DIST_PATH` in `.env.docker` (default `dist/home-manager/browser`)
+- Docs: `DEPLOY.md` (Traefik + imagen solo-`dist`); `docs/DEPLOY.md` apunta ahí

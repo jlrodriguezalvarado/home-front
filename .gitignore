@@ -37,6 +37,12 @@ yarn-error.log
 testem.log
 /typings
 
+# Deployment-specific API and WebSocket URLs stay local.
+/src/environments/environment.prod.ts
+
+# Local Docker image build settings (see .env.docker.example).
+/.env.docker
+
 # System files
 .DS_Store
 Thumbs.db

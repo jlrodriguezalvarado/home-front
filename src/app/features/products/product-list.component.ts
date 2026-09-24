@@ -1,6 +1,14 @@
-import { Component, inject, OnInit, OnDestroy, HostListener, signal, computed, ViewChild, ElementRef } from '@angular/core';
-
-import { CommonModule } from '@angular/common';
+import {
+  Component,
+  inject,
+  OnInit,
+  OnDestroy,
+  signal,
+  computed,
+  ViewChild,
+  ElementRef,
+  ChangeDetectionStrategy,
+} from '@angular/core';
 
 import { FormsModule } from '@angular/forms';
 
@@ -18,7 +26,8 @@ import { ErrorStateComponent } from '../../shared/components/error-state.compone
 
 import { CommerceRepository } from '../commerce/commerce.repository';
 
-import { Product, Category, Commerce } from '../../core/api/models';
+import { Product, Category } from './product.models';
+import { Commerce } from '../commerce/commerce.models';
 
 import { I18nService } from '../../core/i18n/i18n.service';
 import { CommerceReprocessService } from '../../core/notifications/commerce-reprocess.service';
@@ -28,39 +37,28 @@ import { QuantityEditorComponent } from '../../shared/components/quantity-editor
 import { BarcodeScannerDialogComponent } from '../../shared/components/barcode-scanner-dialog.component';
 
 import { formatUnitPrice } from '../shopping/utils/price.utils';
-
-
+import { DialogEscapeDirective } from '../../shared/directives/dialog-escape.directive';
 
 @Component({
-
   selector: 'app-product-list',
 
   standalone: true,
 
   imports: [
-
-    CommonModule,
-
     FormsModule,
-
     LoadingStateComponent,
-
     EmptyStateComponent,
-
     ErrorStateComponent,
-
     QuantityEditorComponent,
-
     BarcodeScannerDialogComponent,
-
+    DialogEscapeDirective,
   ],
 
   templateUrl: './product-list.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './product-list.component.scss',
 })
-
 export class ProductListComponent implements OnInit, OnDestroy {
-
   repo = inject(ProductRepository);
 
   commerceRepo = inject(CommerceRepository);
@@ -72,15 +70,11 @@ export class ProductListComponent implements OnInit, OnDestroy {
   i18n = inject(I18nService);
   reprocess = inject(CommerceReprocessService);
 
-
-
   products = signal<Product[]>([]);
 
   commerces = signal<Commerce[]>([]);
 
   categories = signal<Category[]>([]);
-
-
 
   searchDraft = '';
 
@@ -90,8 +84,6 @@ export class ProductListComponent implements OnInit, OnDestroy {
 
   selectedCategoryId: string | null = null;
 
-
-
   loading = signal(false);
 
   error = signal(false);
@@ -100,8 +92,6 @@ export class ProductListComponent implements OnInit, OnDestroy {
 
   previewImage = signal<{ url: string; alt: string } | null>(null);
   barcodeScannerOpen = signal(false);
-
-
 
   private nextUrl: string | null = null;
 
@@ -133,8 +123,6 @@ export class ProductListComponent implements OnInit, OnDestroy {
     return this.i18n.lang() === 'en' ? 'All' : 'Todas';
   }
 
-
-
   ngOnDestroy() {
     this.destroy$.next();
     this.destroy$.complete();
@@ -142,21 +130,10 @@ export class ProductListComponent implements OnInit, OnDestroy {
     document.body.style.overflow = '';
   }
 
-  @HostListener('document:keydown.escape')
-  onEscapeKey(): void {
-    if (this.barcodeScannerOpen()) {
-      this.closeBarcodeScanner();
-      return;
-    }
-    this.closeImagePreview();
-  }
-
   ngOnInit() {
-
     const saved = this.filterStorage.load();
 
     if (saved) {
-
       this.selectedCommerceId = saved.commerceId;
 
       this.selectedCategoryId = saved.categoryId;
@@ -164,10 +141,7 @@ export class ProductListComponent implements OnInit, OnDestroy {
       this.searchDraft = saved.search;
 
       this.debouncedSearch = saved.search;
-
     }
-
-
 
     this.searchSubject.pipe(debounceTime(400), distinctUntilChanged()).subscribe((query) => {
       this.debouncedSearch = query;
@@ -180,46 +154,29 @@ export class ProductListComponent implements OnInit, OnDestroy {
       }
     });
 
-
-
     this.commerceRepo.list().subscribe({
-
       next: (res) => {
-
         this.commerces.set(res);
 
         if (this.selectedCommerceId && !res.some((c) => c.id === this.selectedCommerceId)) {
-
           this.selectedCommerceId = null;
-
         }
 
         if (!this.selectedCommerceId && res.length > 0) {
-
           this.selectedCommerceId = res[0].id;
-
         }
 
         this.loadCategoriesForSelectedCommerce();
-
       },
 
       error: () => {
-
         this.error.set(true);
-
       },
-
     });
-
   }
 
-
-
   onSearchChange(query: string) {
-
     this.searchSubject.next(query);
-
   }
 
   openBarcodeScanner(): void {
@@ -238,19 +195,13 @@ export class ProductListComponent implements OnInit, OnDestroy {
     this.reloadProducts();
   }
 
-
-
   onCommerceChange(commerceId: string) {
-
     this.selectedCommerceId = commerceId;
 
     this.persistFilters();
 
     this.loadCategoriesForSelectedCommerce();
-
   }
-
-
 
   onCategoryChange(categoryId: string | null) {
     this.selectedCategoryId = categoryId || null;
@@ -263,15 +214,9 @@ export class ProductListComponent implements OnInit, OnDestroy {
     this.onCategoryChange(null);
   }
 
-
-
   qtyInCart(productId: number): number {
-
     return this.cartQuantities().get(productId) ?? 0;
-
   }
-
-
 
   onSetQuantity(productId: number, quantity: number) {
     this.cartService.setQuantity(productId, quantity);
@@ -280,26 +225,16 @@ export class ProductListComponent implements OnInit, OnDestroy {
   addToCart(product: Product) {
     const commerceId = product.commerceId || this.selectedCommerceId || '';
     const snapshot =
-      commerceId && product.commerceId !== commerceId
-        ? { ...product, commerceId }
-        : product;
+      commerceId && product.commerceId !== commerceId ? { ...product, commerceId } : product;
     this.cartService.addProduct(snapshot);
   }
 
-
-
   commerceName(commerceId: string): string {
-
     return this.commerces().find((c) => c.id === commerceId)?.name ?? '';
-
   }
 
-
-
   unitPriceLabel(product: Product): string {
-
     return formatUnitPrice(product);
-
   }
 
   openImagePreview(product: Product): void {
@@ -316,133 +251,79 @@ export class ProductListComponent implements OnInit, OnDestroy {
   }
 
   reloadProducts() {
-
     this.loadProducts(true);
-
   }
 
-
-
   loadMore() {
-
     if (!this.nextUrl || this.loading()) return;
 
     this.loadProducts(false);
-
   }
 
-
-
   private loadCategoriesForSelectedCommerce(): void {
-
     if (!this.selectedCommerceId) {
-
       this.categories.set([]);
 
       return;
-
     }
-
-
 
     const commerceId = this.selectedCommerceId;
 
-
-
     this.repo.getCategories({ commerce_id: commerceId }).subscribe({
-
       next: (res) => {
-
         if (commerceId !== this.selectedCommerceId) return;
-
-
 
         this.categories.set(res);
 
-
-
         if (this.selectedCategoryId && !res.some((c) => c.id === this.selectedCategoryId)) {
-
           this.selectedCategoryId = null;
-
         }
-
-
 
         this.persistFilters();
 
         this.reloadProducts();
-
       },
 
       error: () => {
-
         if (commerceId !== this.selectedCommerceId) return;
-
-
 
         this.categories.set([]);
 
         this.error.set(true);
-
       },
-
     });
-
   }
 
-
-
   private persistFilters(): void {
-
     this.filterStorage.save({
-
       commerceId: this.selectedCommerceId,
 
       categoryId: this.selectedCategoryId,
 
       search: this.searchDraft,
-
     });
-
   }
 
-
-
   private loadProducts(reset: boolean) {
-
     if (!this.selectedCommerceId) return;
-
-
 
     const gen = ++this.generation;
 
-
-
     if (reset) {
-
       this.products.set([]);
 
       this.nextUrl = null;
 
       this.hasMore.set(false);
-
     }
-
-
 
     this.loading.set(true);
 
     this.error.set(false);
 
-
-
     const request$ =
-
       reset || !this.nextUrl
-
         ? this.repo.list({
-
             search: this.debouncedSearch || undefined,
 
             commerce_id: this.selectedCommerceId,
@@ -452,17 +333,11 @@ export class ProductListComponent implements OnInit, OnDestroy {
             page: 1,
 
             perPage: 20,
-
           })
-
         : this.repo.listByNextUrl(this.nextUrl);
 
-
-
     request$.subscribe({
-
       next: (res) => {
-
         if (gen !== this.generation) return;
 
         this.products.update((prev) => [...prev, ...res.results]);
@@ -472,22 +347,15 @@ export class ProductListComponent implements OnInit, OnDestroy {
         this.hasMore.set(!!res.next);
 
         this.loading.set(false);
-
       },
 
       error: () => {
-
         if (gen !== this.generation) return;
 
         this.loading.set(false);
 
         this.error.set(true);
-
       },
-
     });
-
   }
-
 }
-

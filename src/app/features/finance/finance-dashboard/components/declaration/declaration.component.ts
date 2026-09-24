@@ -1,21 +1,34 @@
-import { Component, DestroyRef, inject, OnInit, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import {
+  Component,
+  DestroyRef,
+  inject,
+  OnInit,
+  signal,
+  ChangeDetectionStrategy,
+} from '@angular/core';
+
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { forkJoin, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
-import { FinanceRepository, FinanceDeclaration, FinanceCategory } from '../../../finance.repository';
+import {
+  FinanceRepository,
+  FinanceDeclaration,
+  FinanceCategory,
+} from '../../../finance.repository';
 import { bindFinancePeriodLoads } from '../../../finance-period-route.util';
 import { formatFinanceMoney } from '../../../finance.utils';
 import { I18nService } from '../../../../../core/i18n/i18n.service';
 import { ToastService } from '../../../../../shared/services/toast.service';
 import { DialogFormDirective } from '../../../../../shared/directives/dialog-form.directive';
+import { DialogEscapeDirective } from '../../../../../shared/directives/dialog-escape.directive';
 
 @Component({
   selector: 'app-declaration',
   standalone: true,
-  imports: [CommonModule, FormsModule, DialogFormDirective],
+  imports: [FormsModule, DialogFormDirective, DialogEscapeDirective],
   templateUrl: './declaration.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './declaration.component.scss',
 })
 export class DeclarationComponent implements OnInit {
@@ -49,7 +62,9 @@ export class DeclarationComponent implements OnInit {
       this.destroyRef,
       (period) =>
         forkJoin({
-          entries: this.repo.listDeclarations(period.year, period.month).pipe(catchError(() => of([]))),
+          entries: this.repo
+            .listDeclarations(period.year, period.month)
+            .pipe(catchError(() => of([]))),
           categories: this.repo.listGeneralExpenseCategories().pipe(catchError(() => of([]))),
         }),
       ({ entries, categories }, period) => {
@@ -90,7 +105,13 @@ export class DeclarationComponent implements OnInit {
       };
     } else {
       this.editingId = null;
-      this.form = { title: 'Declaration', content: '', amount: '', generalExpenseCategoryId: '', notes: '' };
+      this.form = {
+        title: 'Declaration',
+        content: '',
+        amount: '',
+        generalExpenseCategoryId: '',
+        notes: '',
+      };
     }
     this.showDialog = true;
   }
@@ -110,13 +131,17 @@ export class DeclarationComponent implements OnInit {
     };
     const onError = () => {
       this.saving = false;
-      this.toast.error(this.i18n.lang() === 'en' ? 'Error saving declaration' : 'Error al guardar declaración');
+      this.toast.error(
+        this.i18n.lang() === 'en' ? 'Error saving declaration' : 'Error al guardar declaración',
+      );
     };
 
     if (this.editingId) {
       this.repo.updateDeclaration(this.editingId, data).subscribe({ next: onDone, error: onError });
     } else {
-      this.repo.createDeclaration(this.year, this.month, data).subscribe({ next: onDone, error: onError });
+      this.repo
+        .createDeclaration(this.year, this.month, data)
+        .subscribe({ next: onDone, error: onError });
     }
   }
 }

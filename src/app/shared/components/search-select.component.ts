@@ -2,17 +2,18 @@ import {
   Component,
   ElementRef,
   EventEmitter,
-  HostListener,
   Input,
   OnDestroy,
   Output,
   inject,
   signal,
   computed,
+  ChangeDetectionStrategy,
 } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { FormsModule } from '@angular/forms';
 import { LoadingStateComponent } from './loading-state.component';
+import { DialogEscapeDirective } from '../directives/dialog-escape.directive';
 
 export interface SearchSelectOption {
   value: string;
@@ -29,8 +30,9 @@ interface PanelStyle {
 @Component({
   selector: 'app-search-select',
   standalone: true,
-  imports: [CommonModule, FormsModule, LoadingStateComponent],
+  imports: [FormsModule, LoadingStateComponent, DialogEscapeDirective],
   templateUrl: './search-select.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './search-select.component.scss',
 })
 export class SearchSelectComponent implements OnDestroy {
@@ -59,11 +61,6 @@ export class SearchSelectComponent implements OnDestroy {
 
   ngOnDestroy() {
     this.removeViewportListeners();
-  }
-
-  @HostListener('document:keydown.escape')
-  onEscape() {
-    if (this.open()) this.close();
   }
 
   selectedLabel(): string {
@@ -109,7 +106,9 @@ export class SearchSelectComponent implements OnDestroy {
   }
 
   private updatePanelPosition(): void {
-    const trigger = this.el.nativeElement.querySelector('[data-search-select-trigger]') as HTMLElement | null;
+    const trigger = this.el.nativeElement.querySelector(
+      '[data-search-select-trigger]',
+    ) as HTMLElement | null;
     if (!trigger) return;
     const rect = trigger.getBoundingClientRect();
     const gap = 4;

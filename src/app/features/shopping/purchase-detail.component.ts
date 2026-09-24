@@ -1,12 +1,8 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { forkJoin } from 'rxjs';
-import {
-  enrichPurchaseCommerceNames,
-  Purchase,
-  PurchaseRepository,
-} from './purchase.repository';
+import { enrichPurchaseCommerceNames, Purchase, PurchaseRepository } from './purchase.repository';
 import { CommerceRepository } from '../commerce/commerce.repository';
 import { I18nService } from '../../core/i18n/i18n.service';
 import { formatPrice } from './utils/price.utils';
@@ -18,6 +14,7 @@ import { ErrorStateComponent } from '../../shared/components/error-state.compone
   standalone: true,
   imports: [CommonModule, LoadingStateComponent, ErrorStateComponent],
   templateUrl: './purchase-detail.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './purchase-detail.component.scss',
 })
 export class PurchaseDetailComponent implements OnInit {

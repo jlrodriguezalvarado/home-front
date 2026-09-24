@@ -1,5 +1,5 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
+
 import { FormsModule } from '@angular/forms';
 import { ExchangeRepository, ExchangeRate } from './exchange.repository';
 import { I18nService } from '../../core/i18n/i18n.service';
@@ -9,8 +9,9 @@ import { ToastService } from '../../shared/services/toast.service';
 @Component({
   selector: 'app-exchange-dashboard',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [FormsModule],
   templateUrl: './exchange-dashboard.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './exchange-dashboard.component.scss',
 })
 export class ExchangeDashboardComponent implements OnInit {
@@ -37,7 +38,11 @@ export class ExchangeDashboardComponent implements OnInit {
   }
 
   calculate() {
-    const rateObj = this.rates().find(r => r.from_currency.toUpperCase() === this.from.toUpperCase() && r.to_currency.toUpperCase() === this.to.toUpperCase());
+    const rateObj = this.rates().find(
+      (r) =>
+        r.from_currency.toUpperCase() === this.from.toUpperCase() &&
+        r.to_currency.toUpperCase() === this.to.toUpperCase(),
+    );
     if (rateObj) {
       this.result.set(new Decimal(this.amount).mul(new Decimal(rateObj.rate)).toFixed(2));
     } else {
@@ -57,21 +62,27 @@ export class ExchangeDashboardComponent implements OnInit {
   }
 
   saveExchange() {
-    const rateObj = this.rates().find(r => r.from_currency.toUpperCase() === this.from.toUpperCase() && r.to_currency.toUpperCase() === this.to.toUpperCase());
+    const rateObj = this.rates().find(
+      (r) =>
+        r.from_currency.toUpperCase() === this.from.toUpperCase() &&
+        r.to_currency.toUpperCase() === this.to.toUpperCase(),
+    );
     if (!rateObj) return;
 
-    this.repo.create({
-      from_currency: this.from.toUpperCase(),
-      to_currency: this.to.toUpperCase(),
-      rate: rateObj.rate,
-      effective_date: new Date().toISOString().split('T')[0],
-      is_active: true,
-    }).subscribe({
-      next: () => {
-        this.toast.success('Exchange saved');
-        this.notes = '';
-      },
-      error: () => this.toast.error('Error saving exchange'),
-    });
+    this.repo
+      .create({
+        from_currency: this.from.toUpperCase(),
+        to_currency: this.to.toUpperCase(),
+        rate: rateObj.rate,
+        effective_date: new Date().toISOString().split('T')[0],
+        is_active: true,
+      })
+      .subscribe({
+        next: () => {
+          this.toast.success('Exchange saved');
+          this.notes = '';
+        },
+        error: () => this.toast.error('Error saving exchange'),
+      });
   }
 }

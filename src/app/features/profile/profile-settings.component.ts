@@ -1,7 +1,6 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, OnInit, inject, signal, ChangeDetectionStrategy } from '@angular/core';
+
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { HttpErrorResponse } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { I18nService, AppStringKey } from '../../core/i18n/i18n.service';
 import { AuthService } from '../../core/auth/auth.service';
@@ -9,7 +8,11 @@ import { ToastService } from '../../shared/services/toast.service';
 import { DialogFormDirective } from '../../shared/directives/dialog-form.directive';
 import { ChatSessionService } from '../chat/services/chat-session.service';
 import { NotificationsSessionService } from '../../core/notifications/notifications-session.service';
-import { MediaPermissionKind, MediaPermissionService } from '../../shared/services/media-permission.service';
+import {
+  MediaPermissionKind,
+  MediaPermissionService,
+} from '../../shared/services/media-permission.service';
+import { normalizeAppError } from '../../core/api/app-error';
 
 const API_FIELD_TO_CONTROL: Record<string, string> = {
   current_password: 'currentPassword',
@@ -20,8 +23,9 @@ const API_FIELD_TO_CONTROL: Record<string, string> = {
 @Component({
   selector: 'app-profile-settings',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, DialogFormDirective],
+  imports: [ReactiveFormsModule, DialogFormDirective],
   templateUrl: './profile-settings.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './profile-settings.component.scss',
 })
 export class ProfileSettingsComponent implements OnInit {
@@ -59,7 +63,9 @@ export class ProfileSettingsComponent implements OnInit {
       return kind === 'camera' ? this.t('cameraAccess') : this.t('microphoneAccess');
     }
     if (state === 'denied') {
-      return kind === 'camera' ? this.t('cameraPermissionDenied') : this.t('microphonePermissionDenied');
+      return kind === 'camera'
+        ? this.t('cameraPermissionDenied')
+        : this.t('microphonePermissionDenied');
     }
     return kind === 'camera' ? this.t('enableCamera') : this.t('enableMicrophone');
   }
@@ -71,17 +77,23 @@ export class ProfileSettingsComponent implements OnInit {
       return;
     }
     if (this.mediaPermissions.getState(kind) === 'denied') {
-      this.toast.error(this.t(kind === 'camera' ? 'cameraPermissionDeniedHint' : 'microphonePermissionDeniedHint'));
+      this.toast.error(
+        this.t(kind === 'camera' ? 'cameraPermissionDeniedHint' : 'microphonePermissionDeniedHint'),
+      );
       return;
     }
     this.mediaPermissionLoading.set(kind);
     try {
       const state = await this.mediaPermissions.requestPermission(kind);
       if (state === 'granted') {
-        this.toast.success(this.t(kind === 'camera' ? 'cameraPermissionGranted' : 'microphonePermissionGranted'));
+        this.toast.success(
+          this.t(kind === 'camera' ? 'cameraPermissionGranted' : 'microphonePermissionGranted'),
+        );
         return;
       }
-      this.toast.error(this.t(kind === 'camera' ? 'cameraPermissionDenied' : 'microphonePermissionDenied'));
+      this.toast.error(
+        this.t(kind === 'camera' ? 'cameraPermissionDenied' : 'microphonePermissionDenied'),
+      );
     } finally {
       this.mediaPermissionLoading.set(null);
     }
@@ -130,35 +142,38 @@ export class ProfileSettingsComponent implements OnInit {
       return;
     }
     this.passwordSaving.set(true);
-    this.auth.changePassword({
-      current_password: currentPassword,
-      new_password: newPassword,
-      confirm_password: confirmPassword,
-    }).subscribe({
-      next: (response) => {
-        this.passwordSaving.set(false);
-        this.passwordForm.reset();
-        this.toast.success(response.detail || this.t('passwordChanged'));
-        void this.chatSession.stop().then(() => {
-          this.notificationsSession.stop();
-          this.auth.logout();
-          void this.router.navigate(['/login']);
-        });
-      },
-      error: (err: HttpErrorResponse) => {
-        this.passwordSaving.set(false);
-        if (err.status === 400) {
-          this.applyApiFieldErrors(err.error);
-          return;
-        }
-        if (err.status === 401) {
-          this.auth.logout();
-          void this.router.navigate(['/login']);
-          return;
-        }
-        this.toast.error(this.t('passwordChangeFailed'));
-      },
-    });
+    this.auth
+      .changePassword({
+        current_password: currentPassword,
+        new_password: newPassword,
+        confirm_password: confirmPassword,
+      })
+      .subscribe({
+        next: (response) => {
+          this.passwordSaving.set(false);
+          this.passwordForm.reset();
+          this.toast.success(response.detail || this.t('passwordChanged'));
+          void this.chatSession.stop().then(() => {
+            this.notificationsSession.stop();
+            this.auth.logout();
+            void this.router.navigate(['/login']);
+          });
+        },
+        error: (error: unknown) => {
+          this.passwordSaving.set(false);
+          const err = normalizeAppError(error);
+          if (err.status === 400) {
+            this.applyApiFieldErrors(err.fieldErrors);
+            return;
+          }
+          if (err.status === 401) {
+            this.auth.logout();
+            void this.router.navigate(['/login']);
+            return;
+          }
+          this.toast.error(this.t('passwordChangeFailed'));
+        },
+      });
   }
 
   private clearApiFieldErrors(): void {

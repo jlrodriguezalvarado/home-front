@@ -1,108 +1,159 @@
-<div class="fixed inset-0 bg-black/50 flex items-center justify-center p-md z-50">
-  <div class="bg-surface-container-lowest w-full max-w-lg p-xl rounded-[24px] border border-outline-variant shadow-card-hover max-h-[90vh] overflow-y-auto">
-    <h2 class="text-title-lg text-on-surface mb-lg">
+<div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-md" (appDialogEscape)="close()">
+  <div
+    class="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-[24px] border border-outline-variant bg-surface-container-lowest p-xl shadow-card-hover"
+  >
+    <h2 class="mb-lg text-title-lg text-on-surface">
       {{ i18n.lang() === 'en' ? 'Register expenses' : 'Registrar gastos' }}
     </h2>
-    <div *ngIf="loading()" class="text-body-md text-on-surface-variant py-xl text-center">
-      {{ i18n.lang() === 'en' ? 'Loading pending expenses...' : 'Cargando gastos pendientes...' }}
-    </div>
-    <div *ngIf="!loading()"
-         class="space-y-md"
-         appDialogForm
-         [dialogSubmitDisabled]="saving() || !canSubmit()"
-         (dialogSubmit)="submit()">
-      <div *ngIf="groups().length === 0" class="text-body-md text-on-surface-variant text-center py-md">
-        {{ i18n.lang() === 'en' ? 'No pending expenses for this month.' : 'No hay gastos pendientes para este mes.' }}
+    @if (loading()) {
+      <div class="py-xl text-center text-body-md text-on-surface-variant">
+        {{ i18n.lang() === 'en' ? 'Loading pending expenses...' : 'Cargando gastos pendientes...' }}
       </div>
-      <div *ngFor="let group of groups(); let i = index" class="card-surface overflow-hidden">
-        <button type="button"
-                class="w-full px-md py-sm bg-surface-container flex items-center justify-between gap-md border-b border-outline-variant text-left"
-                (click)="toggleGroup(groupKey(group, i))">
-          <div class="flex items-center gap-sm min-w-0">
-            <span class="material-symbols-outlined text-[20px] text-on-surface-variant shrink-0">
-              {{ isGroupCollapsed(groupKey(group, i)) ? 'expand_more' : 'expand_less' }}
-            </span>
-            <span class="text-label-lg text-on-surface font-medium truncate">{{ group.categoryName }}</span>
+    }
+    @if (!loading()) {
+      <div
+        class="space-y-md"
+        appDialogForm
+        [dialogSubmitDisabled]="saving() || !canSubmit()"
+        (dialogSubmit)="submit()"
+      >
+        @if (groups().length === 0) {
+          <div class="py-md text-center text-body-md text-on-surface-variant">
+            {{
+              i18n.lang() === 'en'
+                ? 'No pending expenses for this month.'
+                : 'No hay gastos pendientes para este mes.'
+            }}
           </div>
-          <span class="text-label-sm text-on-surface-variant shrink-0">{{ group.items.length }}</span>
-        </button>
-        <div *ngIf="!isGroupCollapsed(groupKey(group, i))" class="divide-y divide-outline-variant">
-          <label class="p-md flex items-center gap-sm cursor-pointer hover:bg-surface-container/50 transition-colors">
-            <input type="checkbox"
-                   class="rounded"
-                   [checked]="isGroupFullySelected(group)"
-                   (change)="toggleGroupSelection(group)">
-            <span class="text-label-md text-on-surface-variant">
-              {{ i18n.lang() === 'en' ? 'Select all' : 'Seleccionar todos' }}
-            </span>
-          </label>
-          <label *ngFor="let item of group.items"
-                 class="p-md flex items-center justify-between gap-md cursor-pointer hover:bg-surface-container/50 transition-colors">
-            <div class="flex items-center gap-sm min-w-0 flex-1">
-              <input type="checkbox"
-                     class="rounded shrink-0"
-                     [checked]="isSelected(item)"
-                     (change)="toggleItem(item)">
-              <div class="min-w-0">
-                <div class="text-label-lg text-on-surface truncate">{{ item.name }}</div>
-                <div *ngIf="item.isCash" class="text-body-sm text-on-surface-variant">
-                  {{ i18n.lang() === 'en' ? 'Cash' : 'Efectivo' }}
-                </div>
+        }
+        @for (group of groups(); track group; let i = $index) {
+          <div class="card-surface overflow-hidden">
+            <button
+              type="button"
+              class="flex w-full items-center justify-between gap-md border-b border-outline-variant bg-surface-container px-md py-sm text-left"
+              (click)="toggleGroup(groupKey(group, i))"
+            >
+              <div class="flex min-w-0 items-center gap-sm">
+                <span
+                  class="material-symbols-outlined shrink-0 text-[20px] text-on-surface-variant"
+                >
+                  {{ isGroupCollapsed(groupKey(group, i)) ? 'expand_more' : 'expand_less' }}
+                </span>
+                <span class="truncate text-label-lg font-medium text-on-surface">{{
+                  group.categoryName
+                }}</span>
               </div>
+              <span class="text-label-sm shrink-0 text-on-surface-variant">{{
+                group.items.length
+              }}</span>
+            </button>
+            @if (!isGroupCollapsed(groupKey(group, i))) {
+              <div class="divide-y divide-outline-variant">
+                <label
+                  class="hover:bg-surface-container/50 flex cursor-pointer items-center gap-sm p-md transition-colors"
+                >
+                  <input
+                    type="checkbox"
+                    class="rounded"
+                    [checked]="isGroupFullySelected(group)"
+                    (change)="toggleGroupSelection(group)"
+                  />
+                  <span class="text-label-md text-on-surface-variant">
+                    {{ i18n.lang() === 'en' ? 'Select all' : 'Seleccionar todos' }}
+                  </span>
+                </label>
+                @for (item of group.items; track item) {
+                  <label
+                    class="hover:bg-surface-container/50 flex cursor-pointer items-center justify-between gap-md p-md transition-colors"
+                  >
+                    <div class="flex min-w-0 flex-1 items-center gap-sm">
+                      <input
+                        type="checkbox"
+                        class="shrink-0 rounded"
+                        [checked]="isSelected(item)"
+                        (change)="toggleItem(item)"
+                      />
+                      <div class="min-w-0">
+                        <div class="truncate text-label-lg text-on-surface">{{ item.name }}</div>
+                        @if (item.isCash) {
+                          <div class="text-body-sm text-on-surface-variant">
+                            {{ i18n.lang() === 'en' ? 'Cash' : 'Efectivo' }}
+                          </div>
+                        }
+                      </div>
+                    </div>
+                    <span class="shrink-0 text-numeral-md font-semibold tabular-nums text-error">
+                      {{ formatMoney(item.amount) }}
+                    </span>
+                  </label>
+                }
+              </div>
+            }
+          </div>
+        }
+        <div class="grid grid-cols-2 gap-md">
+          <div>
+            <label class="mb-xs block text-label-lg text-on-surface-variant">
+              {{ i18n.lang() === 'en' ? 'Batch color' : 'Color del lote' }}
+              <span class="text-error"> *</span>
+            </label>
+            <div class="flex items-center gap-sm">
+              <input
+                type="color"
+                [ngModel]="color"
+                (ngModelChange)="onColorInput($event)"
+                class="h-10 w-12 cursor-pointer rounded-lg border border-outline-variant bg-transparent p-0.5"
+              />
+              <input
+                type="text"
+                [ngModel]="color"
+                (ngModelChange)="onColorInput($event)"
+                class="input-outlined flex-1"
+                maxlength="7"
+                placeholder="#FFAA00"
+              />
             </div>
-            <span class="text-numeral-md tabular-nums font-semibold text-error shrink-0">
-              {{ formatMoney(item.amount) }}
-            </span>
-          </label>
-        </div>
-      </div>
-      <div class="grid grid-cols-2 gap-md">
-        <div>
-          <label class="text-label-lg text-on-surface-variant block mb-xs">
-            {{ i18n.lang() === 'en' ? 'Batch color' : 'Color del lote' }}
-            <span class="text-error"> *</span>
-          </label>
-          <div class="flex items-center gap-sm">
-            <input type="color"
-                   [ngModel]="color"
-                   (ngModelChange)="onColorInput($event)"
-                   class="w-12 h-10 rounded-lg border border-outline-variant cursor-pointer p-0.5 bg-transparent">
-            <input type="text"
-                   [ngModel]="color"
-                   (ngModelChange)="onColorInput($event)"
-                   class="input-outlined flex-1"
-                   maxlength="7"
-                   placeholder="#FFAA00">
+          </div>
+          <div>
+            <label class="mb-xs block text-label-lg text-on-surface-variant">
+              {{ i18n.lang() === 'en' ? 'Registration date' : 'Fecha de registro' }}
+              <span class="text-error"> *</span>
+            </label>
+            <input type="date" [(ngModel)]="registeredAt" class="input-outlined w-full" required />
           </div>
         </div>
         <div>
-          <label class="text-label-lg text-on-surface-variant block mb-xs">
-            {{ i18n.lang() === 'en' ? 'Registration date' : 'Fecha de registro' }}
-            <span class="text-error"> *</span>
+          <label class="mb-xs block text-label-lg text-on-surface-variant">
+            {{ i18n.lang() === 'en' ? 'Notes (optional)' : 'Notas (opcional)' }}
           </label>
-          <input type="date" [(ngModel)]="registeredAt" class="input-outlined w-full" required>
+          <textarea
+            [(ngModel)]="notes"
+            rows="2"
+            maxlength="500"
+            class="input-outlined w-full"
+          ></textarea>
+        </div>
+        <p class="text-body-sm text-on-surface-variant">
+          {{ i18n.lang() === 'en' ? 'Selected' : 'Seleccionados' }}: {{ selectedCount() }}
+        </p>
+        <div class="flex gap-md pt-md">
+          <button
+            type="button"
+            (click)="close()"
+            class="flex-1 rounded-xl border border-outline-variant py-3 text-label-lg"
+          >
+            {{ i18n.t('cancel') }}
+          </button>
+          <button
+            type="button"
+            (click)="submit()"
+            [disabled]="saving() || !canSubmit()"
+            class="btn-primary flex-1 py-3 disabled:opacity-50"
+          >
+            {{ i18n.lang() === 'en' ? 'Confirm' : 'Confirmar' }}
+          </button>
         </div>
       </div>
-      <div>
-        <label class="text-label-lg text-on-surface-variant block mb-xs">
-          {{ i18n.lang() === 'en' ? 'Notes (optional)' : 'Notas (opcional)' }}
-        </label>
-        <textarea [(ngModel)]="notes" rows="2" maxlength="500" class="input-outlined w-full"></textarea>
-      </div>
-      <p class="text-body-sm text-on-surface-variant">
-        {{ i18n.lang() === 'en' ? 'Selected' : 'Seleccionados' }}: {{ selectedCount() }}
-      </p>
-      <div class="flex gap-md pt-md">
-        <button type="button" (click)="close()" class="flex-1 py-3 border border-outline-variant rounded-xl text-label-lg">
-          {{ i18n.t('cancel') }}
-        </button>
-        <button type="button"
-                (click)="submit()"
-                [disabled]="saving() || !canSubmit()"
-                class="flex-1 btn-primary py-3 disabled:opacity-50">
-          {{ i18n.lang() === 'en' ? 'Confirm' : 'Confirmar' }}
-        </button>
-      </div>
-    </div>
+    }
   </div>
 </div>

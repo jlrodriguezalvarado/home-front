@@ -1,5 +1,5 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
+
 import { RouterLink } from '@angular/router';
 import { forkJoin } from 'rxjs';
 import { SavingsAccountType } from '../models/finance.models';
@@ -13,7 +13,8 @@ import { ToastService } from '../../../shared/services/toast.service';
 @Component({
   selector: 'app-savings-account-type-list',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [RouterLink],
+  changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './savings-account-type-list.component.html',
 })
 export class SavingsAccountTypeListComponent implements OnInit {

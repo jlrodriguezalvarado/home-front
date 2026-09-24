@@ -53,6 +53,10 @@ export class CartRepository {
     );
   }
 
+  parseDraftCart(raw: unknown): DraftCart {
+    return this.mapDraftCart(raw as Record<string, unknown>);
+  }
+
   private mapPriceRefreshResult(raw: Record<string, unknown>): CartPriceRefreshResult {
     const cartRaw = (raw['cart'] as Record<string, unknown> | undefined) ?? raw;
     return {

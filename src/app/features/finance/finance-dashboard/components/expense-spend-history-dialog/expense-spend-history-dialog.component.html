@@ -1,59 +1,94 @@
-<div class="fixed inset-0 bg-black/50 flex items-center justify-center p-md z-50">
-  <div class="bg-surface-container-lowest w-full max-w-lg p-xl rounded-[24px] border border-outline-variant shadow-card-hover max-h-[90vh] overflow-y-auto">
-    <div class="flex items-center justify-between gap-md mb-lg">
+<div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-md" (appDialogEscape)="close()">
+  <div
+    class="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-[24px] border border-outline-variant bg-surface-container-lowest p-xl shadow-card-hover"
+  >
+    <div class="mb-lg flex items-center justify-between gap-md">
       <h2 class="text-title-lg text-on-surface">
-        {{ i18n.lang() === 'en' ? 'Expense registration history' : 'Historial de gastos registrados' }}
+        {{
+          i18n.lang() === 'en' ? 'Expense registration history' : 'Historial de gastos registrados'
+        }}
       </h2>
-      <button type="button"
-              (click)="close()"
-              class="p-2 rounded-xl hover:bg-surface-container transition-colors text-on-surface-variant"
-              [title]="i18n.t('cancel')">
+      <button
+        type="button"
+        (click)="close()"
+        class="rounded-xl p-2 text-on-surface-variant transition-colors hover:bg-surface-container"
+        [title]="i18n.t('cancel')"
+      >
         <span class="material-symbols-outlined">close</span>
       </button>
     </div>
-    <p class="text-body-md text-on-surface-variant mb-md">
-      {{ i18n.lang() === 'en'
-        ? 'Batches of expenses marked as spent, ordered by registration date.'
-        : 'Lotes de gastos marcados como realizados, ordenados por fecha de registro.' }}
+    <p class="mb-md text-body-md text-on-surface-variant">
+      {{
+        i18n.lang() === 'en'
+          ? 'Batches of expenses marked as spent, ordered by registration date.'
+          : 'Lotes de gastos marcados como realizados, ordenados por fecha de registro.'
+      }}
     </p>
-    <div *ngIf="loading()" class="text-center py-xl text-on-surface-variant text-body-md">
-      {{ i18n.lang() === 'en' ? 'Loading history...' : 'Cargando historial...' }}
-    </div>
-    <div *ngIf="!loading() && batches().length === 0" class="card-surface p-xl text-center text-on-surface-variant text-body-md">
-      {{ i18n.lang() === 'en' ? 'No registered expense batches yet.' : 'Aún no hay lotes de gastos registrados.' }}
-    </div>
-    <div *ngIf="!loading() && batches().length > 0" class="space-y-md">
-      <div *ngFor="let batch of batches()"
-           class="expense-spend-batch card-surface overflow-hidden"
-           [style.--batch-color]="batch.color">
-        <div class="batch-header px-md py-sm flex items-center justify-between gap-md border-b border-outline-variant">
-          <div class="flex items-center gap-sm min-w-0">
-            <span class="batch-color-dot shrink-0 w-4 h-4 rounded-full border border-outline-variant"
-                  [style.background-color]="batch.color"></span>
-            <span class="text-label-lg text-on-surface font-medium tabular-nums">{{ batch.registeredAt }}</span>
-          </div>
-          <span class="text-numeral-md tabular-nums font-semibold text-error shrink-0">
-            {{ formatMoney(batch.totalAmount) }}
-          </span>
-        </div>
-        <div class="divide-y divide-outline-variant">
-          <div *ngFor="let item of batch.items" class="p-md flex justify-between items-center gap-md">
-            <div class="min-w-0">
-              <div class="text-label-lg text-on-surface truncate">{{ item.name }}</div>
-              <div class="text-body-sm text-on-surface-variant">
-                {{ expenseTypeLabel(item.expenseType) }}
-                <span *ngIf="item.categoryName"> · {{ item.categoryName }}</span>
-              </div>
-            </div>
-            <span class="text-label-md tabular-nums text-on-surface-variant shrink-0">
-              {{ formatMoney(item.amount) }}
-            </span>
-          </div>
-        </div>
-        <div *ngIf="batch.notes" class="px-md py-sm text-body-sm text-on-surface-variant border-t border-outline-variant">
-          {{ batch.notes }}
-        </div>
+    @if (loading()) {
+      <div class="py-xl text-center text-body-md text-on-surface-variant">
+        {{ i18n.lang() === 'en' ? 'Loading history...' : 'Cargando historial...' }}
       </div>
-    </div>
+    }
+    @if (!loading() && batches().length === 0) {
+      <div class="card-surface p-xl text-center text-body-md text-on-surface-variant">
+        {{
+          i18n.lang() === 'en'
+            ? 'No registered expense batches yet.'
+            : 'Aún no hay lotes de gastos registrados.'
+        }}
+      </div>
+    }
+    @if (!loading() && batches().length > 0) {
+      <div class="space-y-md">
+        @for (batch of batches(); track batch) {
+          <div
+            class="expense-spend-batch card-surface overflow-hidden"
+            [style.--batch-color]="batch.color"
+          >
+            <div
+              class="batch-header flex items-center justify-between gap-md border-b border-outline-variant px-md py-sm"
+            >
+              <div class="flex min-w-0 items-center gap-sm">
+                <span
+                  class="batch-color-dot h-4 w-4 shrink-0 rounded-full border border-outline-variant"
+                  [style.background-color]="batch.color"
+                ></span>
+                <span class="text-label-lg font-medium tabular-nums text-on-surface">{{
+                  batch.registeredAt
+                }}</span>
+              </div>
+              <span class="shrink-0 text-numeral-md font-semibold tabular-nums text-error">
+                {{ formatMoney(batch.totalAmount) }}
+              </span>
+            </div>
+            <div class="divide-y divide-outline-variant">
+              @for (item of batch.items; track item) {
+                <div class="flex items-center justify-between gap-md p-md">
+                  <div class="min-w-0">
+                    <div class="truncate text-label-lg text-on-surface">{{ item.name }}</div>
+                    <div class="text-body-sm text-on-surface-variant">
+                      {{ expenseTypeLabel(item.expenseType) }}
+                      @if (item.categoryName) {
+                        <span> · {{ item.categoryName }}</span>
+                      }
+                    </div>
+                  </div>
+                  <span class="shrink-0 text-label-md tabular-nums text-on-surface-variant">
+                    {{ formatMoney(item.amount) }}
+                  </span>
+                </div>
+              }
+            </div>
+            @if (batch.notes) {
+              <div
+                class="text-body-sm border-t border-outline-variant px-md py-sm text-on-surface-variant"
+              >
+                {{ batch.notes }}
+              </div>
+            }
+          </div>
+        }
+      </div>
+    }
   </div>
 </div>

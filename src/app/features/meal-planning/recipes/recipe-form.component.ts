@@ -1,11 +1,27 @@
-import { Component, ElementRef, inject, OnDestroy, OnInit, signal, ViewChild } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { FormArray, FormBuilder, ReactiveFormsModule, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
-import { HttpErrorResponse } from '@angular/common/http';
+import {
+  Component,
+  ElementRef,
+  inject,
+  OnDestroy,
+  OnInit,
+  signal,
+  ViewChild,
+  ChangeDetectionStrategy,
+} from '@angular/core';
+
+import {
+  FormArray,
+  FormBuilder,
+  ReactiveFormsModule,
+  Validators,
+  AbstractControl,
+  ValidationErrors,
+} from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { RecipeRepository } from '../repositories/recipe.repository';
 import { IngredientRepository } from '../repositories/ingredient.repository';
 import { ProductRepository } from '../../products/product.repository';
+import { AppError, normalizeAppError } from '../../../core/api/app-error';
 import { Ingredient, RecipePayload } from '../models/meal-planning.models';
 import { Product } from '../../../core/models/shopping.models';
 import { I18nService } from '../../../core/i18n/i18n.service';
@@ -15,7 +31,10 @@ import { ErrorStateComponent } from '../../../shared/components/error-state.comp
 import { RichTextEditorComponent } from '../../../shared/components/rich-text-editor.component';
 import { IngredientManageDialogComponent } from '../ingredients/ingredient-manage-dialog.component';
 import { IngredientFormDialogComponent } from '../ingredients/ingredient-form-dialog.component';
-import { canonicalPresentationUnit, isPresentationUnitKg } from '../../shopping/utils/presentation-unit.utils';
+import {
+  canonicalPresentationUnit,
+  isPresentationUnitKg,
+} from '../../shopping/utils/presentation-unit.utils';
 
 function urlValidator(control: AbstractControl): ValidationErrors | null {
   const value = String(control.value ?? '').trim();
@@ -44,7 +63,6 @@ function quantityValidator(control: AbstractControl): ValidationErrors | null {
   selector: 'app-recipe-form',
   standalone: true,
   imports: [
-    CommonModule,
     ReactiveFormsModule,
     RouterLink,
     LoadingStateComponent,
@@ -54,6 +72,7 @@ function quantityValidator(control: AbstractControl): ValidationErrors | null {
     IngredientFormDialogComponent,
   ],
   templateUrl: './recipe-form.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './recipe-form.component.scss',
 })
 export class RecipeFormComponent implements OnInit, OnDestroy {
@@ -200,14 +219,16 @@ export class RecipeFormComponent implements OnInit, OnDestroy {
         });
         this.ingredientsArray.clear();
         recipe.ingredients.forEach((row) => {
-          this.ingredientsArray.push(this.createIngredientGroup({
-            ingredient: row.ingredient.id,
-            product: row.product?.id ?? null,
-            quantity: row.quantity,
-            unit: row.unit,
-            notes: row.notes,
-            sortOrder: row.sortOrder,
-          }));
+          this.ingredientsArray.push(
+            this.createIngredientGroup({
+              ingredient: row.ingredient.id,
+              product: row.product?.id ?? null,
+              quantity: row.quantity,
+              unit: row.unit,
+              notes: row.notes,
+              sortOrder: row.sortOrder,
+            }),
+          );
         });
         recipe.ingredients.forEach((row, index) => {
           if (row.product?.id) this.ensureProductLoaded(row.product.id, index);
@@ -227,7 +248,7 @@ export class RecipeFormComponent implements OnInit, OnDestroy {
     ingredient?: string;
     product?: string | null;
     quantity?: string;
-      unit?: 'kg' | 'unit' | string;
+    unit?: 'kg' | 'unit' | string;
     notes?: string;
     sortOrder?: number;
   }) {
@@ -370,7 +391,10 @@ export class RecipeFormComponent implements OnInit, OnDestroy {
         this.loadingProductsById.set({ ...this.loadingProductsById(), [productId]: false });
         const group = this.ingredientsArray.at(index);
         if (!group) return;
-        group.patchValue({ unit: canonicalPresentationUnit(product.presentationUnit) }, { emitEvent: false });
+        group.patchValue(
+          { unit: canonicalPresentationUnit(product.presentationUnit) },
+          { emitEvent: false },
+        );
         group.get('quantity')?.updateValueAndValidity({ emitEvent: false });
       },
       error: () => {
@@ -382,7 +406,11 @@ export class RecipeFormComponent implements OnInit, OnDestroy {
   save() {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
-      this.toast.error(this.i18n.lang() === 'en' ? 'Please fix validation errors' : 'Corrige los errores de validación');
+      this.toast.error(
+        this.i18n.lang() === 'en'
+          ? 'Please fix validation errors'
+          : 'Corrige los errores de validación',
+      );
       return;
     }
     const value = this.form.getRawValue();
@@ -426,7 +454,7 @@ export class RecipeFormComponent implements OnInit, OnDestroy {
         this.toast.success(this.i18n.t('save'));
         this.router.navigate(['/meal-planning/recipes']);
       },
-      error: (err: HttpErrorResponse) => {
+      error: (err: unknown) => {
         this.saving.set(false);
         this.toast.error(this.extractSaveErrorMessage(err));
       },
@@ -437,19 +465,13 @@ export class RecipeFormComponent implements OnInit, OnDestroy {
     if (url?.startsWith('blob:')) URL.revokeObjectURL(url);
   }
 
-  private extractSaveErrorMessage(err: HttpErrorResponse): string {
+  private extractSaveErrorMessage(error: unknown): string {
     const fallback = this.i18n.lang() === 'en' ? 'Save failed' : 'Error al guardar';
-    const body = err.error;
-    if (typeof body === 'string' && body.trim()) return body;
-    if (!body || typeof body !== 'object') return fallback;
-    const record = body as Record<string, unknown>;
-    const detail = record['detail'];
-    if (typeof detail === 'string' && detail.trim()) return detail;
+    const err: AppError = normalizeAppError(error);
     for (const key of ['image', 'video', 'non_field_errors']) {
-      const value = record[key];
-      if (Array.isArray(value) && value.length > 0) return String(value[0]);
-      if (typeof value === 'string' && value.trim()) return value;
+      const value = err.fieldErrors[key]?.[0];
+      if (value) return value;
     }
-    return fallback;
+    return err.message || fallback;
   }
 }

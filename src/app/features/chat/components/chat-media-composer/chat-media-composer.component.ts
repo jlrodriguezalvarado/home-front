@@ -12,8 +12,9 @@ import {
   effect,
   inject,
   signal,
+  ChangeDetectionStrategy,
 } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { FormsModule } from '@angular/forms';
 import { Subject, takeUntil } from 'rxjs';
 import 'emoji-picker-element';
@@ -41,9 +42,10 @@ export interface ChatMediaPreview {
 @Component({
   selector: 'app-chat-media-composer',
   standalone: true,
-  imports: [CommonModule, FormsModule, ChatVoiceRecorderBarComponent],
+  imports: [FormsModule, ChatVoiceRecorderBarComponent],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
   templateUrl: './chat-media-composer.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './chat-media-composer.component.scss',
 })
 export class ChatMediaComposerComponent implements OnInit, OnDestroy {
@@ -254,4 +256,3 @@ export class ChatMediaComposerComponent implements OnInit, OnDestroy {
     textarea.style.height = `${Math.min(textarea.scrollHeight, 120)}px`;
   }
 }
-

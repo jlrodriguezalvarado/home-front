@@ -1,7 +1,8 @@
 import { Injectable, signal, computed, inject } from '@angular/core';
-import { Observable, tap, catchError, throwError } from 'rxjs';
+import { Observable, Subject, catchError, finalize, shareReplay, tap, throwError } from 'rxjs';
 import { ApiService } from '../api/api.service';
 import { API_ENDPOINTS } from '../api/endpoints';
+import { clearUserScopedStorage } from './user-session-storage';
 
 export interface AuthTokens {
   access: string;
@@ -31,11 +32,14 @@ export class AuthService {
   private readonly api = inject(ApiService);
   private readonly ACCESS_TOKEN_KEY = 'access_token';
   private readonly REFRESH_TOKEN_KEY = 'refresh_token';
+  private readonly loggedOutSubject = new Subject<void>();
 
   private _accessToken = signal<string | null>(localStorage.getItem(this.ACCESS_TOKEN_KEY));
   private _refreshToken = signal<string | null>(localStorage.getItem(this.REFRESH_TOKEN_KEY));
+  private refreshInFlight$: Observable<AuthTokens> | null = null;
 
   isAuthenticated = computed(() => !!this._accessToken());
+  readonly loggedOut$ = this.loggedOutSubject.asObservable();
 
   getAccessToken(): string | null {
     return this._accessToken();
@@ -47,15 +51,23 @@ export class AuthService {
 
   login(credentials: { email: string; password: string }): Observable<AuthTokens> {
     return this.api.post<AuthTokens>(API_ENDPOINTS.auth.login, credentials).pipe(
-      tap((tokens) => this.saveTokens(tokens)),
+      tap((tokens) => {
+        // Switching accounts without logout must not keep the previous user's local data.
+        if (this._accessToken()) {
+          clearUserScopedStorage();
+        }
+        this.saveTokens(tokens);
+      }),
     );
   }
 
   refreshToken(): Observable<AuthTokens> {
+    if (this.refreshInFlight$) return this.refreshInFlight$;
+
     const refresh = this.getRefreshToken();
     if (!refresh) return throwError(() => new Error('No refresh token available'));
 
-    return this.api.post<AuthTokens>(API_ENDPOINTS.auth.refresh, { refresh }).pipe(
+    const request$ = this.api.post<AuthTokens>(API_ENDPOINTS.auth.refresh, { refresh }).pipe(
       tap((tokens) => {
         this.saveTokens({ ...tokens, refresh });
       }),
@@ -63,7 +75,13 @@ export class AuthService {
         this.logout();
         return throwError(() => err);
       }),
+      finalize(() => {
+        if (this.refreshInFlight$ === request$) this.refreshInFlight$ = null;
+      }),
+      shareReplay({ bufferSize: 1, refCount: false }),
     );
+    this.refreshInFlight$ = request$;
+    return request$;
   }
 
   getCurrentUser(): Observable<AuthUser> {
@@ -74,13 +92,15 @@ export class AuthService {
     return this.api.post<ChangePasswordResponse>(API_ENDPOINTS.auth.changePassword, payload);
   }
 
-  logout() {
+  logout(): void {
     this._accessToken.set(null);
     this._refreshToken.set(null);
     localStorage.removeItem(this.ACCESS_TOKEN_KEY);
     localStorage.removeItem(this.REFRESH_TOKEN_KEY);
     sessionStorage.removeItem(this.ACCESS_TOKEN_KEY);
     sessionStorage.removeItem(this.REFRESH_TOKEN_KEY);
+    clearUserScopedStorage();
+    this.loggedOutSubject.next();
   }
 
   private saveTokens(tokens: AuthTokens) {

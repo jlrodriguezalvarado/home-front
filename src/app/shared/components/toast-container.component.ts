@@ -1,14 +1,15 @@
-import { Component, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
+
 import { ToastService } from '../services/toast.service';
 
 @Component({
   selector: 'app-toast-container',
   standalone: true,
-  imports: [CommonModule],
+  imports: [],
+  changeDetection: ChangeDetectionStrategy.Eager,
   template: `
     <div
-      class="fixed top-6 right-6 z-[100] flex max-w-sm flex-col items-end gap-2 pointer-events-none"
+      class="pointer-events-none fixed right-6 top-6 z-[100] flex max-w-sm flex-col items-end gap-2"
       aria-live="polite"
       aria-atomic="true"
     >
@@ -23,7 +24,7 @@ import { ToastService } from '../services/toast.service';
           [class.text-on-error-container]="toast.variant === 'error'"
           role="status"
         >
-          <span class="material-symbols-outlined text-xl shrink-0">
+          <span class="material-symbols-outlined shrink-0 text-xl">
             {{ iconFor(toast.variant) }}
           </span>
           <span class="text-label-lg font-medium">{{ toast.message }}</span>

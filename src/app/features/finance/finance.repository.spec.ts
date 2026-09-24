@@ -1,11 +1,13 @@
 import { TestBed } from '@angular/core/testing';
 import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
+import { of } from 'rxjs';
 import { FinanceRepository } from './finance.repository';
 import {
   isReportPending,
   isReportReady,
   isReportFailed,
 } from './services/finance-reports.service';
+import { FinanceWorkspaceService } from './services/finance-workspace.service';
 import { GeneratedReport } from './models/finance.models';
 import { apiUrl } from '../../core/api/api-url';
 import { API_ENDPOINTS } from '../../core/api/endpoints';
@@ -13,11 +15,18 @@ import { API_ENDPOINTS } from '../../core/api/endpoints';
 describe('FinanceRepository', () => {
   let repo: FinanceRepository;
   let httpMock: HttpTestingController;
+  const workspaceId = 'ws-1';
 
   beforeEach(() => {
     TestBed.configureTestingModule({
       imports: [HttpClientTestingModule],
-      providers: [FinanceRepository],
+      providers: [
+        FinanceRepository,
+        {
+          provide: FinanceWorkspaceService,
+          useValue: { resolveActiveId: () => of(workspaceId) },
+        },
+      ],
     });
     repo = TestBed.inject(FinanceRepository);
     httpMock = TestBed.inject(HttpTestingController);
@@ -38,11 +47,15 @@ describe('FinanceRepository', () => {
         available: '500.00',
         available_next_month: '450.00',
         initial_month_expense: '80.00',
+        previous_month_expense: '250.00',
+        previous_month_expense_editable: true,
         previous_month_remainder: '100.00',
+        previous_month_remainder_editable: true,
         initial_month_remainder: '20.00',
         next_month_expense: '60.00',
         current_global_savings: '150.00',
         previous_global_savings: '50.00',
+        previous_global_savings_editable: true,
         total_global_savings: '200.00',
         cash: '50.00',
         total: {
@@ -63,6 +76,11 @@ describe('FinanceRepository', () => {
       expect(res.totalExpenses).toBe('500.00');
       expect(res.balance).toBe('500.00');
       expect(res.initialMonthExpense).toBe('80.00');
+      expect(res.previousMonthExpense).toBe('250.00');
+      expect(res.previousMonthExpenseEditable).toBeTrue();
+      expect(res.previousMonthRemainderEditable).toBeTrue();
+      expect(res.previousGlobalSavings).toBe('50.00');
+      expect(res.previousGlobalSavingsEditable).toBeTrue();
       expect(res.total.amount).toBe('800.00');
       expect(res.total.currency.code).toBe('CLP');
       expect(res.total.currency.symbol).toBe('$');
@@ -72,10 +90,33 @@ describe('FinanceRepository', () => {
       (r) =>
         r.url === apiUrl(API_ENDPOINTS.finance.monthSummary) &&
         r.params.get('year') === '2026' &&
-        r.params.get('month') === '6',
+        r.params.get('month') === '6' &&
+        r.params.get('workspace') === workspaceId,
     );
     expect(req.request.method).toBe('GET');
     req.flush(apiResponse);
+  });
+
+  it('should update manual previous month expense', () => {
+    repo.updateManualPreviousMonthExpense('month-1', '250.00').subscribe();
+
+    const req = httpMock.expectOne(
+      (r) => r.url === apiUrl(`${API_ENDPOINTS.finance.months}month-1/`),
+    );
+    expect(req.request.method).toBe('PATCH');
+    expect(req.request.body).toEqual({ manual_previous_month_expense: '250.00' });
+    req.flush({});
+  });
+
+  it('should update manual previous global savings', () => {
+    repo.updateManualPreviousGlobalSavings('month-1', '50.00').subscribe();
+
+    const req = httpMock.expectOne(
+      (r) => r.url === apiUrl(`${API_ENDPOINTS.finance.months}month-1/`),
+    );
+    expect(req.request.method).toBe('PATCH');
+    expect(req.request.body).toEqual({ manual_previous_global_savings: '50.00' });
+    req.flush({});
   });
 
   it('should pass currency query param when requested', () => {
@@ -113,7 +154,8 @@ describe('FinanceRepository', () => {
         r.url === apiUrl(API_ENDPOINTS.finance.monthSummary) &&
         r.params.get('year') === '2026' &&
         r.params.get('month') === '6' &&
-        r.params.get('currency') === 'cur-usd',
+        r.params.get('currency') === 'cur-usd' &&
+        r.params.get('workspace') === workspaceId,
     );
     expect(req.request.method).toBe('GET');
     req.flush(apiResponse);
@@ -124,7 +166,11 @@ describe('FinanceRepository', () => {
       expect(id).toBe('month-1');
     });
 
-    const yearsReq = httpMock.expectOne((r) => r.url === apiUrl(API_ENDPOINTS.finance.years));
+    const yearsReq = httpMock.expectOne(
+      (r) =>
+        r.url === apiUrl(API_ENDPOINTS.finance.years) &&
+        r.params.get('workspace') === workspaceId,
+    );
     yearsReq.flush([{ id: 'year-1', year: 2026 }]);
 
     const monthsReq = httpMock.expectOne(
@@ -303,7 +349,9 @@ describe('FinanceRepository', () => {
     });
 
     const req = httpMock.expectOne(
-      (r) => r.url === apiUrl(API_ENDPOINTS.finance.initialExpenseCategories),
+      (r) =>
+        r.url === apiUrl(API_ENDPOINTS.finance.initialExpenseCategories) &&
+        r.params.get('workspace') === workspaceId,
     );
     expect(req.request.method).toBe('GET');
     req.flush([{ id: 'cat-1', name: 'Rent' }]);
@@ -316,7 +364,11 @@ describe('FinanceRepository', () => {
       expect(accounts[0].name).toBe('Salary');
     });
 
-    const req = httpMock.expectOne((r) => r.url === apiUrl(API_ENDPOINTS.finance.incomeAccounts));
+    const req = httpMock.expectOne(
+      (r) =>
+        r.url === apiUrl(API_ENDPOINTS.finance.incomeAccounts) &&
+        r.params.get('workspace') === workspaceId,
+    );
     expect(req.request.method).toBe('GET');
     expect(req.request.params.get('is_active')).toBe('true');
     req.flush({
@@ -347,6 +399,29 @@ describe('FinanceRepository', () => {
       notes: 'Salary',
     });
     createReq.flush({ id: '1', amount: '1000.00', income_account: 'acc-1', notes: 'Salary' });
+  });
+
+  it('should confirm exchange calculator with workspace in body', () => {
+    repo
+      .confirmExchangeCalculator({
+        sourceCurrency: 'USD',
+        targetCurrency: 'CLP',
+        amount: '10',
+      })
+      .subscribe();
+
+    const req = httpMock.expectOne(
+      (r) => r.url === apiUrl(API_ENDPOINTS.finance.exchangeCalculatorConfirm),
+    );
+    expect(req.request.method).toBe('POST');
+    expect(req.request.body).toEqual({
+      source_currency: 'USD',
+      target_currency: 'CLP',
+      amount: '10',
+      display_mode: 'compact',
+      workspace: workspaceId,
+    });
+    req.flush(null);
   });
 
   it('should evaluate report status helpers', () => {

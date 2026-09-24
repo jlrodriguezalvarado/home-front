@@ -23,6 +23,12 @@ export class ChatNotificationService {
     this.currentUserId.set(userId);
   }
 
+  reset(): void {
+    this.activeConversationId.set(null);
+    this.currentUserId.set(null);
+    this.inboxStore.reset();
+  }
+
   handleInboxEvent(event: InboxMessageEvent): void {
     if (event.message.senderId === this.currentUserId()) return;
     const isActive = event.conversationId === this.activeConversationId();

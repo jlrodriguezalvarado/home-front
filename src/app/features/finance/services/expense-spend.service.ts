@@ -130,6 +130,20 @@ export function todayIsoDate(): string {
   return `${y}-${m}-${day}`;
 }
 
+/** Today if year/month is the current calendar month; otherwise the 1st of that month. */
+export function defaultRegisteredAtIsoDate(year: number | string, month: number | string): string {
+  const y = Number(year);
+  const m = Number(month);
+  if (!Number.isFinite(y) || !Number.isFinite(m) || m < 1 || m > 12) {
+    return todayIsoDate();
+  }
+  const now = new Date();
+  if (y === now.getFullYear() && m === now.getMonth() + 1) {
+    return todayIsoDate();
+  }
+  return `${y}-${String(m).padStart(2, '0')}-01`;
+}
+
 export function expenseSpendSelectionKey(expenseType: ExpenseSpendType, id: string): string {
   return `${expenseType}:${id}`;
 }

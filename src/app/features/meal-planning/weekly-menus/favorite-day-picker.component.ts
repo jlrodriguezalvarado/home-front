@@ -1,5 +1,14 @@
-import { Component, EventEmitter, inject, Input, OnInit, Output, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import {
+  Component,
+  EventEmitter,
+  inject,
+  Input,
+  OnInit,
+  Output,
+  signal,
+  ChangeDetectionStrategy,
+} from '@angular/core';
+
 import { FormsModule } from '@angular/forms';
 import { MenuDayRepository } from '../repositories/menu-day.repository';
 import { MenuDay } from '../models/meal-planning.models';
@@ -7,11 +16,13 @@ import { I18nService } from '../../../core/i18n/i18n.service';
 import { LoadingStateComponent } from '../../../shared/components/loading-state.component';
 import { EmptyStateComponent } from '../../../shared/components/empty-state.component';
 import { ErrorStateComponent } from '../../../shared/components/error-state.component';
+import { DialogEscapeDirective } from '../../../shared/directives/dialog-escape.directive';
 
 @Component({
   selector: 'app-favorite-day-picker',
   standalone: true,
-  imports: [CommonModule, FormsModule, LoadingStateComponent, EmptyStateComponent, ErrorStateComponent],
+  imports: [FormsModule, LoadingStateComponent, EmptyStateComponent, ErrorStateComponent, DialogEscapeDirective],
+  changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './favorite-day-picker.component.html',
 })
 export class FavoriteDayPickerComponent implements OnInit {
@@ -53,15 +64,17 @@ export class FavoriteDayPickerComponent implements OnInit {
   confirmCopy() {
     const sourceMenuDayId = this.selectedDayId();
     if (!sourceMenuDayId) return;
-    this.repo.copyFavorite({
-      sourceMenuDayId,
-      targetWeeklyMenuId: this.targetWeeklyMenuId,
-      targetDayOfWeek: this.targetDayOfWeek,
-      replaceExisting: this.replaceExisting(),
-    }).subscribe({
-      next: () => this.copied.emit(),
-      error: () => this.error.set(true),
-    });
+    this.repo
+      .copyFavorite({
+        sourceMenuDayId,
+        targetWeeklyMenuId: this.targetWeeklyMenuId,
+        targetDayOfWeek: this.targetDayOfWeek,
+        replaceExisting: this.replaceExisting(),
+      })
+      .subscribe({
+        next: () => this.copied.emit(),
+        error: () => this.error.set(true),
+      });
   }
 
   close() {

@@ -1,5 +1,16 @@
-import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges, effect, inject, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import {
+  Component,
+  EventEmitter,
+  Input,
+  OnChanges,
+  Output,
+  SimpleChanges,
+  effect,
+  inject,
+  signal,
+  ChangeDetectionStrategy,
+} from '@angular/core';
+
 import { ExpenseSpendBatch } from '../../../models/finance.models';
 import { ExpenseSpendService } from '../../../services/expense-spend.service';
 import { FinanceRefreshService } from '../../../finance-refresh.service';
@@ -7,12 +18,14 @@ import { formatFinanceMoney } from '../../../finance.utils';
 import { financeApiErrorMessage } from '../../../services/finance-api.utils';
 import { I18nService } from '../../../../../core/i18n/i18n.service';
 import { ToastService } from '../../../../../shared/services/toast.service';
+import { DialogEscapeDirective } from '../../../../../shared/directives/dialog-escape.directive';
 
 @Component({
   selector: 'app-expense-spend-history-dialog',
   standalone: true,
-  imports: [CommonModule],
+  imports: [DialogEscapeDirective],
   templateUrl: './expense-spend-history-dialog.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './expense-spend-history-dialog.component.scss',
 })
 export class ExpenseSpendHistoryDialogComponent implements OnChanges {

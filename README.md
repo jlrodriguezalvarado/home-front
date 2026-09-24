@@ -3,7 +3,7 @@
 Production-ready web frontend for Home Manager, replicating Flutter app functionality.
 
 ## Stack
-- Angular 19+ (Standalone Components, Signals, Router, HttpClient)
+- Angular 22 (Standalone Components, Signals, Router, HttpClient)
 - Tailwind CSS
 - decimal.js for financial accuracy
 - jszip for Mosaic tool
@@ -16,7 +16,7 @@ Production-ready web frontend for Home Manager, replicating Flutter app function
    ```
 
 2. **Configure API:**
-   Edit `src/environments/environment.ts` or `src/environments/environment.development.ts` to set `API_BASE_URL`.
+   Edit `src/environments/environment.development.ts` to set the development `apiUrl` and `wsUrl`.
    Default: `http://localhost:8000/api/`
 
 3. **Run development server:**
@@ -63,3 +63,7 @@ Production-ready web frontend for Home Manager, replicating Flutter app function
 - `GET /api/finance/reports/` (Lists generated reports for a month)
 - `DELETE /api/currencies/<code>/` (Standard DELETE for CRUD)
 - Standard CRUD endpoints for `/api/finance/<feature>/` with `year`/`month` query params.
+
+## Deploy
+
+Producción (Traefik + imagen solo-`dist`): [DEPLOY.md](DEPLOY.md).

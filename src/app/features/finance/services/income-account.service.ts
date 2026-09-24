@@ -1,9 +1,10 @@
 import { Injectable, inject } from '@angular/core';
-import { Observable, map } from 'rxjs';
+import { Observable, map, switchMap } from 'rxjs';
 import { ApiService } from '../../../core/api/api.service';
 import { API_ENDPOINTS } from '../../../core/api/endpoints';
 import { IncomeAccount, IncomeAccountWrite } from '../models/finance.models';
 import { decodeApiList, foreignKeyId } from './finance-api.utils';
+import { FinanceWorkspaceService } from './finance-workspace.service';
 
 export interface IncomeAccountListOptions {
   currencyId?: string;
@@ -18,18 +19,24 @@ export interface IncomeAccountListOptions {
 })
 export class IncomeAccountService {
   private readonly api = inject(ApiService);
+  private readonly workspaceService = inject(FinanceWorkspaceService);
 
   list(options: IncomeAccountListOptions = {}): Observable<IncomeAccount[]> {
-    const params: Record<string, string | number | boolean> = {
-      ordering: options.ordering ?? 'name',
-      perPage: options.perPage ?? 200,
-    };
-    if (options.currencyId) params['currency'] = options.currencyId;
-    if (options.isActive != null) params['is_active'] = options.isActive;
-    if (options.page != null) params['page'] = options.page;
-    return this.api
-      .get<unknown>(API_ENDPOINTS.finance.incomeAccounts, { params })
-      .pipe(map((res) => decodeApiList<Record<string, unknown>>(res).map((item) => this.mapAccount(item))));
+    return this.workspaceService.resolveActiveId().pipe(
+      switchMap((workspace) => {
+        const params: Record<string, string | number | boolean> = {
+          ordering: options.ordering ?? 'name',
+          perPage: options.perPage ?? 200,
+          workspace,
+        };
+        if (options.currencyId) params['currency'] = options.currencyId;
+        if (options.isActive != null) params['is_active'] = options.isActive;
+        if (options.page != null) params['page'] = options.page;
+        return this.api
+          .get<unknown>(API_ENDPOINTS.finance.incomeAccounts, { params })
+          .pipe(map((res) => decodeApiList<Record<string, unknown>>(res).map((item) => this.mapAccount(item))));
+      }),
+    );
   }
 
   getById(id: string): Observable<IncomeAccount> {
@@ -39,9 +46,16 @@ export class IncomeAccountService {
   }
 
   create(data: IncomeAccountWrite): Observable<IncomeAccount> {
-    return this.api
-      .post<Record<string, unknown>>(API_ENDPOINTS.finance.incomeAccounts, this.toPayload(data))
-      .pipe(map((res) => this.mapAccount(res)));
+    return this.workspaceService.resolveActiveId().pipe(
+      switchMap((workspace) =>
+        this.api
+          .post<Record<string, unknown>>(API_ENDPOINTS.finance.incomeAccounts, {
+            ...this.toPayload(data),
+            workspace,
+          })
+          .pipe(map((res) => this.mapAccount(res))),
+      ),
+    );
   }
 
   update(id: string, data: IncomeAccountWrite): Observable<IncomeAccount> {

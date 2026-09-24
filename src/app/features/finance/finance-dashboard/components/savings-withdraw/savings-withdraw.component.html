@@ -1,0 +1,87 @@
+<div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-md" (appDialogEscape)="close()">
+  <div
+    class="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-[24px] border border-outline-variant bg-surface-container-lowest p-xl shadow-card-hover"
+  >
+    <h2 class="mb-lg text-title-lg text-on-surface">{{ i18n.t('withdrawFromSavings') }}</h2>
+    @if (loading()) {
+      <div class="py-xl text-center text-body-md text-on-surface-variant">
+        {{ i18n.t('loading') }}
+      </div>
+    }
+    @if (!loading()) {
+      <div
+        class="space-y-md"
+        appDialogForm
+        [dialogSubmitDisabled]="saving() || !canSubmit()"
+        (dialogSubmit)="submit()"
+      >
+        <div>
+          <label class="mb-xs block text-label-lg text-on-surface-variant">
+            {{ i18n.t('savingsAccountType') }}
+            <span class="text-error"> *</span>
+          </label>
+          <select [(ngModel)]="savingsAccountTypeId" class="input-outlined w-full" required>
+            <option value="">{{ i18n.t('selectSavingsAccountType') }}</option>
+            @for (type of savingsAccountTypes(); track type.id) {
+              <option [value]="type.id">{{ type.name }}</option>
+            }
+          </select>
+        </div>
+        <div>
+          <label class="mb-xs block text-label-lg text-on-surface-variant">
+            {{ i18n.t('amount') }}
+            <span class="text-error"> *</span>
+          </label>
+          <input
+            type="text"
+            inputmode="decimal"
+            [(ngModel)]="amount"
+            class="input-outlined w-full"
+            required
+          />
+          <p class="mt-xs text-body-sm text-on-surface-variant">{{ maxAmountHint() }}</p>
+        </div>
+        <div>
+          <label class="mb-xs block text-label-lg text-on-surface-variant">
+            {{ i18n.t('incomeAccount') }}
+            <span class="text-error"> *</span>
+          </label>
+          <select [(ngModel)]="incomeAccountId" class="input-outlined w-full" required>
+            <option value="">{{ i18n.t('selectIncomeAccount') }}</option>
+            @for (account of incomeAccounts(); track account.id) {
+              <option [value]="account.id">{{ account.name }}</option>
+            }
+          </select>
+        </div>
+        <div>
+          <label class="mb-xs block text-label-lg text-on-surface-variant">
+            {{ i18n.t('notesOptional') }}
+          </label>
+          <textarea
+            [(ngModel)]="notes"
+            rows="2"
+            maxlength="500"
+            class="input-outlined w-full"
+          ></textarea>
+        </div>
+        <div class="flex gap-md pt-md">
+          <button
+            type="button"
+            (click)="close()"
+            class="flex-1 rounded-xl border border-outline-variant py-3 text-label-lg"
+          >
+            {{ i18n.t('cancel') }}
+          </button>
+          <button
+            type="button"
+            (click)="submit()"
+            [disabled]="saving() || !canSubmit()"
+            class="btn-primary flex-1 py-3 disabled:opacity-50"
+          >
+            {{ i18n.t('confirm') }}
+          </button>
+        </div>
+      </div>
+    }
+  </div>
+</div>

@@ -1,5 +1,12 @@
-import { Component, computed, inject, OnInit, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import {
+  Component,
+  computed,
+  inject,
+  OnInit,
+  signal,
+  ChangeDetectionStrategy,
+} from '@angular/core';
+
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { WeeklyMenuRepository } from '../repositories/weekly-menu.repository';
 import { ShoppingList, ShoppingListItem } from '../models/meal-planning.models';
@@ -17,8 +24,9 @@ interface CommerceGroup {
 @Component({
   selector: 'app-shopping-list',
   standalone: true,
-  imports: [CommonModule, RouterLink, LoadingStateComponent, EmptyStateComponent, ErrorStateComponent],
+  imports: [RouterLink, LoadingStateComponent, EmptyStateComponent, ErrorStateComponent],
   templateUrl: './shopping-list.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './shopping-list.component.scss',
 })
 export class ShoppingListComponent implements OnInit {

@@ -1,12 +1,13 @@
-import { Component, inject, Input } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, inject, Input, ChangeDetectionStrategy } from '@angular/core';
+
 import { MenuMeal, Recipe, RecipeIngredient } from '../models/meal-planning.models';
 import { I18nService } from '../../../core/i18n/i18n.service';
 
 @Component({
   selector: 'app-meal-recipe-display',
   standalone: true,
-  imports: [CommonModule],
+  imports: [],
+  changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './meal-recipe-display.component.html',
 })
 export class MealRecipeDisplayComponent {
@@ -21,7 +22,8 @@ export class MealRecipeDisplayComponent {
   }
 
   mealSubtitle(): string | null {
-    if (this.meal.recipe && this.meal.name && this.meal.name !== this.meal.recipe.name) return this.meal.name;
+    if (this.meal.recipe && this.meal.name && this.meal.name !== this.meal.recipe.name)
+      return this.meal.name;
     return null;
   }
 

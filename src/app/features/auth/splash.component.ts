@@ -1,4 +1,4 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { Router } from '@angular/router';
 import { AuthService } from '../../core/auth/auth.service';
 
@@ -6,6 +6,7 @@ import { AuthService } from '../../core/auth/auth.service';
   selector: 'app-splash',
   standalone: true,
   templateUrl: './splash.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './splash.component.scss',
 })
 export class SplashComponent implements OnInit {
@@ -16,7 +17,7 @@ export class SplashComponent implements OnInit {
     if (this.auth.getRefreshToken()) {
       this.auth.refreshToken().subscribe({
         next: () => this.router.navigate(['/']),
-        error: () => this.router.navigate(['/login'])
+        error: () => this.router.navigate(['/login']),
       });
     } else {
       setTimeout(() => this.router.navigate(['/login']), 1000);

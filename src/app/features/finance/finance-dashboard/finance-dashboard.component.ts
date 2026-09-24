@@ -1,16 +1,28 @@
-import { Component, DestroyRef, effect, inject, OnInit, signal } from '@angular/core';
+import {
+  Component,
+  DestroyRef,
+  computed,
+  effect,
+  inject,
+  OnInit,
+  signal,
+  ChangeDetectionStrategy,
+} from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute, Router, RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
+import {
+  ActivatedRoute,
+  Router,
+  RouterOutlet,
+  RouterLink,
+  RouterLinkActive,
+} from '@angular/router';
 import { EMPTY, Subject, forkJoin, switchMap, tap, filter, map } from 'rxjs';
 import { FinanceRepository, FinanceSummary } from '../finance.repository';
 import { FinanceRefreshService } from '../finance-refresh.service';
 import { formatFinanceMoney } from '../finance.utils';
-import {
-  financeFormErrorMessage,
-  validateFinanceListForm,
-} from '../finance-form-rules';
+import { financeFormErrorMessage, validateFinanceListForm } from '../finance-form-rules';
 import { writeFinancePeriod } from '../finance-period.storage';
 import { IncomeAccount, MonthlyIncomeEntry, AppCurrency } from '../models/finance.models';
 import { financeApiErrorMessage } from '../services/finance-api.utils';
@@ -21,22 +33,20 @@ import { ConfirmService } from '../../../shared/services/confirm.service';
 import { I18nService } from '../../../core/i18n/i18n.service';
 import { ToastService } from '../../../shared/services/toast.service';
 import { DialogFormDirective } from '../../../shared/directives/dialog-form.directive';
+import { DialogEscapeDirective } from '../../../shared/directives/dialog-escape.directive';
 import { ExpenseSpendRegisterComponent } from './components/expense-spend-register/expense-spend-register.component';
 import { ExpenseSpendHistoryDialogComponent } from './components/expense-spend-history-dialog/expense-spend-history-dialog.component';
+import {
+  SummaryMetric,
+} from './components/finance-metric-card/finance-metric-card.component';
+import {
+  FinanceSummaryMetricsComponent,
+  FinanceSummaryMetricsState,
+} from './components/finance-summary-metrics/finance-summary-metrics.component';
 
 type IncomeDialogMode = 'closed' | 'add' | 'manage' | 'edit';
 
-interface SummaryMetric {
-  id: string;
-  labelEn: string;
-  labelEs: string;
-  value: string;
-  colorClass: string;
-  currencySymbol?: string;
-  action?: 'income';
-}
-
-const PRIMARY_METRIC_IDS = new Set(['expense', 'balance', 'total']);
+const PRIMARY_METRIC_IDS = new Set(['initialExpense', 'expense', 'balance', 'availableNext', 'cash']);
 
 @Component({
   selector: 'app-finance-dashboard',
@@ -48,10 +58,13 @@ const PRIMARY_METRIC_IDS = new Set(['expense', 'balance', 'total']);
     RouterLink,
     RouterLinkActive,
     DialogFormDirective,
+    DialogEscapeDirective,
     ExpenseSpendRegisterComponent,
     ExpenseSpendHistoryDialogComponent,
+    FinanceSummaryMetricsComponent,
   ],
   templateUrl: './finance-dashboard.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './finance-dashboard.component.scss',
 })
 export class FinanceDashboardComponent implements OnInit {
@@ -83,6 +96,12 @@ export class FinanceDashboardComponent implements OnInit {
   summaryDetailsExpanded = signal(false);
   summaryCurrencyId = signal('');
   currencies = signal<AppCurrency[]>([]);
+  manualPreviousMonthExpense = signal('');
+  savingManualPreviousMonthExpense = signal(false);
+  manualPreviousMonthRemainder = signal('');
+  savingManualPreviousMonthRemainder = signal(false);
+  manualPreviousGlobalSavings = signal('');
+  savingManualPreviousGlobalSavings = signal(false);
   savingIncome = false;
   editingIncomeEntryId: string | null = null;
   incomeForm = {
@@ -90,9 +109,7 @@ export class FinanceDashboardComponent implements OnInit {
     notes: '',
     incomeAccountId: '',
   };
-
   formatMoney = formatFinanceMoney;
-
   tabs = [
     { path: 'initial-expenses', labelEn: 'Initial', labelEs: 'Inicial' },
     { path: 'math', labelEn: 'Math', labelEs: 'Math' },
@@ -117,7 +134,7 @@ export class FinanceDashboardComponent implements OnInit {
       )
       .subscribe({
         next: (res) => {
-          this.summary.set(res);
+          this.setSummary(res);
           this.loading.set(false);
         },
         error: () => {
@@ -168,7 +185,7 @@ export class FinanceDashboardComponent implements OnInit {
       )
       .subscribe({
         next: ({ year, month, res }) => {
-          this.summary.set(res);
+          this.setSummary(res);
           this.finishPeriodLoad(year, month);
         },
         error: () => {
@@ -186,6 +203,13 @@ export class FinanceDashboardComponent implements OnInit {
   private loadSummary$(year: string, month: string) {
     const currency = this.summaryCurrencyId();
     return this.repo.getMonthlySummary(year, month, currency ? { currency } : undefined);
+  }
+
+  private setSummary(summary: FinanceSummary) {
+    this.summary.set(summary);
+    this.manualPreviousMonthExpense.set(summary.previousMonthExpense);
+    this.manualPreviousMonthRemainder.set(summary.previousMonthRemainder);
+    this.manualPreviousGlobalSavings.set(summary.previousGlobalSavings);
   }
 
   onSummaryCurrencyChange(currencyId: string) {
@@ -209,52 +233,249 @@ export class FinanceDashboardComponent implements OnInit {
     this.refresh.completePeriodChange(year, month);
   }
 
-  metrics(): SummaryMetric[] {
+  metrics = computed((): SummaryMetric[] => {
     const s = this.summary();
     if (!s) return [];
     const totalCode = s.total.currency.code || 'USD';
     const totalSymbol = s.total.currency.symbol || '$';
     return [
-      { id: 'income', labelEn: 'Month income', labelEs: 'Ingreso del mes', value: s.totalIncome, colorClass: 'text-secondary', action: 'income' },
-      { id: 'expense', labelEn: 'Month expense', labelEs: 'Gasto del mes', value: s.totalExpenses, colorClass: 'text-error' },
-      { id: 'initialExpense', labelEn: 'Initial month expense', labelEs: 'Gasto inicial del mes', value: s.initialMonthExpense, colorClass: 'text-orange-600' },
-      { id: 'currentSavings', labelEn: 'Current global savings', labelEs: 'Ahorro global actual', value: s.currentGlobalSavings, colorClass: 'text-amber-700' },
-      { id: 'previousSavings', labelEn: 'Previous global savings', labelEs: 'Ahorro global anterior', value: s.previousGlobalSavings, colorClass: 'text-amber-900' },
-      { id: 'totalSavings', labelEn: 'Total global savings', labelEs: 'Ahorro global total', value: s.totalGlobalSavings, colorClass: 'text-teal-600' },
-      { id: 'nextExpense', labelEn: 'Next month expense', labelEs: 'Gasto próximo mes', value: s.nextMonthExpense, colorClass: 'text-purple-600' },
-      { id: 'initialRemainder', labelEn: 'Initial month remainder', labelEs: 'Remanente inicial del mes', value: s.initialMonthRemainder, colorClass: 'text-blue-grey' },
-      { id: 'balance', labelEn: 'Available', labelEs: 'Disponible', value: s.balance, colorClass: 'text-primary' },
-      { id: 'availableNext', labelEn: 'Available next month', labelEs: 'Disponible próximo mes', value: s.availableNextMonth, colorClass: 'text-indigo-600' },
-      { id: 'cash', labelEn: 'Cash', labelEs: 'Efectivo', value: s.cash, colorClass: 'text-green-600' },
-      { id: 'total', labelEn: `Total (${totalCode})`, labelEs: `Total (${totalCode})`, value: s.total.amount, colorClass: 'text-cyan-600', currencySymbol: totalSymbol },
-      { id: 'previousRemainder', labelEn: 'Previous month remainder', labelEs: 'Remanente mes anterior', value: s.previousMonthRemainder, colorClass: 'text-on-surface-variant' },
+      {
+        id: 'income',
+        labelEn: 'Month income',
+        labelEs: 'Ingreso del mes',
+        value: s.totalIncome,
+        colorClass: 'text-secondary',
+        action: 'income',
+      },
+      {
+        id: 'expense',
+        labelEn: 'Month expense',
+        labelEs: 'Gasto del mes',
+        value: s.totalExpenses,
+        colorClass: 'text-error',
+      },
+      {
+        id: 'initialExpense',
+        labelEn: 'Initial expense',
+        labelEs: 'Gasto inicial',
+        value: s.initialMonthExpense,
+        colorClass: 'text-orange-600',
+      },
+      {
+        id: 'previousExpense',
+        labelEn: 'Previous month expense',
+        labelEs: 'Gasto mes anterior',
+        value: s.previousMonthExpense,
+        colorClass: 'text-on-surface-variant',
+        action: 'previousMonthExpense',
+      },
+      {
+        id: 'currentSavings',
+        labelEn: 'Current global savings',
+        labelEs: 'Ahorro global actual',
+        value: s.currentGlobalSavings,
+        colorClass: 'text-amber-700',
+      },
+      {
+        id: 'previousSavings',
+        labelEn: 'Previous global savings',
+        labelEs: 'Ahorro global anterior',
+        value: s.previousGlobalSavings,
+        colorClass: 'text-amber-900',
+        action: 'previousGlobalSavings',
+      },
+      {
+        id: 'totalSavings',
+        labelEn: 'Total global savings',
+        labelEs: 'Ahorro global total',
+        value: s.totalGlobalSavings,
+        colorClass: 'text-teal-600',
+      },
+      {
+        id: 'nextExpense',
+        labelEn: 'Next month expense',
+        labelEs: 'Gasto próximo mes',
+        value: s.nextMonthExpense,
+        colorClass: 'text-purple-600',
+      },
+      {
+        id: 'initialRemainder',
+        labelEn: 'Initial month remainder',
+        labelEs: 'Remanente inicial del mes',
+        value: s.initialMonthRemainder,
+        colorClass: 'text-blue-grey',
+      },
+      {
+        id: 'balance',
+        labelEn: 'Available',
+        labelEs: 'Disponible',
+        value: s.balance,
+        colorClass: 'text-primary',
+      },
+      {
+        id: 'availableNext',
+        labelEn: 'Available next month',
+        labelEs: 'Disponible próximo mes',
+        value: s.availableNextMonth,
+        colorClass: 'text-indigo-600',
+      },
+      {
+        id: 'cash',
+        labelEn: 'Cash',
+        labelEs: 'Efectivo',
+        value: s.cash,
+        colorClass: 'text-green-600',
+      },
+      {
+        id: 'total',
+        labelEn: `Total (${totalCode})`,
+        labelEs: `Total (${totalCode})`,
+        value: s.total.amount,
+        colorClass: 'text-cyan-600',
+        currencySymbol: totalSymbol,
+      },
+      {
+        id: 'previousRemainder',
+        labelEn: 'Previous month remainder',
+        labelEs: 'Remanente mes anterior',
+        value: s.previousMonthRemainder,
+        colorClass: 'text-on-surface-variant',
+        action: 'previousMonthRemainder',
+      },
     ];
-  }
+  });
 
-  primaryMetrics(): SummaryMetric[] {
-    return this.metrics().filter((m) => PRIMARY_METRIC_IDS.has(m.id));
-  }
-
-  secondaryMetrics(): SummaryMetric[] {
-    return this.metrics().filter((m) => !PRIMARY_METRIC_IDS.has(m.id));
-  }
+  primaryMetrics = computed(() => this.metrics().filter((m) => PRIMARY_METRIC_IDS.has(m.id)));
+  secondaryMetrics = computed(() => this.metrics().filter((m) => !PRIMARY_METRIC_IDS.has(m.id)));
+  previousMonthExpenseEditable = computed(
+    () => this.summary()?.previousMonthExpenseEditable === true,
+  );
+  previousMonthRemainderEditable = computed(
+    () => this.summary()?.previousMonthRemainderEditable === true,
+  );
+  previousGlobalSavingsEditable = computed(
+    () => this.summary()?.previousGlobalSavingsEditable === true,
+  );
+  metricsEditorState = computed<FinanceSummaryMetricsState>(() => ({
+    previousMonthExpenseEditable: this.previousMonthExpenseEditable(),
+    manualPreviousMonthExpense: this.manualPreviousMonthExpense(),
+    savingManualPreviousMonthExpense: this.savingManualPreviousMonthExpense(),
+    canSaveManualPreviousMonthExpense: this.canSaveManualPreviousMonthExpense(),
+    previousMonthRemainderEditable: this.previousMonthRemainderEditable(),
+    manualPreviousMonthRemainder: this.manualPreviousMonthRemainder(),
+    savingManualPreviousMonthRemainder: this.savingManualPreviousMonthRemainder(),
+    canSaveManualPreviousMonthRemainder: this.canSaveManualPreviousMonthRemainder(),
+    previousGlobalSavingsEditable: this.previousGlobalSavingsEditable(),
+    manualPreviousGlobalSavings: this.manualPreviousGlobalSavings(),
+    savingManualPreviousGlobalSavings: this.savingManualPreviousGlobalSavings(),
+    canSaveManualPreviousGlobalSavings: this.canSaveManualPreviousGlobalSavings(),
+  }));
+  moreDetailsLabel = computed(() =>
+    this.i18n.lang() === 'en' ? 'More summary details' : 'Más detalles del resumen',
+  );
 
   toggleSummaryDetails() {
     this.summaryDetailsExpanded.update((open) => !open);
   }
 
-  metricLabel(m: SummaryMetric): string {
-    return this.i18n.lang() === 'en' ? m.labelEn : m.labelEs;
+  canSaveManualPreviousMonthExpense(): boolean {
+    const amount = this.manualPreviousMonthExpense().trim();
+    return amount === '' || /^\d+(?:\.\d{1,2})?$/.test(amount);
   }
 
-  formatMetricValue(m: SummaryMetric): string {
-    if (m.currencySymbol) {
-      const n = Number(m.value ?? 0);
-      const symbol = m.currencySymbol;
-      if (!Number.isFinite(n)) return `${symbol}0.00`;
-      return `${symbol}${n.toFixed(2)}`;
+  canSaveManualPreviousMonthRemainder(): boolean {
+    const amount = this.manualPreviousMonthRemainder().trim();
+    return amount === '' || /^\d+(?:\.\d{1,2})?$/.test(amount);
+  }
+
+  canSaveManualPreviousGlobalSavings(): boolean {
+    const amount = this.manualPreviousGlobalSavings().trim();
+    return amount === '' || /^\d+(?:\.\d{1,2})?$/.test(amount);
+  }
+
+  saveManualPreviousMonthExpense() {
+    const summary = this.summary();
+    const amount = this.manualPreviousMonthExpense().trim();
+    if (!summary?.financialMonthId || this.savingManualPreviousMonthExpense() || !this.canSaveManualPreviousMonthExpense()) {
+      return;
     }
-    return formatFinanceMoney(m.value);
+    this.savingManualPreviousMonthExpense.set(true);
+    this.repo
+      .updateManualPreviousMonthExpense(summary.financialMonthId, amount || null)
+      .pipe(switchMap(() => this.loadSummary$(this.year(), this.month())))
+      .subscribe({
+        next: (updatedSummary) => {
+          this.setSummary(updatedSummary);
+          this.savingManualPreviousMonthExpense.set(false);
+          this.toast.success(
+            this.i18n.lang() === 'en'
+              ? 'Previous month expense saved'
+              : 'Gasto del mes anterior guardado',
+          );
+        },
+        error: (err) => {
+          this.savingManualPreviousMonthExpense.set(false);
+          this.toast.error(financeApiErrorMessage(err, this.i18n.lang()));
+        },
+      });
+  }
+
+  saveManualPreviousMonthRemainder() {
+    const summary = this.summary();
+    const amount = this.manualPreviousMonthRemainder().trim();
+    if (
+      !summary?.financialMonthId ||
+      this.savingManualPreviousMonthRemainder() ||
+      !this.canSaveManualPreviousMonthRemainder()
+    ) {
+      return;
+    }
+    this.savingManualPreviousMonthRemainder.set(true);
+    this.repo
+      .updateManualPreviousMonthRemainder(summary.financialMonthId, amount || null)
+      .pipe(switchMap(() => this.loadSummary$(this.year(), this.month())))
+      .subscribe({
+        next: (updatedSummary) => {
+          this.setSummary(updatedSummary);
+          this.savingManualPreviousMonthRemainder.set(false);
+          this.toast.success(
+            this.i18n.lang() === 'en'
+              ? 'Previous month remainder saved'
+              : 'Remanente del mes anterior guardado',
+          );
+        },
+        error: (err) => {
+          this.savingManualPreviousMonthRemainder.set(false);
+          this.toast.error(financeApiErrorMessage(err, this.i18n.lang()));
+        },
+      });
+  }
+
+  saveManualPreviousGlobalSavings() {
+    const summary = this.summary();
+    const amount = this.manualPreviousGlobalSavings().trim();
+    if (!summary?.financialMonthId || this.savingManualPreviousGlobalSavings() || !this.canSaveManualPreviousGlobalSavings()) {
+      return;
+    }
+    this.savingManualPreviousGlobalSavings.set(true);
+    this.repo
+      .updateManualPreviousGlobalSavings(summary.financialMonthId, amount || null)
+      .pipe(switchMap(() => this.loadSummary$(this.year(), this.month())))
+      .subscribe({
+        next: (updatedSummary) => {
+          this.setSummary(updatedSummary);
+          this.savingManualPreviousGlobalSavings.set(false);
+          this.toast.success(
+            this.i18n.lang() === 'en'
+              ? 'Previous global savings saved'
+              : 'Ahorro global anterior guardado',
+          );
+        },
+        error: (err) => {
+          this.savingManualPreviousGlobalSavings.set(false);
+          this.toast.error(financeApiErrorMessage(err, this.i18n.lang()));
+        },
+      });
   }
 
   tabLabel(tab: { labelEn: string; labelEs: string }): string {
@@ -407,16 +628,18 @@ export class FinanceDashboardComponent implements OnInit {
   }
 
   canSaveIncome(): boolean {
-    return validateFinanceListForm('income', {
-      description: '',
-      amount: this.incomeForm.amount,
-      notes: this.incomeForm.notes,
-      isCash: false,
-      isRecurring: false,
-      categoryId: '',
-      savingsAccountTypeId: '',
-      incomeAccountId: this.incomeForm.incomeAccountId,
-    }) === null;
+    return (
+      validateFinanceListForm('income', {
+        description: '',
+        amount: this.incomeForm.amount,
+        notes: this.incomeForm.notes,
+        isCash: false,
+        isRecurring: false,
+        categoryId: '',
+        savingsAccountTypeId: '',
+        incomeAccountId: this.incomeForm.incomeAccountId,
+      }) === null
+    );
   }
 
   saveIncome() {
@@ -513,12 +736,12 @@ export class FinanceDashboardComponent implements OnInit {
         this.refresh.notify();
         const message =
           result.createdCount === 0 && result.skippedCount === 0
-            ? (lang === 'en'
+            ? lang === 'en'
               ? 'No recurring expenses found in the previous month'
-              : 'No se encontraron gastos recurrentes en el mes anterior')
-            : (lang === 'en'
+              : 'No se encontraron gastos recurrentes en el mes anterior'
+            : lang === 'en'
               ? `Replicated ${result.createdCount} expense(s), skipped ${result.skippedCount}`
-              : `Se replicaron ${result.createdCount} gasto(s), se omitieron ${result.skippedCount}`);
+              : `Se replicaron ${result.createdCount} gasto(s), se omitieron ${result.skippedCount}`;
         this.toast.success(message);
       },
       error: (err) => {

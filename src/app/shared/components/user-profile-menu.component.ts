@@ -1,4 +1,12 @@
-import { Component, HostListener, OnInit, computed, inject, signal } from '@angular/core';
+import {
+  Component,
+  HostListener,
+  OnInit,
+  computed,
+  inject,
+  signal,
+  ChangeDetectionStrategy,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { I18nService, AppStringKey } from '../../core/i18n/i18n.service';
@@ -15,6 +23,7 @@ import { ToastService } from '../services/toast.service';
   standalone: true,
   imports: [CommonModule, RouterLink],
   templateUrl: './user-profile-menu.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './user-profile-menu.component.scss',
 })
 export class UserProfileMenuComponent implements OnInit {
@@ -108,17 +117,23 @@ export class UserProfileMenuComponent implements OnInit {
     }
     const denied = this.mediaPermissions.getState(kind) === 'denied';
     if (denied) {
-      this.toast.error(this.t(kind === 'camera' ? 'cameraPermissionDeniedHint' : 'microphonePermissionDeniedHint'));
+      this.toast.error(
+        this.t(kind === 'camera' ? 'cameraPermissionDeniedHint' : 'microphonePermissionDeniedHint'),
+      );
       return;
     }
     this.mediaPermissionLoading.set(kind);
     try {
       const state = await this.mediaPermissions.requestPermission(kind);
       if (state === 'granted') {
-        this.toast.success(this.t(kind === 'camera' ? 'cameraPermissionGranted' : 'microphonePermissionGranted'));
+        this.toast.success(
+          this.t(kind === 'camera' ? 'cameraPermissionGranted' : 'microphonePermissionGranted'),
+        );
         return;
       }
-      this.toast.error(this.t(kind === 'camera' ? 'cameraPermissionDenied' : 'microphonePermissionDenied'));
+      this.toast.error(
+        this.t(kind === 'camera' ? 'cameraPermissionDenied' : 'microphonePermissionDenied'),
+      );
     } finally {
       this.mediaPermissionLoading.set(null);
     }

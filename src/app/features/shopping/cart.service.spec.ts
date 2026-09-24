@@ -1,5 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import { of } from 'rxjs';
+import { of, Subject } from 'rxjs';
 import { CartService } from './cart.service';
 import { CartStorageService } from './cart-storage.service';
 import { CartRepository } from './cart.repository';
@@ -10,6 +10,13 @@ import { HttpClientTestingModule } from '@angular/common/http/testing';
 describe('CartService', () => {
   let service: CartService;
   let storage: CartStorageService;
+  let cartRepo: {
+    getCurrent: jasmine.Spy;
+    syncCurrent: jasmine.Spy;
+    refreshPrices: jasmine.Spy;
+  };
+  const loggedOut$ = new Subject<void>();
+  let authenticated = false;
 
   const kgProduct: Product = {
     id: 101,
@@ -39,24 +46,35 @@ describe('CartService', () => {
 
   beforeEach(() => {
     localStorage.clear();
+    authenticated = false;
+    cartRepo = {
+      getCurrent: jasmine.createSpy('getCurrent').and.returnValue(
+        of({ id: '', status: 'draft', filterCommerceId: null, items: [], updatedAt: '' }),
+      ),
+      syncCurrent: jasmine.createSpy('syncCurrent').and.returnValue(
+        of({ id: '', status: 'draft', filterCommerceId: null, items: [], updatedAt: '' }),
+      ),
+      refreshPrices: jasmine.createSpy('refreshPrices').and.returnValue(
+        of({
+          cart: { id: '', status: 'draft', filterCommerceId: null, items: [], updatedAt: '' },
+          updatedCount: 0,
+          skippedCount: 0,
+        }),
+      ),
+    };
     TestBed.configureTestingModule({
       imports: [HttpClientTestingModule],
       providers: [
         {
           provide: AuthService,
-          useValue: { isAuthenticated: () => false },
+          useValue: {
+            isAuthenticated: () => authenticated,
+            loggedOut$: loggedOut$.asObservable(),
+          },
         },
         {
           provide: CartRepository,
-          useValue: {
-            getCurrent: () => of({ id: '', status: 'draft', filterCommerceId: null, items: [], updatedAt: '' }),
-            syncCurrent: () => of({ id: '', status: 'draft', filterCommerceId: null, items: [], updatedAt: '' }),
-            refreshPrices: () => of({
-              cart: { id: '', status: 'draft', filterCommerceId: null, items: [], updatedAt: '' },
-              updatedCount: 0,
-              skippedCount: 0,
-            }),
-          },
+          useValue: cartRepo,
         },
       ],
     });
@@ -139,5 +157,35 @@ describe('CartService', () => {
     expect(service.commerceIds()).toEqual(['c2']);
     expect(service.items().find((i) => i.product.id === unitProduct.id)?.product.commerceId).toBe('c2');
     expect(service.resolveEffectiveFilterCommerceId()).toBe('c2');
+  });
+
+  it('clears in-memory cart on logout so the next user does not inherit it', () => {
+    service.addProduct(unitProduct);
+    expect(service.items().length).toBe(1);
+    loggedOut$.next();
+    expect(service.items().length).toBe(0);
+  });
+
+  it('does not push previous-user memory when server cart is empty', () => {
+    authenticated = true;
+    service.addProduct(unitProduct);
+    localStorage.removeItem('shopping_cart_items_v4');
+    service.resetLocalState();
+    service.syncFromServer().subscribe();
+    expect(cartRepo.syncCurrent).not.toHaveBeenCalled();
+    expect(service.items().length).toBe(0);
+  });
+
+  it('migrates guest storage cart to empty server cart', () => {
+    authenticated = true;
+    const guestItem = { product: unitProduct, quantity: 1, priceUpdatedAt: null };
+    storage.save([guestItem]);
+    cartRepo.syncCurrent.and.returnValue(
+      of({ id: 'draft-1', status: 'draft', filterCommerceId: null, items: [guestItem], updatedAt: '' }),
+    );
+    service.resetLocalState();
+    service.syncFromServer().subscribe();
+    expect(cartRepo.syncCurrent).toHaveBeenCalled();
+    expect(service.items().length).toBe(1);
   });
 });

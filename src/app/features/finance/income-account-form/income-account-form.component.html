@@ -1,66 +1,95 @@
-
-<div class="space-y-lg max-w-xl">
-  <div class="flex items-center gap-sm min-w-0">
-    <a routerLink="/finance/income-accounts"
-       class="p-2 border border-outline-variant rounded-xl hover:bg-surface-container transition-colors shrink-0">
+<div class="max-w-xl space-y-lg">
+  <div class="flex min-w-0 items-center gap-sm">
+    <a
+      routerLink="/finance/income-accounts"
+      class="shrink-0 rounded-xl border border-outline-variant p-2 transition-colors hover:bg-surface-container"
+    >
       <span class="material-symbols-outlined">arrow_back</span>
     </a>
     <h1 class="page-title truncate">
-      {{ accountId
-        ? (i18n.lang() === 'en' ? 'Edit income account' : 'Editar cuenta de ingreso')
-        : (i18n.lang() === 'en' ? 'New income account' : 'Nueva cuenta de ingreso') }}
+      {{
+        accountId
+          ? i18n.lang() === 'en'
+            ? 'Edit income account'
+            : 'Editar cuenta de ingreso'
+          : i18n.lang() === 'en'
+            ? 'New income account'
+            : 'Nueva cuenta de ingreso'
+      }}
     </h1>
   </div>
 
-  <div *ngIf="loading()" class="text-center py-xl text-on-surface-variant">
-    {{ i18n.lang() === 'en' ? 'Loading...' : 'Cargando...' }}
-  </div>
+  @if (loading()) {
+    <div class="py-xl text-center text-on-surface-variant">
+      {{ i18n.lang() === 'en' ? 'Loading...' : 'Cargando...' }}
+    </div>
+  }
 
-  <div *ngIf="!loading()" class="card-surface p-xl space-y-md">
-    <div>
-      <label class="text-label-lg text-on-surface-variant block mb-xs">
-        {{ i18n.lang() === 'en' ? 'Name' : 'Nombre' }}
-        <span class="text-error"> *</span>
-      </label>
-      <input type="text" [(ngModel)]="form.name" class="input-outlined w-full" maxlength="255" required>
-    </div>
-    <div>
-      <label class="text-label-lg text-on-surface-variant block mb-xs">
-        {{ i18n.lang() === 'en' ? 'Currency' : 'Moneda' }}
-        <span class="text-error"> *</span>
-      </label>
-      <select [(ngModel)]="form.currencyId" class="input-outlined w-full" required>
-        <option value="">{{ i18n.lang() === 'en' ? 'Select currency' : 'Seleccionar moneda' }}</option>
-        <option *ngFor="let currency of currencies()" [value]="currency.id">
-          {{ currency.code }} — {{ currency.name }} ({{ currency.symbol }})
-        </option>
-      </select>
-      <p *ngIf="currencies().length === 0" class="text-body-sm text-on-surface-variant mt-xs">
-        {{ i18n.lang() === 'en'
-          ? 'No currencies available. Add currencies first.'
-          : 'No hay monedas disponibles. Agrega monedas primero.' }}
-        <a routerLink="/currencies" class="text-primary hover:underline">
-          {{ i18n.lang() === 'en' ? 'Go to currencies' : 'Ir a monedas' }}
+  @if (!loading()) {
+    <div class="card-surface space-y-md p-xl">
+      <div>
+        <label class="mb-xs block text-label-lg text-on-surface-variant">
+          {{ i18n.lang() === 'en' ? 'Name' : 'Nombre' }}
+          <span class="text-error"> *</span>
+        </label>
+        <input
+          type="text"
+          [(ngModel)]="form.name"
+          class="input-outlined w-full"
+          maxlength="255"
+          required
+        />
+      </div>
+      <div>
+        <label class="mb-xs block text-label-lg text-on-surface-variant">
+          {{ i18n.lang() === 'en' ? 'Currency' : 'Moneda' }}
+          <span class="text-error"> *</span>
+        </label>
+        <select [(ngModel)]="form.currencyId" class="input-outlined w-full" required>
+          <option value="">
+            {{ i18n.lang() === 'en' ? 'Select currency' : 'Seleccionar moneda' }}
+          </option>
+          @for (currency of currencies(); track currency) {
+            <option [value]="currency.id">
+              {{ currency.code }} — {{ currency.name }} ({{ currency.symbol }})
+            </option>
+          }
+        </select>
+        @if (currencies().length === 0) {
+          <p class="text-body-sm mt-xs text-on-surface-variant">
+            {{
+              i18n.lang() === 'en'
+                ? 'No currencies available. Add currencies first.'
+                : 'No hay monedas disponibles. Agrega monedas primero.'
+            }}
+            <a routerLink="/currencies" class="text-primary hover:underline">
+              {{ i18n.lang() === 'en' ? 'Go to currencies' : 'Ir a monedas' }}
+            </a>
+          </p>
+        }
+      </div>
+      <div class="flex items-center gap-sm">
+        <input type="checkbox" id="isActive" [(ngModel)]="form.isActive" class="rounded" />
+        <label for="isActive" class="text-label-lg text-on-surface-variant">
+          {{ i18n.lang() === 'en' ? 'Active account' : 'Cuenta activa' }}
+        </label>
+      </div>
+      <div class="flex gap-md pt-md">
+        <a
+          routerLink="/finance/income-accounts"
+          class="flex-1 rounded-xl border border-outline-variant py-3 text-center text-label-lg"
+        >
+          {{ i18n.t('cancel') }}
         </a>
-      </p>
+        <button
+          type="button"
+          (click)="save()"
+          [disabled]="saving || !canSave()"
+          class="btn-primary flex-1 py-3 disabled:opacity-50"
+        >
+          {{ i18n.t('save') }}
+        </button>
+      </div>
     </div>
-    <div class="flex items-center gap-sm">
-      <input type="checkbox" id="isActive" [(ngModel)]="form.isActive" class="rounded">
-      <label for="isActive" class="text-label-lg text-on-surface-variant">
-        {{ i18n.lang() === 'en' ? 'Active account' : 'Cuenta activa' }}
-      </label>
-    </div>
-    <div class="flex gap-md pt-md">
-      <a routerLink="/finance/income-accounts"
-         class="flex-1 py-3 border border-outline-variant rounded-xl text-label-lg text-center">
-        {{ i18n.t('cancel') }}
-      </a>
-      <button type="button"
-              (click)="save()"
-              [disabled]="saving || !canSave()"
-              class="flex-1 btn-primary py-3 disabled:opacity-50">
-        {{ i18n.t('save') }}
-      </button>
-    </div>
-  </div>
+  }
 </div>

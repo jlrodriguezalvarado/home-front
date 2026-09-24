@@ -4,53 +4,71 @@
       type="button"
       (click)="onDiscard()"
       [attr.aria-label]="i18n.t('chatDiscardVoice')"
-      class="voice-recorder-icon-btn">
+      class="voice-recorder-icon-btn"
+    >
       <span class="material-symbols-outlined text-[22px]">delete</span>
     </button>
-    <button
-      *ngIf="voiceRecorder.phase() === 'paused'"
-      type="button"
-      (click)="onTogglePreview()"
-      [attr.aria-label]="voiceRecorder.isPreviewPlaying() ? i18n.t('chatPauseVoicePreview') : i18n.t('chatPlayVoicePreview')"
-      class="voice-recorder-icon-btn">
-      <span class="material-symbols-outlined text-[22px]">
-        {{ voiceRecorder.isPreviewPlaying() ? 'pause' : 'play_arrow' }}
-      </span>
-    </button>
-    <div *ngIf="voiceRecorder.phase() === 'recording'" class="voice-recording-indicator">
-      <span class="voice-recording-dot"></span>
-    </div>
+    @if (voiceRecorder.phase() === 'paused') {
+      <button
+        type="button"
+        (click)="onTogglePreview()"
+        [attr.aria-label]="
+          voiceRecorder.isPreviewPlaying()
+            ? i18n.t('chatPauseVoicePreview')
+            : i18n.t('chatPlayVoicePreview')
+        "
+        class="voice-recorder-icon-btn"
+      >
+        <span class="material-symbols-outlined text-[22px]">
+          {{ voiceRecorder.isPreviewPlaying() ? 'pause' : 'play_arrow' }}
+        </span>
+      </button>
+    }
+    @if (voiceRecorder.phase() === 'recording') {
+      <div class="voice-recording-indicator">
+        <span class="voice-recording-dot"></span>
+      </div>
+    }
     <div class="voice-waveform" aria-hidden="true">
-      <span
-        *ngFor="let level of waveformBars(); let index = index"
-        class="voice-waveform-bar"
-        [class.voice-waveform-bar-played]="voiceRecorder.phase() === 'paused' && index < playedBarCount()"
-        [style.height.px]="4 + level * 22">
-      </span>
+      @for (level of waveformBars(); track level; let index = $index) {
+        <span
+          class="voice-waveform-bar"
+          [class.voice-waveform-bar-played]="
+            voiceRecorder.phase() === 'paused' && index < playedBarCount()
+          "
+          [style.height.px]="4 + level * 22"
+        >
+        </span>
+      }
     </div>
     <span class="voice-recorder-timer">{{ voiceRecorder.formattedDuration() }}</span>
-    <button
-      *ngIf="voiceRecorder.phase() === 'recording'"
-      type="button"
-      (click)="onPause()"
-      [attr.aria-label]="i18n.t('chatPauseVoiceRecording')"
-      class="voice-recorder-icon-btn voice-recorder-icon-btn-accent">
-      <span class="material-symbols-outlined text-[22px]">pause</span>
-    </button>
-    <button
-      *ngIf="voiceRecorder.phase() === 'paused'"
-      type="button"
-      (click)="onResumeRecording()"
-      [attr.aria-label]="i18n.t('chatResumeVoiceRecording')"
-      class="voice-recorder-icon-btn voice-recorder-icon-btn-accent">
-      <span class="material-symbols-outlined text-[22px]">mic</span>
-    </button>
+    @if (voiceRecorder.phase() === 'recording') {
+      <button
+        type="button"
+        (click)="onPause()"
+        [attr.aria-label]="i18n.t('chatPauseVoiceRecording')"
+        class="voice-recorder-icon-btn voice-recorder-icon-btn-accent"
+      >
+        <span class="material-symbols-outlined text-[22px]">pause</span>
+      </button>
+    }
+    @if (voiceRecorder.phase() === 'paused') {
+      <button
+        type="button"
+        (click)="onResumeRecording()"
+        [attr.aria-label]="i18n.t('chatResumeVoiceRecording')"
+        class="voice-recorder-icon-btn voice-recorder-icon-btn-accent"
+      >
+        <span class="material-symbols-outlined text-[22px]">mic</span>
+      </button>
+    }
   </div>
   <button
     type="button"
     (click)="onSend()"
     [attr.aria-label]="i18n.t('send')"
-    class="voice-recorder-send-btn">
+    class="voice-recorder-send-btn"
+  >
     <span class="material-symbols-outlined text-[22px]">send</span>
   </button>
 </div>

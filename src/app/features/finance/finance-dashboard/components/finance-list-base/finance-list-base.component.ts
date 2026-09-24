@@ -1,4 +1,16 @@
-import { Component, DestroyRef, effect, inject, Input, OnInit, signal } from '@angular/core';
+import {
+  Component,
+  DestroyRef,
+  EventEmitter,
+  Output,
+  computed,
+  effect,
+  inject,
+  Input,
+  OnInit,
+  signal,
+  ChangeDetectionStrategy,
+} from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -20,6 +32,8 @@ import { ConfirmService } from '../../../../../shared/services/confirm.service';
 import { I18nService } from '../../../../../core/i18n/i18n.service';
 import { ToastService } from '../../../../../shared/services/toast.service';
 import { DialogFormDirective } from '../../../../../shared/directives/dialog-form.directive';
+import { DialogEscapeDirective } from '../../../../../shared/directives/dialog-escape.directive';
+import { FinanceEntryRowComponent } from '../finance-entry-row/finance-entry-row.component';
 
 export interface ExpenseCategoryGroup {
   categoryId: string;
@@ -31,8 +45,16 @@ export interface ExpenseCategoryGroup {
 @Component({
   selector: 'app-finance-list-base',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, DialogFormDirective],
+  imports: [
+    CommonModule,
+    FormsModule,
+    RouterLink,
+    DialogFormDirective,
+    DialogEscapeDirective,
+    FinanceEntryRowComponent,
+  ],
   templateUrl: './finance-list-base.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './finance-list-base.component.scss',
 })
 export class FinanceListBaseComponent implements OnInit {
@@ -48,6 +70,7 @@ export class FinanceListBaseComponent implements OnInit {
 
   @Input() feature = '';
   @Input() isExpense = true;
+  @Output() withdrawRequested = new EventEmitter<void>();
 
   entries = signal<FinanceEntry[]>([]);
   categories = signal<FinanceCategory[]>([]);
@@ -71,6 +94,53 @@ export class FinanceListBaseComponent implements OnInit {
 
   formatMoney = formatFinanceMoney;
   isRequired = isFieldRequired;
+
+  listTotal = computed(() => sumEntryAmounts(this.entries().map((e) => e.amount)));
+
+  showGroupedByCategory = computed(() => this.feature === 'initial-expenses');
+
+  groupedEntries = computed((): ExpenseCategoryGroup[] => {
+    const byCategory = new Map<string, FinanceEntry[]>();
+    for (const entry of this.entries()) {
+      const key = entry.categoryId ?? '';
+      const list = byCategory.get(key) ?? [];
+      list.push(entry);
+      byCategory.set(key, list);
+    }
+    const groups: ExpenseCategoryGroup[] = [];
+    const sortedCategories = [...this.categories()].sort((a, b) => {
+      const orderA = a.sortOrder ?? 999;
+      const orderB = b.sortOrder ?? 999;
+      if (orderA !== orderB) return orderA - orderB;
+      return a.name.localeCompare(b.name);
+    });
+    for (const category of sortedCategories) {
+      const items = byCategory.get(category.id);
+      if (!items?.length) continue;
+      groups.push({
+        categoryId: category.id,
+        name: category.name,
+        items,
+        total: sumEntryAmounts(items.map((e) => e.amount)),
+      });
+      byCategory.delete(category.id);
+    }
+    for (const [categoryId, items] of byCategory) {
+      if (!items.length) continue;
+      const name = categoryId
+        ? items[0].categoryName || (this.i18n.lang() === 'en' ? 'Other' : 'Otro')
+        : this.i18n.lang() === 'en'
+          ? 'Uncategorized'
+          : 'Sin categoría';
+      groups.push({
+        categoryId,
+        name,
+        items,
+        total: sumEntryAmounts(items.map((e) => e.amount)),
+      });
+    }
+    return groups;
+  });
 
   constructor() {
     effect(() => {
@@ -98,12 +168,16 @@ export class FinanceListBaseComponent implements OnInit {
     );
   }
 
-  private loadPeriodData(period: FinancePeriod): Observable<{ entries: FinanceEntry[]; categories: FinanceCategory[] }> {
+  private loadPeriodData(
+    period: FinancePeriod,
+  ): Observable<{ entries: FinanceEntry[]; categories: FinanceCategory[] }> {
     if (!this.feature) {
       return of({ entries: [], categories: [] });
     }
     return forkJoin({
-      entries: this.repo.listEntries(this.feature, period.year, period.month).pipe(catchError(() => of([]))),
+      entries: this.repo
+        .listEntries(this.feature, period.year, period.month)
+        .pipe(catchError(() => of([]))),
       categories: this.loadCategories$(period).pipe(catchError(() => of([]))),
     });
   }
@@ -136,55 +210,6 @@ export class FinanceListBaseComponent implements OnInit {
         takeUntilDestroyed(this.destroyRef),
       )
       .subscribe((res) => this.entries.set(res));
-  }
-
-  listTotal(): string {
-    return sumEntryAmounts(this.entries().map((e) => e.amount));
-  }
-
-  showGroupedByCategory(): boolean {
-    return this.feature === 'initial-expenses';
-  }
-
-  groupedEntries(): ExpenseCategoryGroup[] {
-    const byCategory = new Map<string, FinanceEntry[]>();
-    for (const entry of this.entries()) {
-      const key = entry.categoryId ?? '';
-      const list = byCategory.get(key) ?? [];
-      list.push(entry);
-      byCategory.set(key, list);
-    }
-    const groups: ExpenseCategoryGroup[] = [];
-    const sortedCategories = [...this.categories()].sort((a, b) => {
-      const orderA = a.sortOrder ?? 999;
-      const orderB = b.sortOrder ?? 999;
-      if (orderA !== orderB) return orderA - orderB;
-      return a.name.localeCompare(b.name);
-    });
-    for (const category of sortedCategories) {
-      const items = byCategory.get(category.id);
-      if (!items?.length) continue;
-      groups.push({
-        categoryId: category.id,
-        name: category.name,
-        items,
-        total: sumEntryAmounts(items.map((e) => e.amount)),
-      });
-      byCategory.delete(category.id);
-    }
-    for (const [categoryId, items] of byCategory) {
-      if (!items.length) continue;
-      const name = categoryId
-        ? (items[0].categoryName || (this.i18n.lang() === 'en' ? 'Other' : 'Otro'))
-        : (this.i18n.lang() === 'en' ? 'Uncategorized' : 'Sin categoría');
-      groups.push({
-        categoryId,
-        name,
-        items,
-        total: sumEntryAmounts(items.map((e) => e.amount)),
-      });
-    }
-    return groups;
   }
 
   showCategoryField(): boolean {
@@ -227,9 +252,8 @@ export class FinanceListBaseComponent implements OnInit {
     } else {
       this.editingId = null;
       this.form = {
-        description: this.feature === 'savings'
-          ? (this.i18n.lang() === 'en' ? 'Savings' : 'Ahorro')
-          : '',
+        description:
+          this.feature === 'savings' ? (this.i18n.lang() === 'en' ? 'Savings' : 'Ahorro') : '',
         amount: '',
         notes: '',
         isCash: false,
@@ -271,9 +295,13 @@ export class FinanceListBaseComponent implements OnInit {
     };
 
     if (this.editingId) {
-      this.repo.updateEntry(this.feature, this.editingId, data).subscribe({ next: onDone, error: onError });
+      this.repo
+        .updateEntry(this.feature, this.editingId, data)
+        .subscribe({ next: onDone, error: onError });
     } else {
-      this.repo.createEntry(this.feature, this.year, this.month, data).subscribe({ next: onDone, error: onError });
+      this.repo
+        .createEntry(this.feature, this.year, this.month, data)
+        .subscribe({ next: onDone, error: onError });
     }
   }
 
@@ -289,7 +317,8 @@ export class FinanceListBaseComponent implements OnInit {
         this.refresh.notify();
         this.toast.success(this.i18n.lang() === 'en' ? 'Entry deleted' : 'Registro eliminado');
       },
-      error: () => this.toast.error(this.i18n.lang() === 'en' ? 'Error deleting entry' : 'Error al eliminar'),
+      error: () =>
+        this.toast.error(this.i18n.lang() === 'en' ? 'Error deleting entry' : 'Error al eliminar'),
     });
   }
 

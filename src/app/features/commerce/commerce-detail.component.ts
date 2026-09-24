@@ -1,13 +1,20 @@
-import { Component, DestroyRef, inject, OnInit, signal } from '@angular/core';
+import {
+  Component,
+  DestroyRef,
+  inject,
+  OnInit,
+  signal,
+  ChangeDetectionStrategy,
+} from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import { HttpErrorResponse } from '@angular/common/http';
 import { interval, Subscription } from 'rxjs';
 import { CommerceRepository } from './commerce.repository';
 import { CommerceDetail, SourceUrlDetail } from './commerce.models';
 import { I18nService } from '../../core/i18n/i18n.service';
 import { ToastService } from '../../shared/services/toast.service';
+import { normalizeAppError } from '../../core/api/app-error';
 import { CommerceReprocessService } from '../../core/notifications/commerce-reprocess.service';
 import { LoadingStateComponent } from '../../shared/components/loading-state.component';
 import { ErrorStateComponent } from '../../shared/components/error-state.component';
@@ -17,6 +24,7 @@ import { ErrorStateComponent } from '../../shared/components/error-state.compone
   standalone: true,
   imports: [CommonModule, RouterModule, LoadingStateComponent, ErrorStateComponent],
   templateUrl: './commerce-detail.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './commerce-detail.component.scss',
 })
 export class CommerceDetailComponent implements OnInit {
@@ -40,11 +48,9 @@ export class CommerceDetailComponent implements OnInit {
       return;
     }
     this.load();
-    this.reprocess.finished$
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe((event) => {
-        if (event.commerce_id === this.commerceId) this.load(true);
-      });
+    this.reprocess.finished$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((event) => {
+      if (event.commerce_id === this.commerceId) this.load(true);
+    });
     this.destroyRef.onDestroy(() => this.stopPolling());
   }
 
@@ -106,7 +112,7 @@ export class CommerceDetailComponent implements OnInit {
         this.toast.info(this.i18n.t('batchProcessingStarted'));
         this.load(true);
       },
-      error: (err: HttpErrorResponse) => this.handleScrapingError(err),
+      error: (err: unknown) => this.handleScrapingError(err),
     });
   }
 
@@ -123,7 +129,7 @@ export class CommerceDetailComponent implements OnInit {
         this.toast.info(this.processingStartedMessage(sourceUrl.name));
         this.load(true);
       },
-      error: (err: HttpErrorResponse) => this.handleScrapingError(err),
+      error: (err: unknown) => this.handleScrapingError(err),
     });
   }
 
@@ -147,7 +153,8 @@ export class CommerceDetailComponent implements OnInit {
       : `Procesamiento iniciado para ${categoryName}`;
   }
 
-  private handleScrapingError(err: HttpErrorResponse) {
+  private handleScrapingError(error: unknown) {
+    const err = normalizeAppError(error);
     if (err.status === 409) {
       this.toast.info(this.i18n.t('processingAlreadyRunning'));
       this.load(true);
@@ -161,8 +168,7 @@ export class CommerceDetailComponent implements OnInit {
   }
 
   private syncPolling(detail: CommerceDetail) {
-    const shouldPoll =
-      detail.urlsProcessing || detail.sourceUrls.some((u) => u.isProcessing);
+    const shouldPoll = detail.urlsProcessing || detail.sourceUrls.some((u) => u.isProcessing);
     if (shouldPoll && !this.pollSub) {
       this.pollSub = interval(5000)
         .pipe(takeUntilDestroyed(this.destroyRef))

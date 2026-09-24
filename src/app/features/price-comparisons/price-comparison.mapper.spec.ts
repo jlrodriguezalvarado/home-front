@@ -8,7 +8,7 @@ describe('price comparison mapper', () => {
       id: 'price-1',
       storeId: 'store-1',
       productId: 'product-1',
-      price: 12.5,
+      price: '12.50',
       storeName: 'Market',
       productName: '',
     }]);
@@ -46,7 +46,7 @@ describe('price comparison mapper', () => {
     });
     expect(report.products.map((product) => product.id)).toEqual(['product-1', 'product-2']);
     expect(report.products[0].cheapestOffers.length).toBe(2);
-    expect(report.products[0].priceRange).toBe(1.5);
+    expect(report.products[0].priceRange).toBe('1.5');
     expect(report.summary.cheapestProducts[0].id).toBe('product-1');
   });
   it('does not hide invalid required identifiers', () => {

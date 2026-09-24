@@ -5,6 +5,7 @@ export interface PriceComparison {
   createdAt: string | null;
   updatedAt: string | null;
 }
+export type DecimalString = string;
 export interface ComparisonStore {
   id: string;
   comparisonId: string;
@@ -31,7 +32,7 @@ export interface ComparisonPrice {
   id: string;
   storeId: string;
   productId: string;
-  price: number;
+  price: DecimalString;
   storeName: string;
   productName: string;
 }
@@ -41,7 +42,7 @@ export interface ReportOffer {
   storeName: string;
   productId: string;
   productName: string;
-  price: number;
+  price: DecimalString;
 }
 export interface ReportProduct {
   id: string;
@@ -50,14 +51,14 @@ export interface ReportProduct {
   categories: ProductCategory[];
   prices: ReportOffer[];
   cheapestOffers: ReportOffer[];
-  minPrice: number | null;
-  maxPrice: number | null;
-  priceRange: number | null;
+  minPrice: DecimalString | null;
+  maxPrice: DecimalString | null;
+  priceRange: DecimalString | null;
 }
 export interface StoreRanking {
   storeId: string;
   storeName: string;
-  total: number;
+  total: DecimalString;
   pricedProducts: number;
   missingProducts: number;
   isComplete: boolean;

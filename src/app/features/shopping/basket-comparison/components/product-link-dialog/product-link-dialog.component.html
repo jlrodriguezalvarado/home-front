@@ -1,0 +1,133 @@
+<div
+  class="fixed inset-0 z-[70] flex items-end justify-center bg-black/50 p-0 sm:items-center sm:p-md"
+  role="dialog"
+  aria-modal="true"
+  (click)="close()"
+  (appDialogEscape)="close()"
+>
+  <div
+    class="flex max-h-[90vh] w-full max-w-lg flex-col rounded-t-2xl bg-surface sm:rounded-2xl"
+    (click)="$event.stopPropagation()"
+  >
+    <div class="flex items-center justify-between gap-sm border-b border-outline-variant px-md py-sm">
+      <div class="min-w-0">
+        <h2 class="text-title-md text-on-surface">{{ t('basketCompareLinkProduct') }}</h2>
+        @if (commerceName()) {
+          <p class="text-body-sm text-on-surface-variant">{{ commerceName() }}</p>
+        }
+      </div>
+      <button
+        type="button"
+        class="flex h-10 w-10 items-center justify-center rounded-full text-on-surface-variant hover:bg-surface-container"
+        (click)="close()"
+        [attr.aria-label]="t('cancel')"
+      >
+        <span class="material-symbols-outlined text-[22px]">close</span>
+      </button>
+    </div>
+    <div class="border-b border-outline-variant px-md py-sm">
+      <div class="flex gap-sm">
+        <input
+          type="search"
+          class="input-outlined min-w-0 flex-1 px-md py-2 text-body-md"
+          [(ngModel)]="search"
+          (keyup.enter)="onSearch()"
+          [placeholder]="t('basketCompareSearchProducts')"
+        />
+        <button type="button" class="btn-primary px-md py-2 text-label-md" (click)="onSearch()">
+          {{ t('search') }}
+        </button>
+      </div>
+    </div>
+    <div class="min-h-0 flex-1 space-y-md overflow-y-auto px-md py-md">
+      @if (loading()) {
+        <p class="text-body-md text-on-surface-variant">{{ t('loading') }}</p>
+      } @else {
+        @if (suggestions().length > 0) {
+          <section>
+            <h3 class="mb-sm text-label-md text-on-surface-variant">
+              {{ t('basketCompareBarcodeMatches') }}
+            </h3>
+            <ul class="space-y-xs">
+              @for (product of suggestions(); track product.apiId) {
+                <li>
+                  <button
+                    type="button"
+                    class="card-surface flex w-full items-center gap-sm p-sm text-left transition-colors hover:bg-surface-container-high"
+                    (click)="selectProduct(product)"
+                  >
+                    @if (product.imageUrl; as imageUrl) {
+                      <img
+                        [src]="imageUrl"
+                        [alt]="product.name"
+                        class="h-12 w-12 shrink-0 rounded-lg object-cover"
+                      />
+                    } @else {
+                      <div
+                        class="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-surface-container"
+                      >
+                        <span class="material-symbols-outlined text-on-surface-variant">image</span>
+                      </div>
+                    }
+                    <div class="min-w-0 flex-1">
+                      <div class="truncate text-label-md text-on-surface">{{ product.name }}</div>
+                      <div class="text-label-sm tabular-nums text-primary">
+                        {{ formatProductPrice(product) }}
+                      </div>
+                    </div>
+                    <span class="material-symbols-outlined text-primary">link</span>
+                  </button>
+                </li>
+              }
+            </ul>
+          </section>
+        }
+        @if (searching()) {
+          <p class="text-body-md text-on-surface-variant">{{ t('loading') }}</p>
+        } @else if (results().length > 0) {
+          <section>
+            <h3 class="mb-sm text-label-md text-on-surface-variant">
+              {{ t('basketCompareSearchResults') }}
+            </h3>
+            <ul class="space-y-xs">
+              @for (product of results(); track product.apiId) {
+                <li>
+                  <button
+                    type="button"
+                    class="card-surface flex w-full items-center gap-sm p-sm text-left transition-colors hover:bg-surface-container-high"
+                    (click)="selectProduct(product)"
+                  >
+                    @if (product.imageUrl; as imageUrl) {
+                      <img
+                        [src]="imageUrl"
+                        [alt]="product.name"
+                        class="h-12 w-12 shrink-0 rounded-lg object-cover"
+                      />
+                    } @else {
+                      <div
+                        class="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-surface-container"
+                      >
+                        <span class="material-symbols-outlined text-on-surface-variant">image</span>
+                      </div>
+                    }
+                    <div class="min-w-0 flex-1">
+                      <div class="truncate text-label-md text-on-surface">{{ product.name }}</div>
+                      <div class="text-label-sm tabular-nums text-primary">
+                        {{ formatProductPrice(product) }}
+                      </div>
+                    </div>
+                    <span class="material-symbols-outlined text-primary">link</span>
+                  </button>
+                </li>
+              }
+            </ul>
+          </section>
+        } @else if (search.trim() && !searching()) {
+          <p class="text-body-md text-on-surface-variant">{{ t('basketCompareNoProducts') }}</p>
+        } @else if (!loading() && suggestions().length === 0) {
+          <p class="text-body-md text-on-surface-variant">{{ t('basketCompareSearchHint') }}</p>
+        }
+      }
+    </div>
+  </div>
+</div>

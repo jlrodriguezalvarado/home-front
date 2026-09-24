@@ -1,86 +1,140 @@
-<ng-container [ngSwitch]="message.messageType">
-  <div
-    *ngSwitchCase="'text'"
-    class="text-body-md whitespace-pre-wrap break-words"
-    [class.chat-text-emoji-only]="emojiOnly(message.body)">
-    <ng-container *ngFor="let segment of textSegments(message.body)">
-      <span *ngIf="segment.kind === 'text'">{{ segment.value }}</span>
-      <span
-        *ngIf="segment.kind === 'emoji'"
-        class="chat-emoji"
-        [class.chat-emoji-large]="emojiOnly(message.body)">{{ segment.value }}</span>
-    </ng-container>
-  </div>
-  <div *ngSwitchCase="'system'" class="text-body-md whitespace-pre-wrap break-words opacity-80">{{ message.body }}</div>
-  <div *ngSwitchCase="'image'" class="space-y-xs">
-    <button
-      *ngIf="mediaUrl"
-      type="button"
-      (click)="openLightbox()"
-      class="block max-w-full rounded-lg overflow-hidden">
-      <img
-        [src]="mediaUrl"
-        [alt]="message.metadata?.filename || message.body"
-        class="max-w-full max-h-64 rounded-lg object-cover"
-        (error)="onMediaError()" />
-    </button>
-    <div *ngIf="!mediaUrl" class="text-body-md">{{ message.metadata?.filename || message.body }}</div>
-    <div *ngIf="message.status === 'uploading'" class="h-1 rounded-full bg-outline-variant overflow-hidden">
-      <div class="h-full bg-primary transition-all" [style.width.%]="message.uploadProgress ?? 0"></div>
+@switch (message.messageType) {
+  @case ('text') {
+    <div
+      class="whitespace-pre-wrap break-words text-body-md"
+      [class.chat-text-emoji-only]="emojiOnly(message.body)"
+    >
+      @for (segment of textSegments(message.body); track segment) {
+        @if (segment.kind === 'text') {
+          <span>{{ segment.value }}</span>
+        }
+        @if (segment.kind === 'emoji') {
+          <span class="chat-emoji" [class.chat-emoji-large]="emojiOnly(message.body)">{{
+            segment.value
+          }}</span>
+        }
+      }
     </div>
-  </div>
-  <div *ngSwitchCase="'audio'" class="space-y-xs">
-    <app-chat-audio-player
-      *ngIf="mediaUrl"
+  }
+  @case ('system') {
+    <div class="whitespace-pre-wrap break-words text-body-md opacity-80">{{ message.body }}</div>
+  }
+  @case ('image') {
+    <div class="space-y-xs">
+      @if (mediaUrl) {
+        <button
+          type="button"
+          (click)="openLightbox()"
+          class="block max-w-full overflow-hidden rounded-lg"
+        >
+          <img
+            [src]="mediaUrl"
+            [alt]="message.metadata?.filename || message.body"
+            class="max-h-64 max-w-full rounded-lg object-cover"
+            (error)="onMediaError()"
+          />
+        </button>
+      }
+      @if (!mediaUrl) {
+        <div class="text-body-md">{{ message.metadata?.filename || message.body }}</div>
+      }
+      @if (message.status === 'uploading') {
+        <div class="h-1 overflow-hidden rounded-full bg-outline-variant">
+          <div
+            class="h-full bg-primary transition-all"
+            [style.width.%]="message.uploadProgress ?? 0"
+          ></div>
+        </div>
+      }
+    </div>
+  }
+  @case ('audio') {
+    <div class="space-y-xs">
+      @if (mediaUrl) {
+        <app-chat-audio-player
+          [src]="mediaUrl"
+          [isOwn]="message.isOwn"
+          [durationHint]="$safeNavigationMigration(message.metadata?.duration)"
+        >
+        </app-chat-audio-player>
+      }
+      @if (!mediaUrl) {
+        <div class="text-body-md">{{ i18n.t('chatVoiceMessage') }}</div>
+      }
+      @if (message.status === 'uploading') {
+        <div class="h-1 overflow-hidden rounded-full bg-outline-variant">
+          <div
+            class="h-full bg-primary transition-all"
+            [style.width.%]="message.uploadProgress ?? 0"
+          ></div>
+        </div>
+      }
+    </div>
+  }
+  @case ('file') {
+    <div class="space-y-xs">
+      @if (mediaUrl) {
+        <a
+          [href]="mediaUrl"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="flex items-center gap-sm rounded-lg border border-outline-variant px-sm py-xs hover:bg-surface-container-high"
+        >
+          <span class="material-symbols-outlined text-[24px]">{{ fileIcon }}</span>
+          <div class="min-w-0">
+            <div class="truncate text-body-md">
+              {{ message.metadata?.filename || message.body }}
+            </div>
+            @if (fileSizeLabel) {
+              <div class="text-label-md opacity-70">{{ fileSizeLabel }}</div>
+            }
+          </div>
+          <span class="material-symbols-outlined ml-auto text-[18px]">download</span>
+        </a>
+      }
+      @if (!mediaUrl) {
+        <div class="text-body-md">{{ message.metadata?.filename || message.body }}</div>
+      }
+      @if (message.status === 'uploading') {
+        <div class="h-1 overflow-hidden rounded-full bg-outline-variant">
+          <div
+            class="h-full bg-primary transition-all"
+            [style.width.%]="message.uploadProgress ?? 0"
+          ></div>
+        </div>
+      }
+    </div>
+  }
+  @default {
+    <div
+      class="whitespace-pre-wrap break-words text-body-md"
+      [class.chat-text-emoji-only]="emojiOnly(message.body)"
+    >
+      @for (segment of textSegments(message.body); track segment) {
+        @if (segment.kind === 'text') {
+          <span>{{ segment.value }}</span>
+        }
+        @if (segment.kind === 'emoji') {
+          <span class="chat-emoji" [class.chat-emoji-large]="emojiOnly(message.body)">{{
+            segment.value
+          }}</span>
+        }
+      }
+    </div>
+  }
+}
+@if (lightboxOpen && mediaUrl) {
+  <div
+    class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-md"
+    (click)="closeLightbox()"
+    (appDialogEscape)="closeLightbox()"
+  >
+    <img
       [src]="mediaUrl"
-      [isOwn]="message.isOwn"
-      [durationHint]="message.metadata?.duration">
-    </app-chat-audio-player>
-    <div *ngIf="!mediaUrl" class="text-body-md">{{ i18n.t('chatVoiceMessage') }}</div>
-    <div *ngIf="message.status === 'uploading'" class="h-1 rounded-full bg-outline-variant overflow-hidden">
-      <div class="h-full bg-primary transition-all" [style.width.%]="message.uploadProgress ?? 0"></div>
-    </div>
+      [alt]="message.metadata?.filename || message.body"
+      class="max-h-full max-w-full object-contain"
+      (click)="$event.stopPropagation()"
+      (error)="onMediaError()"
+    />
   </div>
-  <div *ngSwitchCase="'file'" class="space-y-xs">
-    <a
-      *ngIf="mediaUrl"
-      [href]="mediaUrl"
-      target="_blank"
-      rel="noopener noreferrer"
-      class="flex items-center gap-sm rounded-lg border border-outline-variant px-sm py-xs hover:bg-surface-container-high">
-      <span class="material-symbols-outlined text-[24px]">{{ fileIcon }}</span>
-      <div class="min-w-0">
-        <div class="text-body-md truncate">{{ message.metadata?.filename || message.body }}</div>
-        <div *ngIf="fileSizeLabel" class="text-label-md opacity-70">{{ fileSizeLabel }}</div>
-      </div>
-      <span class="material-symbols-outlined text-[18px] ml-auto">download</span>
-    </a>
-    <div *ngIf="!mediaUrl" class="text-body-md">{{ message.metadata?.filename || message.body }}</div>
-    <div *ngIf="message.status === 'uploading'" class="h-1 rounded-full bg-outline-variant overflow-hidden">
-      <div class="h-full bg-primary transition-all" [style.width.%]="message.uploadProgress ?? 0"></div>
-    </div>
-  </div>
-  <div
-    *ngSwitchDefault
-    class="text-body-md whitespace-pre-wrap break-words"
-    [class.chat-text-emoji-only]="emojiOnly(message.body)">
-    <ng-container *ngFor="let segment of textSegments(message.body)">
-      <span *ngIf="segment.kind === 'text'">{{ segment.value }}</span>
-      <span
-        *ngIf="segment.kind === 'emoji'"
-        class="chat-emoji"
-        [class.chat-emoji-large]="emojiOnly(message.body)">{{ segment.value }}</span>
-    </ng-container>
-  </div>
-</ng-container>
-<div
-  *ngIf="lightboxOpen && mediaUrl"
-  class="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-md"
-  (click)="closeLightbox()">
-  <img
-    [src]="mediaUrl"
-    [alt]="message.metadata?.filename || message.body"
-    class="max-w-full max-h-full object-contain"
-    (click)="$event.stopPropagation()"
-    (error)="onMediaError()" />
-</div>
+}

@@ -1,11 +1,11 @@
-import { Component, Input } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, Input, ChangeDetectionStrategy } from '@angular/core';
 
 @Component({
   selector: 'app-empty-state',
   standalone: true,
-  imports: [CommonModule],
+  imports: [],
   templateUrl: './empty-state.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './empty-state.component.scss',
 })
 export class EmptyStateComponent {

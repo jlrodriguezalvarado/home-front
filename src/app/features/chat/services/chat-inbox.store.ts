@@ -13,6 +13,10 @@ export class ChatInboxStore {
     this.conversations.set(items);
   }
 
+  reset(): void {
+    this.conversations.set([]);
+  }
+
   applyInboxEvent(event: InboxMessageEvent): void {
     const { conversationId, conversationTitle, isGroup, unreadCount, message } = event;
     this.conversations.update((items) => {

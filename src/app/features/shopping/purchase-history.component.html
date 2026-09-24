@@ -1,52 +1,123 @@
-
 <div class="space-y-lg">
   <h1 class="page-title">{{ i18n.t('purchaseHistory') }}</h1>
-
-  <app-loading-state *ngIf="loading() && purchases().length === 0"></app-loading-state>
-  <app-error-state *ngIf="error()" (retry)="loadPurchases()"></app-error-state>
-  <app-empty-state *ngIf="!loading() && !error() && purchases().length === 0" icon="receipt_long"></app-empty-state>
-
+  @if (loading() && purchases().length === 0) {
+    <app-loading-state></app-loading-state>
+  }
+  @if (error()) {
+    <app-error-state (retry)="loadPurchases()"></app-error-state>
+  }
+  @if (!loading() && !error() && purchases().length === 0) {
+    <app-empty-state icon="receipt_long"></app-empty-state>
+  }
   <div class="space-y-md">
-    <div *ngFor="let p of purchases()"
-         class="card-surface p-md hover:shadow-card-hover transition-shadow">
-      <div class="flex items-start gap-md">
-        <div class="flex items-center gap-md flex-1 cursor-pointer min-w-0" (click)="viewDetail(p)">
-          <div class="w-12 h-12 rounded-xl bg-surface-container flex items-center justify-center text-primary shrink-0">
-            <span class="material-symbols-outlined">receipt_long</span>
+    @for (p of purchases(); track p.id) {
+      <div class="card-surface p-md transition-shadow hover:shadow-card-hover">
+        <div class="flex items-start gap-md">
+          <div
+            class="flex min-w-0 flex-1 cursor-pointer items-center gap-md"
+            (click)="viewDetail(p)"
+          >
+            <div
+              class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-surface-container text-primary"
+            >
+              <span class="material-symbols-outlined">receipt_long</span>
+            </div>
+            <div class="min-w-0 flex-1">
+              <div class="truncate text-label-lg text-on-surface">{{ displayName(p) }}</div>
+              <div class="truncate text-body-md text-on-surface-variant">
+                @if (p.favoriteName?.trim() && p.commerceName) {
+                  {{ p.commerceName }} ·
+                }
+                {{ p.date | date: 'mediumDate' }}
+              </div>
+              <div class="mt-xs text-numeral-md font-semibold tabular-nums text-primary md:hidden">
+                {{ p.total }}
+              </div>
+            </div>
           </div>
-          <div class="min-w-0 flex-1">
-            <div class="text-label-lg text-on-surface truncate">{{ p.commerceName }}</div>
-            <div class="text-body-md text-on-surface-variant">{{ p.date | date:'mediumDate' }}</div>
-            <div class="text-primary text-numeral-md tabular-nums font-semibold mt-xs md:hidden">{{ p.total }}</div>
+          <div class="hidden shrink-0 items-center gap-md md:flex">
+            <div class="text-numeral-md font-semibold tabular-nums text-primary">{{ p.total }}</div>
+            <button
+              type="button"
+              (click)="editName(p, $event)"
+              class="text-on-surface-variant transition-colors hover:text-primary"
+              [attr.aria-label]="i18n.t('editPurchaseName')"
+              [title]="i18n.t('editPurchaseName')"
+            >
+              <span class="material-symbols-outlined">edit</span>
+            </button>
+            <button
+              type="button"
+              (click)="usePurchase(p, $event)"
+              class="rounded-full bg-secondary-container px-md py-1 text-label-md text-on-secondary-container transition-opacity hover:opacity-90"
+            >
+              USE
+            </button>
+            <button
+              type="button"
+              (click)="toggleFavorite(p, $event)"
+              class="text-on-surface-variant transition-colors hover:text-error"
+            >
+              <span
+                class="material-symbols-outlined"
+                [class.material-symbols-filled]="p.isFavorite"
+                [class.text-error]="p.isFavorite"
+                >favorite</span
+              >
+            </button>
           </div>
         </div>
-        <div class="hidden md:flex items-center gap-md shrink-0">
-          <div class="text-primary text-numeral-md tabular-nums font-semibold">{{ p.total }}</div>
-          <button (click)="usePurchase(p)"
-                  class="px-md py-1 bg-secondary-container text-on-secondary-container text-label-md rounded-full hover:opacity-90 transition-opacity">
+        <div class="mt-sm flex items-center justify-end gap-sm md:hidden">
+          <button
+            type="button"
+            (click)="editName(p, $event)"
+            class="p-2 text-on-surface-variant"
+            [attr.aria-label]="i18n.t('editPurchaseName')"
+          >
+            <span class="material-symbols-outlined">edit</span>
+          </button>
+          <button
+            type="button"
+            (click)="usePurchase(p, $event)"
+            class="rounded-full bg-secondary-container px-md py-1.5 text-label-md text-on-secondary-container"
+          >
             USE
           </button>
-          <button (click)="toggleFavorite(p)" class="text-on-surface-variant hover:text-error transition-colors">
-            <span class="material-symbols-outlined" [class.material-symbols-filled]="p.isFavorite" [class.text-error]="p.isFavorite">favorite</span>
+          <button
+            type="button"
+            (click)="toggleFavorite(p, $event)"
+            class="p-2 text-on-surface-variant"
+          >
+            <span
+              class="material-symbols-outlined"
+              [class.material-symbols-filled]="p.isFavorite"
+              [class.text-error]="p.isFavorite"
+              >favorite</span
+            >
           </button>
         </div>
       </div>
-      <div class="flex items-center justify-end gap-sm mt-sm md:hidden">
-        <button (click)="usePurchase(p)"
-                class="px-md py-1.5 bg-secondary-container text-on-secondary-container text-label-md rounded-full">
-          USE
-        </button>
-        <button (click)="toggleFavorite(p)" class="p-2 text-on-surface-variant">
-          <span class="material-symbols-outlined" [class.material-symbols-filled]="p.isFavorite" [class.text-error]="p.isFavorite">favorite</span>
-        </button>
-      </div>
+    }
+  </div>
+  @if (hasMore()) {
+    <div class="flex justify-center py-md">
+      <button
+        type="button"
+        (click)="loadMore()"
+        [disabled]="loading()"
+        class="rounded-xl bg-surface-container px-lg py-2 text-label-lg text-on-surface transition-colors hover:bg-surface-container-high"
+      >
+        {{ loading() ? '...' : i18n.t('loadMore') }}
+      </button>
     </div>
-  </div>
-
-  <div *ngIf="hasMore()" class="flex justify-center py-md">
-    <button (click)="loadMore()" [disabled]="loading()"
-            class="px-lg py-2 bg-surface-container text-on-surface rounded-xl hover:bg-surface-container-high transition-colors text-label-lg">
-      {{ loading() ? '...' : i18n.t('loadMore') }}
-    </button>
-  </div>
+  }
 </div>
+@if (nameDialogOpen() && nameDialogPurchase(); as purchase) {
+  <app-purchase-name-dialog
+    [title]="i18n.t(nameDialogMode() === 'favorite' ? 'purchaseNamePrompt' : 'editPurchaseName')"
+    [initialName]="purchase.favoriteName || ''"
+    [busy]="nameDialogBusy()"
+    (saved)="onNameDialogSaved($event)"
+    (cancelled)="closeNameDialog()"
+  ></app-purchase-name-dialog>
+}

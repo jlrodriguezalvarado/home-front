@@ -1,5 +1,5 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
+
 import { Router } from '@angular/router';
 import { ChatRepository } from '../repositories/chat.repository';
 import { ChatInboxStore } from '../services/chat-inbox.store';
@@ -9,18 +9,20 @@ import { LoadingStateComponent } from '../../../shared/components/loading-state.
 import { EmptyStateComponent } from '../../../shared/components/empty-state.component';
 import { ErrorStateComponent } from '../../../shared/components/error-state.component';
 import { ConversationFormComponent } from '../conversation-form/conversation-form.component';
+import { DialogEscapeDirective } from '../../../shared/directives/dialog-escape.directive';
 
 @Component({
   selector: 'app-conversation-list',
   standalone: true,
   imports: [
-    CommonModule,
     LoadingStateComponent,
     EmptyStateComponent,
     ErrorStateComponent,
     ConversationFormComponent,
+    DialogEscapeDirective,
   ],
   templateUrl: './conversation-list.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './conversation-list.component.scss',
 })
 export class ConversationListComponent implements OnInit {

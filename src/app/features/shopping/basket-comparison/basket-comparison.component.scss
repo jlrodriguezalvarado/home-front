@@ -1,0 +1,12 @@
+:host {
+  display: block;
+}
+.is-missing {
+  border: 1px solid var(--md-error);
+  background-color: color-mix(in srgb, var(--md-error-container) 30%, transparent);
+}
+.is-missing-cell {
+  border-color: var(--md-error);
+  background-color: color-mix(in srgb, var(--md-error-container) 20%, transparent);
+  color: var(--md-error);
+}

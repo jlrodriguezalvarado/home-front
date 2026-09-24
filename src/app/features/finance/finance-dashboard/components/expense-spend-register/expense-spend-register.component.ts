@@ -1,25 +1,37 @@
-import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges, inject, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import {
+  Component,
+  EventEmitter,
+  Input,
+  OnChanges,
+  Output,
+  SimpleChanges,
+  inject,
+  signal,
+  ChangeDetectionStrategy,
+} from '@angular/core';
+
 import { FormsModule } from '@angular/forms';
-import { HttpErrorResponse } from '@angular/common/http';
 import { ExpenseSpendGroup, ExpenseSpendPendingItem } from '../../../models/finance.models';
 import {
   ExpenseSpendService,
+  defaultRegisteredAtIsoDate,
   expenseSpendSelectionKey,
   isValidExpenseSpendColor,
   normalizeExpenseSpendColor,
-  todayIsoDate,
 } from '../../../services/expense-spend.service';
 import { formatFinanceMoney } from '../../../finance.utils';
 import { financeApiErrorMessage } from '../../../services/finance-api.utils';
+import { normalizeAppError } from '../../../../../core/api/app-error';
 import { I18nService } from '../../../../../core/i18n/i18n.service';
 import { ToastService } from '../../../../../shared/services/toast.service';
 import { DialogFormDirective } from '../../../../../shared/directives/dialog-form.directive';
+import { DialogEscapeDirective } from '../../../../../shared/directives/dialog-escape.directive';
 
 @Component({
   selector: 'app-expense-spend-register',
   standalone: true,
-  imports: [CommonModule, FormsModule, DialogFormDirective],
+  imports: [FormsModule, DialogFormDirective, DialogEscapeDirective],
+  changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './expense-spend-register.component.html',
 })
 export class ExpenseSpendRegisterComponent implements OnChanges {
@@ -28,6 +40,8 @@ export class ExpenseSpendRegisterComponent implements OnChanges {
   toast = inject(ToastService);
 
   @Input({ required: true }) financialMonthId = '';
+  @Input({ required: true }) year = '';
+  @Input({ required: true }) month = '';
   @Output() closed = new EventEmitter<void>();
   @Output() registered = new EventEmitter<void>();
 
@@ -37,12 +51,15 @@ export class ExpenseSpendRegisterComponent implements OnChanges {
   collapsedGroups = signal<Set<string>>(new Set());
   selectedKeys = signal<Set<string>>(new Set());
   color = '#FFAA00';
-  registeredAt = todayIsoDate();
+  registeredAt = '';
   notes = '';
 
   formatMoney = formatFinanceMoney;
 
   ngOnChanges(changes: SimpleChanges) {
+    if ((changes['year'] || changes['month']) && this.year && this.month) {
+      this.registeredAt = defaultRegisteredAtIsoDate(this.year, this.month);
+    }
     if (changes['financialMonthId'] && this.financialMonthId) {
       this.loadPending();
     }
@@ -126,9 +143,7 @@ export class ExpenseSpendRegisterComponent implements OnChanges {
   canSubmit(): boolean {
     const normalized = normalizeExpenseSpendColor(this.color);
     return (
-      this.selectedCount() > 0 &&
-      !!this.registeredAt.trim() &&
-      isValidExpenseSpendColor(normalized)
+      this.selectedCount() > 0 && !!this.registeredAt.trim() && isValidExpenseSpendColor(normalized)
     );
   }
 
@@ -144,9 +159,7 @@ export class ExpenseSpendRegisterComponent implements OnChanges {
     const normalizedColor = normalizeExpenseSpendColor(this.color);
     if (this.selectedCount() === 0) {
       this.toast.error(
-        this.i18n.lang() === 'en'
-          ? 'Select at least one expense'
-          : 'Selecciona al menos un gasto',
+        this.i18n.lang() === 'en' ? 'Select at least one expense' : 'Selecciona al menos un gasto',
       );
       return;
     }
@@ -180,9 +193,7 @@ export class ExpenseSpendRegisterComponent implements OnChanges {
         next: () => {
           this.saving.set(false);
           this.toast.success(
-            this.i18n.lang() === 'en'
-              ? 'Expenses registered'
-              : 'Gastos registrados',
+            this.i18n.lang() === 'en' ? 'Expenses registered' : 'Gastos registrados',
           );
           this.registered.emit();
           this.close();
@@ -190,7 +201,7 @@ export class ExpenseSpendRegisterComponent implements OnChanges {
         error: (err) => {
           this.saving.set(false);
           this.toast.error(financeApiErrorMessage(err, this.i18n.lang()));
-          if (err instanceof HttpErrorResponse && err.status === 400) {
+          if (normalizeAppError(err).status === 400) {
             this.loadPending();
           }
         },

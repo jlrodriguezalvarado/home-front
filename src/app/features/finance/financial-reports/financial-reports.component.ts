@@ -1,9 +1,16 @@
-import { Component, DestroyRef, inject, OnInit, signal } from '@angular/core';
+import {
+  Component,
+  DestroyRef,
+  inject,
+  OnInit,
+  signal,
+  ChangeDetectionStrategy,
+} from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
-import { Subscription, timer, switchMap, takeWhile } from 'rxjs';
+import { finalize, Subscription, timer, switchMap, takeWhile } from 'rxjs';
 import { GeneratedReport, FinancialYearOption } from '../models/finance.models';
 import {
   FinanceReportsService,
@@ -23,6 +30,7 @@ const PER_PAGE = 20;
   selector: 'app-financial-reports',
   standalone: true,
   imports: [CommonModule, FormsModule, RouterLink],
+  changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './financial-reports.component.html',
 })
 export class FinancialReportsComponent implements OnInit {
@@ -44,8 +52,18 @@ export class FinancialReportsComponent implements OnInit {
   private pollSubs = new Map<string, Subscription>();
 
   readonly monthNames = [
-    'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'May',
+    'Jun',
+    'Jul',
+    'Aug',
+    'Sep',
+    'Oct',
+    'Nov',
+    'Dec',
   ];
 
   ngOnInit() {
@@ -54,7 +72,8 @@ export class FinancialReportsComponent implements OnInit {
         const sorted = [...years].sort((a, b) => b.year - a.year);
         this.yearOptions.set(sorted);
         const currentYear = new Date().getFullYear();
-        const initial = sorted.find((y) => y.year === currentYear)?.year ?? sorted[0]?.year ?? currentYear;
+        const initial =
+          sorted.find((y) => y.year === currentYear)?.year ?? sorted[0]?.year ?? currentYear;
         this.selectedYear.set(initial);
         this.loadReports(true);
       },
@@ -94,27 +113,29 @@ export class FinancialReportsComponent implements OnInit {
     } else {
       this.loadingMore.set(true);
     }
-    this.reportsService.listByYear(year, {
-      page: this.currentPage(),
-      perPage: PER_PAGE,
-      financialYear: this.selectedFinancialYearId(),
-    }).subscribe({
-      next: (res) => {
-        const merged = reset ? res.results : [...this.reports(), ...res.results];
-        this.reports.set(merged);
-        this.totalCount.set(res.count);
-        this.hasMore.set(!!res.next);
-        this.loading.set(false);
-        this.loadingMore.set(false);
-        merged.forEach((report) => this.ensurePolling(report));
-      },
-      error: (err) => {
-        if (reset) this.reports.set([]);
-        this.loading.set(false);
-        this.loadingMore.set(false);
-        this.toast.error(financeApiErrorMessage(err, this.i18n.lang()));
-      },
-    });
+    this.reportsService
+      .listByYear(year, {
+        page: this.currentPage(),
+        perPage: PER_PAGE,
+        financialYear: this.selectedFinancialYearId(),
+      })
+      .subscribe({
+        next: (res) => {
+          const merged = reset ? res.results : [...this.reports(), ...res.results];
+          this.reports.set(merged);
+          this.totalCount.set(res.count);
+          this.hasMore.set(!!res.next);
+          this.loading.set(false);
+          this.loadingMore.set(false);
+          merged.forEach((report) => this.ensurePolling(report));
+        },
+        error: (err) => {
+          if (reset) this.reports.set([]);
+          this.loading.set(false);
+          this.loadingMore.set(false);
+          this.toast.error(financeApiErrorMessage(err, this.i18n.lang()));
+        },
+      });
   }
 
   loadMore() {
@@ -127,26 +148,19 @@ export class FinancialReportsComponent implements OnInit {
     const year = this.selectedYear();
     if (year == null || this.generating()) return;
     this.generating.set(true);
-    this.reportsService.generate(year).subscribe({
-      next: (report) => {
-        if (isReportPending(report)) {
-          this.reportsService.waitForReportCompletion(report, POLL_INTERVAL_MS).subscribe({
-            next: (final) => this.onReportFinished(final, true),
-            error: (err) => {
-              this.generating.set(false);
-              this.toast.error(financeApiErrorMessage(err, this.i18n.lang()));
-              this.loadReports(true);
-            },
-          });
-        } else {
-          this.onReportFinished(report, true);
-        }
-      },
-      error: (err) => {
-        this.generating.set(false);
-        this.toast.error(financeApiErrorMessage(err, this.i18n.lang()));
-      },
-    });
+    this.reportsService
+      .generateAndWait(year, undefined, POLL_INTERVAL_MS)
+      .pipe(
+        finalize(() => this.generating.set(false)),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe({
+        next: (report) => this.onReportFinished(report, true),
+        error: (err) => {
+          this.toast.error(financeApiErrorMessage(err, this.i18n.lang()));
+          this.loadReports(true);
+        },
+      });
   }
 
   async deleteReport(report: GeneratedReport) {
@@ -214,7 +228,20 @@ export class FinancialReportsComponent implements OnInit {
     if (month == null) return '—';
     const lang = this.i18n.lang();
     if (lang === 'en') return this.monthNames[month - 1] ?? String(month);
-    const esMonths = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+    const esMonths = [
+      'Ene',
+      'Feb',
+      'Mar',
+      'Abr',
+      'May',
+      'Jun',
+      'Jul',
+      'Ago',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dic',
+    ];
     return esMonths[month - 1] ?? String(month);
   }
 
@@ -236,12 +263,14 @@ export class FinancialReportsComponent implements OnInit {
   }
 
   private onReportFinished(report: GeneratedReport, fromGenerate: boolean) {
-    this.generating.set(false);
     this.updateReportInList(report);
     this.ensurePolling(report);
     const lang = this.i18n.lang();
     if (isReportFailed(report)) {
-      this.toast.error(report.errorMessage ?? (lang === 'en' ? 'Report generation failed' : 'Error al generar reporte'));
+      this.toast.error(
+        report.errorMessage ??
+          (lang === 'en' ? 'Report generation failed' : 'Error al generar reporte'),
+      );
       return;
     }
     if (fromGenerate) {
@@ -269,8 +298,10 @@ export class FinancialReportsComponent implements OnInit {
             this.stopPolling(updated.id);
             if (isReportFailed(updated)) {
               this.toast.error(
-                updated.errorMessage
-                  ?? (this.i18n.lang() === 'en' ? 'Report generation failed' : 'Error al generar reporte'),
+                updated.errorMessage ??
+                  (this.i18n.lang() === 'en'
+                    ? 'Report generation failed'
+                    : 'Error al generar reporte'),
               );
             }
           }

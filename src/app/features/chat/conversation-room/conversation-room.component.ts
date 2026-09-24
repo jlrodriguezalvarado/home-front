@@ -9,8 +9,9 @@ import {
   ViewChild,
   AfterViewChecked,
   effect,
+  ChangeDetectionStrategy,
 } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { Subject, debounceTime, takeUntil } from 'rxjs';
 import { ChatRepository } from '../repositories/chat.repository';
@@ -18,15 +19,26 @@ import { ChatConversationWebSocketService } from '../services/chat-conversation-
 import { ChatService } from '../services/chat.service';
 import { ChatInboxStore } from '../services/chat-inbox.store';
 import { ChatMessageItem } from '../models/chat.models';
-import { Conversation, ConversationParticipant, PeerDisplayNameResponse } from '../models/chat.models';
-import { applyPeerDisplayNameToConversation, getConversationDisplayTitle } from '../mappers/chat.mapper';
+import {
+  Conversation,
+  ConversationParticipant,
+  PeerDisplayNameResponse,
+} from '../models/chat.models';
+import {
+  applyPeerDisplayNameToConversation,
+  getConversationDisplayTitle,
+} from '../mappers/chat.mapper';
 import { I18nService } from '../../../core/i18n/i18n.service';
 import { ToastService } from '../../../shared/services/toast.service';
 import { LoadingStateComponent } from '../../../shared/components/loading-state.component';
 import { ErrorStateComponent } from '../../../shared/components/error-state.component';
 import { RenameChatContactDialogComponent } from '../rename-chat-contact-dialog/rename-chat-contact-dialog.component';
 import { ChatMessageContentComponent } from '../components/chat-message-content/chat-message-content.component';
-import { ChatMediaComposerComponent, ChatMediaPreview } from '../components/chat-media-composer/chat-media-composer.component';
+import {
+  ChatMediaComposerComponent,
+  ChatMediaPreview,
+} from '../components/chat-media-composer/chat-media-composer.component';
+import { DialogEscapeDirective } from '../../../shared/directives/dialog-escape.directive';
 
 const SCROLL_EDGE_THRESHOLD_PX = 80;
 
@@ -34,15 +46,16 @@ const SCROLL_EDGE_THRESHOLD_PX = 80;
   selector: 'app-conversation-room',
   standalone: true,
   imports: [
-    CommonModule,
     RouterLink,
     LoadingStateComponent,
     ErrorStateComponent,
     RenameChatContactDialogComponent,
     ChatMessageContentComponent,
     ChatMediaComposerComponent,
+    DialogEscapeDirective,
   ],
   templateUrl: './conversation-room.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './conversation-room.component.scss',
 })
 export class ConversationRoomComponent implements OnInit, OnDestroy, AfterViewChecked {
@@ -93,7 +106,9 @@ export class ConversationRoomComponent implements OnInit, OnDestroy, AfterViewCh
     const conversation = this.conversation();
     const currentUserId = this.chat.currentUserId();
     if (!conversation || conversation.isGroup || !currentUserId) return null;
-    return conversation.participants.find((participant) => participant.user.id !== currentUserId) ?? null;
+    return (
+      conversation.participants.find((participant) => participant.user.id !== currentUserId) ?? null
+    );
   });
   canRenameContact = computed(() => this.otherParticipant() != null);
   conversationId = '';
@@ -210,7 +225,11 @@ export class ConversationRoomComponent implements OnInit, OnDestroy, AfterViewCh
   onAliasChanged(response: PeerDisplayNameResponse): void {
     const conversation = this.conversation();
     if (!conversation) return;
-    const updated = applyPeerDisplayNameToConversation(conversation, response.targetUserId, response);
+    const updated = applyPeerDisplayNameToConversation(
+      conversation,
+      response.targetUserId,
+      response,
+    );
     this.conversation.set(updated);
     this.inboxStore.applyPeerDisplayName(conversation.id, response.targetUserId, response);
     this.closeRenameDialog();

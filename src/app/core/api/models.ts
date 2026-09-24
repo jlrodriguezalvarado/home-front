@@ -5,25 +5,7 @@ export interface PaginatedResponse<T> {
   results: T[];
 }
 
-export interface Commerce {
-  id: string;
-  name: string;
-  logo: string | null;
-  currencyCode: string;
-  currencySymbol: string;
-}
-
-export interface Category {
-  id: string;
-  name: string;
-}
-
-export interface Currency {
-  id: string;
-  code: string;
-  name: string;
-  symbol: string;
-  active: boolean;
-}
-
 export type { Product, CartItem } from '../models/shopping.models';
+export type { Commerce } from '../../features/commerce/commerce.models';
+export type { Currency } from '../../features/currency/currency.models';
+export type { Category } from '../../features/products/product.models';
