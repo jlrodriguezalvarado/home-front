@@ -5,6 +5,7 @@ Include this block (filled in) when delegating to `angular-frontend` or `qa`.
 ```text
 Plan: .plans/YYYY-MM-DD-<slug>.md
   (or ../home-api/.plans/YYYY-MM-DD-<slug>.md when Scope: cross)
+Branch: feature/<kebab-slug> (from develop; same name on sibling repos; Jose / jlrodriguez, local or cloud)
 Role: angular-frontend | qa
 Sibling: ../home-api (Django) <-> this repo (Angular)
 Scope:

@@ -8,6 +8,7 @@ alwaysApply: true
 - Before planning or implementing, read `.agents/WORKFLOW.md` and the approved plan (`.plans/` or `../home-api/.plans/` when cross).
 - Sibling API: `../home-api` (Django). Consume OpenAPI; do not invent transport shapes.
 - Do not implement while a plan awaits approval. Front-only plans go in `.plans/`; cross plans live in `../home-api/.plans/`.
+- Non-trivial work: `feature/<kebab-slug>` from `develop` as Jose (`jlrodriguez`), local or cloud, same name on both repos. Do not implement on `develop`. Merge to `develop` only when the user authorizes.
 - Delegate frontend work to `angular-frontend` using `.agents/HANDOFF.md`. After integration, run `qa`.
 - Do not push, merge, deploy, or force dependency upgrades unless the user explicitly authorizes it.
 - Preserve dirty worktree changes. Never hide failures by deleting tests or weakening assertions.

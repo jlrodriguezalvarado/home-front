@@ -14,7 +14,7 @@
     <button
       type="button"
       (click)="generateReport()"
-      [disabled]="generating() || selectedYear() == null"
+      [disabled]="generating() || selectedYear() === null"
       class="btn-primary flex shrink-0 items-center gap-2"
     >
       <span class="material-symbols-outlined text-[20px]">picture_as_pdf</span>
@@ -41,7 +41,7 @@
         @for (y of yearNumbers(); track y) {
           <option [ngValue]="y">{{ y }}</option>
         }
-        @if (!yearNumbers().length && selectedYear() != null) {
+        @if (!yearNumbers().length && selectedYear() !== null) {
           <option [ngValue]="selectedYear()">{{ selectedYear() }}</option>
         }
       </select>

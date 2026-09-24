@@ -129,88 +129,23 @@
     </div>
   }
 
-  @if (!loading() && summary(); as s) {
-    <div class="space-y-sm">
-      <div class="grid grid-cols-1 gap-sm sm:grid-cols-2 lg:grid-cols-4">
-        @for (m of primaryMetrics(); track m.id) {
-          <app-finance-metric-card
-            [metric]="m"
-            [previousMonthExpenseEditable]="previousMonthExpenseEditable()"
-            [manualPreviousMonthExpense]="manualPreviousMonthExpense()"
-            [savingManualPreviousMonthExpense]="savingManualPreviousMonthExpense()"
-            [canSaveManualPreviousMonthExpense]="canSaveManualPreviousMonthExpense()"
-            [previousMonthRemainderEditable]="previousMonthRemainderEditable()"
-            [manualPreviousMonthRemainder]="manualPreviousMonthRemainder()"
-            [savingManualPreviousMonthRemainder]="savingManualPreviousMonthRemainder()"
-            [canSaveManualPreviousMonthRemainder]="canSaveManualPreviousMonthRemainder()"
-            [previousGlobalSavingsEditable]="previousGlobalSavingsEditable()"
-            [manualPreviousGlobalSavings]="manualPreviousGlobalSavings()"
-            [savingManualPreviousGlobalSavings]="savingManualPreviousGlobalSavings()"
-            [canSaveManualPreviousGlobalSavings]="canSaveManualPreviousGlobalSavings()"
-            (manualPreviousMonthExpenseChange)="manualPreviousMonthExpense.set($event)"
-            (manualPreviousMonthRemainderChange)="manualPreviousMonthRemainder.set($event)"
-            (manualPreviousGlobalSavingsChange)="manualPreviousGlobalSavings.set($event)"
-            (manageIncome)="openIncomeManageDialog()"
-            (addIncome)="openIncomeAddDialog()"
-            (savePreviousMonthExpense)="saveManualPreviousMonthExpense()"
-            (savePreviousMonthRemainder)="saveManualPreviousMonthRemainder()"
-            (savePreviousGlobalSavings)="saveManualPreviousGlobalSavings()"
-          />
-        }
-      </div>
-      @if (secondaryMetrics().length > 0) {
-        <div class="card-surface overflow-hidden">
-          <button
-            type="button"
-            class="flex w-full items-center justify-between gap-md px-md py-sm text-left transition-colors hover:bg-surface-container"
-            (click)="toggleSummaryDetails()"
-          >
-            <div class="flex min-w-0 items-center gap-sm">
-              <span class="material-symbols-outlined shrink-0 text-[20px] text-on-surface-variant">
-                {{ summaryDetailsExpanded() ? 'expand_less' : 'expand_more' }}
-              </span>
-              <span class="text-label-lg font-medium text-on-surface">
-                {{ i18n.lang() === 'en' ? 'More summary details' : 'Más detalles del resumen' }}
-              </span>
-            </div>
-            <span class="text-label-sm shrink-0 tabular-nums text-on-surface-variant">{{
-              secondaryMetrics().length
-            }}</span>
-          </button>
-          @if (summaryDetailsExpanded()) {
-            <div
-              class="grid grid-cols-2 gap-sm border-t border-outline-variant p-md pt-0 md:grid-cols-3"
-            >
-              @for (m of secondaryMetrics(); track m.id) {
-                <app-finance-metric-card
-                  [metric]="m"
-                  [previousMonthExpenseEditable]="previousMonthExpenseEditable()"
-                  [manualPreviousMonthExpense]="manualPreviousMonthExpense()"
-                  [savingManualPreviousMonthExpense]="savingManualPreviousMonthExpense()"
-                  [canSaveManualPreviousMonthExpense]="canSaveManualPreviousMonthExpense()"
-                  [previousMonthRemainderEditable]="previousMonthRemainderEditable()"
-                  [manualPreviousMonthRemainder]="manualPreviousMonthRemainder()"
-                  [savingManualPreviousMonthRemainder]="savingManualPreviousMonthRemainder()"
-                  [canSaveManualPreviousMonthRemainder]="canSaveManualPreviousMonthRemainder()"
-                  [previousGlobalSavingsEditable]="previousGlobalSavingsEditable()"
-                  [manualPreviousGlobalSavings]="manualPreviousGlobalSavings()"
-                  [savingManualPreviousGlobalSavings]="savingManualPreviousGlobalSavings()"
-                  [canSaveManualPreviousGlobalSavings]="canSaveManualPreviousGlobalSavings()"
-                  (manualPreviousMonthExpenseChange)="manualPreviousMonthExpense.set($event)"
-                  (manualPreviousMonthRemainderChange)="manualPreviousMonthRemainder.set($event)"
-                  (manualPreviousGlobalSavingsChange)="manualPreviousGlobalSavings.set($event)"
-                  (manageIncome)="openIncomeManageDialog()"
-                  (addIncome)="openIncomeAddDialog()"
-                  (savePreviousMonthExpense)="saveManualPreviousMonthExpense()"
-                  (savePreviousMonthRemainder)="saveManualPreviousMonthRemainder()"
-                  (savePreviousGlobalSavings)="saveManualPreviousGlobalSavings()"
-                />
-              }
-            </div>
-          }
-        </div>
-      }
-    </div>
+  @if (!loading() && summary()) {
+    <app-finance-summary-metrics
+      [primaryMetrics]="primaryMetrics()"
+      [secondaryMetrics]="secondaryMetrics()"
+      [summaryDetailsExpanded]="summaryDetailsExpanded()"
+      [state]="metricsEditorState()"
+      [moreDetailsLabel]="moreDetailsLabel()"
+      (toggleDetails)="toggleSummaryDetails()"
+      (manualPreviousMonthExpenseChange)="manualPreviousMonthExpense.set($event)"
+      (manualPreviousMonthRemainderChange)="manualPreviousMonthRemainder.set($event)"
+      (manualPreviousGlobalSavingsChange)="manualPreviousGlobalSavings.set($event)"
+      (manageIncome)="openIncomeManageDialog()"
+      (addIncome)="openIncomeAddDialog()"
+      (savePreviousMonthExpense)="saveManualPreviousMonthExpense()"
+      (savePreviousMonthRemainder)="saveManualPreviousMonthRemainder()"
+      (savePreviousGlobalSavings)="saveManualPreviousGlobalSavings()"
+    />
   }
 
   @if (!loading() && !summary()) {

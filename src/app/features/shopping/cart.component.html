@@ -169,6 +169,16 @@
   </app-barcode-scanner-dialog>
 }
 
+@if (nameDialogOpen()) {
+  <app-purchase-name-dialog
+    [title]="i18n.t('purchaseNamePrompt')"
+    [confirmLabel]="i18n.t('confirmPurchase')"
+    [busy]="nameDialogBusy()"
+    (saved)="onPurchaseNameSaved($event)"
+    (cancelled)="closeNameDialog()"
+  ></app-purchase-name-dialog>
+}
+
 @if (previewImage(); as preview) {
   <div
     class="fixed inset-0 z-[70] flex flex-col bg-black/95"

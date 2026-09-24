@@ -1,6 +1,5 @@
 <div class="space-y-lg">
   <h1 class="page-title">{{ i18n.t('purchaseHistory') }}</h1>
-
   @if (loading() && purchases().length === 0) {
     <app-loading-state></app-loading-state>
   }
@@ -10,9 +9,8 @@
   @if (!loading() && !error() && purchases().length === 0) {
     <app-empty-state icon="receipt_long"></app-empty-state>
   }
-
   <div class="space-y-md">
-    @for (p of purchases(); track p) {
+    @for (p of purchases(); track p.id) {
       <div class="card-surface p-md transition-shadow hover:shadow-card-hover">
         <div class="flex items-start gap-md">
           <div
@@ -25,8 +23,11 @@
               <span class="material-symbols-outlined">receipt_long</span>
             </div>
             <div class="min-w-0 flex-1">
-              <div class="truncate text-label-lg text-on-surface">{{ p.commerceName }}</div>
-              <div class="text-body-md text-on-surface-variant">
+              <div class="truncate text-label-lg text-on-surface">{{ displayName(p) }}</div>
+              <div class="truncate text-body-md text-on-surface-variant">
+                @if (p.favoriteName?.trim() && p.commerceName) {
+                  {{ p.commerceName }} ·
+                }
                 {{ p.date | date: 'mediumDate' }}
               </div>
               <div class="mt-xs text-numeral-md font-semibold tabular-nums text-primary md:hidden">
@@ -37,13 +38,24 @@
           <div class="hidden shrink-0 items-center gap-md md:flex">
             <div class="text-numeral-md font-semibold tabular-nums text-primary">{{ p.total }}</div>
             <button
-              (click)="usePurchase(p)"
+              type="button"
+              (click)="editName(p, $event)"
+              class="text-on-surface-variant transition-colors hover:text-primary"
+              [attr.aria-label]="i18n.t('editPurchaseName')"
+              [title]="i18n.t('editPurchaseName')"
+            >
+              <span class="material-symbols-outlined">edit</span>
+            </button>
+            <button
+              type="button"
+              (click)="usePurchase(p, $event)"
               class="rounded-full bg-secondary-container px-md py-1 text-label-md text-on-secondary-container transition-opacity hover:opacity-90"
             >
               USE
             </button>
             <button
-              (click)="toggleFavorite(p)"
+              type="button"
+              (click)="toggleFavorite(p, $event)"
               class="text-on-surface-variant transition-colors hover:text-error"
             >
               <span
@@ -57,12 +69,25 @@
         </div>
         <div class="mt-sm flex items-center justify-end gap-sm md:hidden">
           <button
-            (click)="usePurchase(p)"
+            type="button"
+            (click)="editName(p, $event)"
+            class="p-2 text-on-surface-variant"
+            [attr.aria-label]="i18n.t('editPurchaseName')"
+          >
+            <span class="material-symbols-outlined">edit</span>
+          </button>
+          <button
+            type="button"
+            (click)="usePurchase(p, $event)"
             class="rounded-full bg-secondary-container px-md py-1.5 text-label-md text-on-secondary-container"
           >
             USE
           </button>
-          <button (click)="toggleFavorite(p)" class="p-2 text-on-surface-variant">
+          <button
+            type="button"
+            (click)="toggleFavorite(p, $event)"
+            class="p-2 text-on-surface-variant"
+          >
             <span
               class="material-symbols-outlined"
               [class.material-symbols-filled]="p.isFavorite"
@@ -74,10 +99,10 @@
       </div>
     }
   </div>
-
   @if (hasMore()) {
     <div class="flex justify-center py-md">
       <button
+        type="button"
         (click)="loadMore()"
         [disabled]="loading()"
         class="rounded-xl bg-surface-container px-lg py-2 text-label-lg text-on-surface transition-colors hover:bg-surface-container-high"
@@ -87,3 +112,12 @@
     </div>
   }
 </div>
+@if (nameDialogOpen() && nameDialogPurchase(); as purchase) {
+  <app-purchase-name-dialog
+    [title]="i18n.t(nameDialogMode() === 'favorite' ? 'purchaseNamePrompt' : 'editPurchaseName')"
+    [initialName]="purchase.favoriteName || ''"
+    [busy]="nameDialogBusy()"
+    (saved)="onNameDialogSaved($event)"
+    (cancelled)="closeNameDialog()"
+  ></app-purchase-name-dialog>
+}

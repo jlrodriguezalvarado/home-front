@@ -10,26 +10,17 @@ import {
 } from '@angular/core';
 
 import { FormsModule } from '@angular/forms';
-
 import { CartService } from './cart.service';
-
 import { PurchaseRepository } from './purchase.repository';
-
 import { I18nService } from '../../core/i18n/i18n.service';
-
 import { Router } from '@angular/router';
-
 import { CommerceRepository } from '../commerce/commerce.repository';
 import { ProductFilterStorageService } from '../products/product-filter-storage.service';
-
 import { Commerce } from '../commerce/commerce.models';
-
 import { CartItem } from '../../core/models/shopping.models';
-
 import { QuantityEditorComponent } from '../../shared/components/quantity-editor.component';
 import { BarcodeScannerDialogComponent } from '../../shared/components/barcode-scanner-dialog.component';
 import { ProductRepository } from '../products/product.repository';
-
 import {
   formatPrice,
   formatUnitPrice,
@@ -37,20 +28,26 @@ import {
   moneyDecimalString,
   quantityStringForPurchase,
 } from './utils/price.utils';
-
 import { isPresentationUnitKg } from './utils/presentation-unit.utils';
 import { formatCartListMessage } from './utils/cart-list-message.utils';
 import { ToastService } from '../../shared/services/toast.service';
 import { ConfirmService } from '../../shared/services/confirm.service';
 import { BasketComparisonRepository } from './basket-comparison/basket-comparison.repository';
 import { DialogEscapeDirective } from '../../shared/directives/dialog-escape.directive';
+import { PurchaseNameDialogComponent } from './components/purchase-name-dialog/purchase-name-dialog.component';
 
 @Component({
   selector: 'app-cart',
 
   standalone: true,
 
-  imports: [FormsModule, QuantityEditorComponent, BarcodeScannerDialogComponent, DialogEscapeDirective],
+  imports: [
+    FormsModule,
+    QuantityEditorComponent,
+    BarcodeScannerDialogComponent,
+    DialogEscapeDirective,
+    PurchaseNameDialogComponent,
+  ],
 
   templateUrl: './cart.component.html',
   changeDetection: ChangeDetectionStrategy.Eager,
@@ -79,6 +76,8 @@ export class CartComponent implements OnInit, OnDestroy {
   barcodeScannerOpen = signal(false);
   previewImage = signal<{ url: string; alt: string } | null>(null);
   comparingPrices = signal(false);
+  nameDialogOpen = signal(false);
+  nameDialogBusy = signal(false);
 
   commerceIds = computed(() => this.cart.commerceIds());
 
@@ -261,17 +260,30 @@ export class CartComponent implements OnInit, OnDestroy {
   async confirmPurchase() {
     const items = this.visibleItems();
     if (items.length === 0) return;
-
     const confirmed = await this.confirm.confirm(`${this.i18n.t('confirmPurchase')}?`, {
       confirmLabel: this.i18n.t('confirmPurchase'),
     });
     if (!confirmed) return;
+    this.nameDialogOpen.set(true);
+  }
 
+  closeNameDialog() {
+    if (this.nameDialogBusy()) return;
+    this.nameDialogOpen.set(false);
+  }
+
+  onPurchaseNameSaved(name: string) {
+    const items = this.visibleItems();
+    if (items.length === 0) {
+      this.closeNameDialog();
+      return;
+    }
     const commerceId = this.filterCommerceId()!;
     const currency = this.resolveCurrency(items, commerceId);
     const total = moneyDecimalString(this.cart.visibleTotal(items));
     const data = {
       commerce_id: commerceId,
+      favorite_name: name,
       currency: currency || null,
       subtotal: total,
       grand_total: total,
@@ -283,25 +295,26 @@ export class CartComponent implements OnInit, OnDestroy {
         presentation_unit: i.product.presentationUnit || undefined,
       })),
     };
+    this.nameDialogBusy.set(true);
     this.purchaseRepo.create(data).subscribe({
       next: () => {
+        this.nameDialogBusy.set(false);
+        this.nameDialogOpen.set(false);
         this.cart.removeProducts(items.map((i) => i.product.id));
-
         if (this.cart.items().length === 0) {
           this.filterCommerceId.set(null);
-
           this.cart.setFilterCommerceId(null);
         } else {
           this.filterCommerceId.set(this.cart.resolveEffectiveFilterCommerceId());
         }
-
         this.router.navigate(['/purchases']);
       },
-
-      error: () =>
+      error: () => {
+        this.nameDialogBusy.set(false);
         this.toast.error(
           this.i18n.lang() === 'en' ? 'Error creating purchase' : 'Error al crear la compra',
-        ),
+        );
+      },
     });
   }
 

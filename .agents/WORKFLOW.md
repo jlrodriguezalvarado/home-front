@@ -9,6 +9,10 @@ Identify outcome, non-goals, UI impact, API contract needs, OpenAPI/types regene
 - Front-only: create `.plans/YYYY-MM-DD-<slug>.md` from `.plans/TEMPLATE.md`.
 - Cross (needs API changes): plan belongs in `../home-api/.plans/` (contract owner). If opened here alone and the scope becomes cross, stop and record/continue from that API plan (or open parent `home/`).
 
+## Open a feature branch
+
+Unless the change is trivial (typo, comment, one-file docs) and does not warrant a plan: create or checkout `feature/<kebab-slug>` from up-to-date `develop` in each affected repo (same slug on API and front). Work as Jose (`jlrodriguez`) locally or in the cloud (`cloud_base_branch` = that feature, never `develop`). Do not implement on `develop`. Merge to `develop` only after QA and explicit authorization.
+
 ## 3. Implement by ownership
 
 - Use the `angular-frontend` subagent (`.cursor/agents/angular-frontend.md`).

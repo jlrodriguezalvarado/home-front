@@ -37,9 +37,12 @@ import { DialogEscapeDirective } from '../../../shared/directives/dialog-escape.
 import { ExpenseSpendRegisterComponent } from './components/expense-spend-register/expense-spend-register.component';
 import { ExpenseSpendHistoryDialogComponent } from './components/expense-spend-history-dialog/expense-spend-history-dialog.component';
 import {
-  FinanceMetricCardComponent,
   SummaryMetric,
 } from './components/finance-metric-card/finance-metric-card.component';
+import {
+  FinanceSummaryMetricsComponent,
+  FinanceSummaryMetricsState,
+} from './components/finance-summary-metrics/finance-summary-metrics.component';
 
 type IncomeDialogMode = 'closed' | 'add' | 'manage' | 'edit';
 
@@ -58,7 +61,7 @@ const PRIMARY_METRIC_IDS = new Set(['initialExpense', 'expense', 'balance', 'ava
     DialogEscapeDirective,
     ExpenseSpendRegisterComponent,
     ExpenseSpendHistoryDialogComponent,
-    FinanceMetricCardComponent,
+    FinanceSummaryMetricsComponent,
   ],
   templateUrl: './finance-dashboard.component.html',
   changeDetection: ChangeDetectionStrategy.Eager,
@@ -343,19 +346,32 @@ export class FinanceDashboardComponent implements OnInit {
   });
 
   primaryMetrics = computed(() => this.metrics().filter((m) => PRIMARY_METRIC_IDS.has(m.id)));
-
   secondaryMetrics = computed(() => this.metrics().filter((m) => !PRIMARY_METRIC_IDS.has(m.id)));
-
   previousMonthExpenseEditable = computed(
     () => this.summary()?.previousMonthExpenseEditable === true,
   );
-
   previousMonthRemainderEditable = computed(
     () => this.summary()?.previousMonthRemainderEditable === true,
   );
-
   previousGlobalSavingsEditable = computed(
     () => this.summary()?.previousGlobalSavingsEditable === true,
+  );
+  metricsEditorState = computed<FinanceSummaryMetricsState>(() => ({
+    previousMonthExpenseEditable: this.previousMonthExpenseEditable(),
+    manualPreviousMonthExpense: this.manualPreviousMonthExpense(),
+    savingManualPreviousMonthExpense: this.savingManualPreviousMonthExpense(),
+    canSaveManualPreviousMonthExpense: this.canSaveManualPreviousMonthExpense(),
+    previousMonthRemainderEditable: this.previousMonthRemainderEditable(),
+    manualPreviousMonthRemainder: this.manualPreviousMonthRemainder(),
+    savingManualPreviousMonthRemainder: this.savingManualPreviousMonthRemainder(),
+    canSaveManualPreviousMonthRemainder: this.canSaveManualPreviousMonthRemainder(),
+    previousGlobalSavingsEditable: this.previousGlobalSavingsEditable(),
+    manualPreviousGlobalSavings: this.manualPreviousGlobalSavings(),
+    savingManualPreviousGlobalSavings: this.savingManualPreviousGlobalSavings(),
+    canSaveManualPreviousGlobalSavings: this.canSaveManualPreviousGlobalSavings(),
+  }));
+  moreDetailsLabel = computed(() =>
+    this.i18n.lang() === 'en' ? 'More summary details' : 'Más detalles del resumen',
   );
 
   toggleSummaryDetails() {

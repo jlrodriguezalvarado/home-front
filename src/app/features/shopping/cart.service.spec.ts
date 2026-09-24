@@ -178,7 +178,11 @@ describe('CartService', () => {
 
   it('migrates guest storage cart to empty server cart', () => {
     authenticated = true;
-    storage.save([{ product: unitProduct, quantity: 1, priceUpdatedAt: null }]);
+    const guestItem = { product: unitProduct, quantity: 1, priceUpdatedAt: null };
+    storage.save([guestItem]);
+    cartRepo.syncCurrent.and.returnValue(
+      of({ id: 'draft-1', status: 'draft', filterCommerceId: null, items: [guestItem], updatedAt: '' }),
+    );
     service.resetLocalState();
     service.syncFromServer().subscribe();
     expect(cartRepo.syncCurrent).toHaveBeenCalled();

@@ -1,0 +1,54 @@
+<div
+  class="fixed inset-0 z-[110] flex items-center justify-center bg-black/50 p-md"
+  role="dialog"
+  aria-modal="true"
+  (click)="cancel()"
+  (appDialogEscape)="cancel()"
+>
+  <div
+    class="w-full max-w-md rounded-[24px] border border-outline-variant bg-surface-container-lowest p-xl shadow-card-hover"
+    (click)="$event.stopPropagation()"
+  >
+    <h2 class="mb-lg text-title-lg text-on-surface">{{ title() || i18n.t('purchaseName') }}</h2>
+    <div
+      class="space-y-md"
+      appDialogForm
+      [dialogSubmitDisabled]="!canSave()"
+      (dialogSubmit)="save()"
+    >
+      <div>
+        <label class="mb-xs block text-label-lg text-on-surface-variant" for="purchase-name-input">
+          {{ i18n.t('purchaseName') }}
+        </label>
+        <input
+          id="purchase-name-input"
+          type="text"
+          [ngModel]="draft()"
+          (ngModelChange)="draft.set($event)"
+          maxlength="255"
+          required
+          class="input-outlined w-full"
+          [attr.aria-label]="i18n.t('purchaseName')"
+        />
+      </div>
+      <div class="flex gap-md pt-md">
+        <button
+          type="button"
+          (click)="cancel()"
+          [disabled]="busy()"
+          class="flex-1 rounded-xl border border-outline-variant py-3 text-label-lg text-on-surface disabled:opacity-50"
+        >
+          {{ i18n.t('cancel') }}
+        </button>
+        <button
+          type="button"
+          (click)="save()"
+          [disabled]="!canSave()"
+          class="btn-primary flex-1 py-3 disabled:opacity-50"
+        >
+          {{ confirmLabel() || i18n.t('save') }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

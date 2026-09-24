@@ -14,7 +14,9 @@
       >
         <span class="material-symbols-outlined">arrow_back</span>
       </button>
-      <h1 class="page-title truncate">{{ purchase.commerceName }}</h1>
+      <h1 class="page-title truncate">
+        {{ purchase.favoriteName?.trim() || purchase.commerceName }}
+      </h1>
     </div>
     <div class="card-surface overflow-hidden">
       <div class="flex items-center justify-between gap-md border-b border-outline-variant p-lg">

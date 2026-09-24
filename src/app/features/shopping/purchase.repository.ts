@@ -74,6 +74,14 @@ export class PurchaseRepository {
       .pipe(map((p) => this.mapPurchase(p)));
   }
 
+  updateName(id: string, favoriteName: string): Observable<Purchase> {
+    return this.api
+      .patch<any>(API_ENDPOINTS.purchases.detail(id), {
+        favorite_name: favoriteName,
+      })
+      .pipe(map((p) => this.mapPurchase(p)));
+  }
+
   private mapPurchase(p: any): Purchase {
     const currency = resolveCurrencyCode(p.currency);
     const rawTotal = String(p.grand_total ?? p.total ?? '0');

@@ -51,6 +51,7 @@ Do not leave routed screens as sibling loose files next to a feature root. Do no
 
 - Never cache authenticated API responses, financial data, media, health endpoints, or mutations without an explicit reviewed policy.
 - Keep user-scoped storage keys centrally registered and cleared on logout. Preserve device-scoped theme and language preferences.
+- Treat localStorage drafts as UX only. Authorization and “already submitted” locks must be enforced by the API. Clear drafts after a successful submit.
 - Treat offline data as potentially stale and expose connectivity/update state deliberately.
 - `src/environments/environment.prod.ts` remains local, ignored, and must not be staged.
 
@@ -68,9 +69,23 @@ Run focused checks while iterating, then the full matrix before QA:
 npx tsc -p tsconfig.app.json --noEmit
 npx tsc -p tsconfig.spec.json --noEmit
 npm run api:types:check
-npm test -- --watch=false --browsers=ChromeHeadless
+npm run lint
+npm run test:ci
 npm run build:prod
 ```
+
+Chrome Headless (WSL): `npm run test:ci` downloads Chrome for Testing under
+`~/.cache/home-front-chrome`. If it fails on missing shared libraries, install:
+
+```bash
+sudo apt-get install -y libnspr4 libnss3 libatk-bridge2.0-0 libcups2 libdrm2 \
+  libxkbcommon0 libxcomposite1 libxdamage1 libxrandr2 libgbm1 libgtk-3-0 \
+  libx11-xcb1 libxcb-dri3-0 libxshmfence1 fonts-liberation \
+  libasound2t64 || sudo apt-get install -y libasound2
+```
+
+Then re-run `npm run test:ci`. The ensure-chrome script exits non-zero when the
+binary cannot start (harness for the previous BLOCKED QA).
 
 - Keep the configured initial bundle budget.
 - Report CommonJS warnings and `npm audit` findings; never run `npm audit fix --force` or a major framework upgrade without an approved plan.
